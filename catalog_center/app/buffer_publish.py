@@ -764,8 +764,8 @@ def publish_product(
     if story_link_notification is None:
         if hasattr(db, "setting"):
             link_mode = str(
-                db.setting("instagram_story_link_mode", "native_sticker_notification")
-                or "native_sticker_notification"
+                db.setting("instagram_story_link_mode", "bio_shop_grid")
+                or "bio_shop_grid"
             ).strip().lower()
             if link_mode in {
                 "native_sticker_notification",

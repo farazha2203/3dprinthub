@@ -1,3 +1,20 @@
+## 2026-09-26 - Phase50.A.2Z-O6A1 media display + Story default regression hotfix - LOCAL_TESTED / GITHUB GATE NEXT
+
+Owner runtime evidence on Product #862 exposed two regressions after O6A. The Stage-3 screenshot showed five visible cards while the canonical DB/history had already transitioned to four current/selected images; the same Product could therefore show stale cards even though publish/Social authority read the current finalized files. Repository forensics also proved the current code had regressed the absent-setting Story default from the Production-proven `bio_shop_grid` route back to `native_sticker_notification`.
+
+Requested delta is bounded to Product media display/refresh and the existing Buffer Story default. Must-not-touch: Product/Site identity, image selection authority, pricing/Profile/Filament, receipts, Crawl, provider objects, Host/Production and native-sticker explicit opt-in.
+
+Local fix:
+- Stage-3 card rebuild now hides/deparents old widgets before deferred deletion, preventing stale cards from overlaying a newly rebuilt gallery.
+- Image preview decodes the current on-disk bytes instead of relying on a stable filename path whose finalized WebP bytes can be rewritten/reordered in-place.
+- The blue action is now explicit `رفرش رسانه از DB/Local`; it calls local-only media truth (`include_site=False`) and does not touch Site/Source recovery or change selection.
+- Buffer publish and Qt readiness both restore absent `instagram_story_link_mode` to `bio_shop_grid`; `native_sticker_notification` remains explicit opt-in only.
+- The proven automatic Story route keeps the tracked Product order URL as receipt/Shop-Grid authority and does not claim a native clickable sticker. The native sticker route still requires Buffer mobile when explicitly selected.
+
+Changed-condition 31/31 PASS and related Product-image/Buffer/Story/Social regression 84/84 PASS. compileall, pip check, git diff-check and Qt VerifyOnly PASS. Read-only canonical Product #862 proof: DB=4, selected=4, visible current cards=4, exact selected Local=4, mismatches=0. Live Buffer readiness is read-only and now returns provider=buffer, Story mode=`bio_shop_grid`, ready=true, requires_mobile_handoff=false even though hasActiveMemberDevice=false. No Catalog write, provider mutation, Instagram publish, Host or Production change occurred.
+
+Exact next: reviewed GitHub commit/push -> fresh rollback/integrity backup -> isolated/exact-SHA Product #862 reload/reopen smoke + read-only Story readiness -> documentation closure -> STOP. Then resume O6B full exact-SHA runtime/UI smoke.
+
 ## 2026-09-26 - Phase50.A.2Z-O6A integrated Local regression - ACCEPTED / O6B NEXT
 
 Owner explicitly chose O6A instead of a real-provider O5G action. O5G is therefore NOT_REQUIRED for this closure pass; its only unresolved external evidence remains #609 clickable Story blocked by Buffer `hasActiveMemberDevice=false` and #301/#588 missing current Story provider evidence. No automatic provider publish was performed.

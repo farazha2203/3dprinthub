@@ -328,6 +328,24 @@ class Phase50InstagramDeliveryReadinessTests(unittest.TestCase):
         self.assertFalse(state["has_active_member_device"])
 
     @patch("app.buffer_publish.test_connection")
+    def test_missing_story_mode_setting_still_defaults_to_shop_grid(
+        self, connection
+    ):
+        connection.return_value = {
+            "id": "chan-1",
+            "name": "3dprinthub_ir",
+            "service": "instagram",
+            "external_link": "https://instagram.com/3dprinthub_ir",
+            "has_active_member_device": False,
+        }
+        core = self._core()
+        core.db.settings.pop("instagram_story_link_mode", None)
+        state = core.delivery_readiness()
+        self.assertTrue(state["ready"])
+        self.assertFalse(state["requires_mobile_handoff"])
+        self.assertEqual(state["story_link_mode"], "bio_shop_grid")
+
+    @patch("app.buffer_publish.test_connection")
     def test_native_sticker_mode_blocks_before_any_work_without_mobile(
         self, connection
     ):

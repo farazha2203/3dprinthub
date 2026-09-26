@@ -3608,8 +3608,8 @@ class InstagramCore:
         ).strip().lower()
         companion_enabled = companion_raw not in {"0", "false", "no", "off"}
         link_mode = str(
-            self.db.setting("instagram_story_link_mode", "native_sticker_notification")
-            or "native_sticker_notification"
+            self.db.setting("instagram_story_link_mode", "bio_shop_grid")
+            or "bio_shop_grid"
         ).strip().lower()
         native_sticker_enabled = link_mode in {
             "native_sticker_notification",
@@ -4559,9 +4559,10 @@ class ApplicationKernel:
         product_id: int,
         *,
         recover_site_media: bool = True,
+        include_site: bool = True,
         progress=None,
     ) -> dict[str, Any]:
-        """Compare Local/DB/Site media and recover missing Site bytes as candidates."""
+        """Re-read canonical DB/local media, optionally comparing Site truth."""
         from app.epic49_site_sync import get_product as get_site_product
         from app.phase50_a2w_media_sync import (
             media_truth_snapshot,
@@ -4573,20 +4574,21 @@ class ApplicationKernel:
             raise RuntimeError("محصول پیدا نشد.")
         data = dict(row)
         server_id = int(data.get("server_product_id") or 0)
-        settings = self.connection.bridge_settings()
+        settings = None
         server: dict[str, Any] | None = None
         site_error = ""
         recovery: dict[str, Any] = {}
         if callable(progress):
             progress(5, "خواندن authority محلی رسانه‌ها")
-        if server_id > 0:
+        if include_site and server_id > 0:
+            settings = self.connection.bridge_settings()
             try:
                 if callable(progress):
                     progress(15, f"خواندن Site Product #{server_id}")
                 server = get_site_product(settings, server_id)
             except Exception as exc:
                 site_error = f"{type(exc).__name__}: {exc}"
-        if server is not None and recover_site_media:
+        if server is not None and recover_site_media and settings is not None:
             recovery = recover_site_media_candidates(
                 self.db,
                 self.images,
@@ -4602,12 +4604,13 @@ class ApplicationKernel:
             self.images,
             int(product_id),
             server=server,
-            site_url=settings.site_url,
+            site_url=(str(settings.site_url) if settings is not None else ""),
             site_error=site_error,
             recovery=recovery,
         )
         if callable(progress):
             progress(100, "Truth Sync رسانه کامل شد")
+        result["site_compare"] = bool(include_site)
         return result
 
     def sync_filaments_with_site(

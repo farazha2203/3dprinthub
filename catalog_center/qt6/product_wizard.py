@@ -447,7 +447,7 @@ class ProductWizardPage(QWidget):
         delete_selected.setProperty("danger", True)
         add_files = QPushButton("+ عکس از فایل")
         screenshot = QPushButton("اسکرین‌شات")
-        truth_refresh = QPushButton("رفرش رسانه و وضعیت")
+        truth_refresh = QPushButton("رفرش رسانه از DB/Local")
         truth_refresh.setProperty("primary", True)
         recover = QPushButton("دریافت جدید از منبع")
         deep_repair = QPushButton("بازیابی عمیق از صفر")
@@ -468,9 +468,8 @@ class ProductWizardPage(QWidget):
         )
         screenshot.setToolTip("دریافت اسکرین‌شات صفحه محصول")
         truth_refresh.setToolTip(
-            "DB و فایل‌های Local را با رسانه فعلی Site Product مقایسه می‌کند؛ "
-            "رسانه Site که Local نیست به‌صورت candidate بازیابی می‌شود، بدون اینکه "
-            "تیک‌های «ارسال سایت» خودکار عوض شوند."
+            "گالری را فقط از authority فعلی DB و فایل‌های Local همین Product دوباره می‌سازد؛ "
+            "هیچ Site/Source recovery انجام نمی‌دهد و تیک‌های «ارسال سایت» را تغییر نمی‌دهد."
         )
         recover.setToolTip(
             "دریافت داده و عکس جدید از لینک منبع محصول؛ تصمیم‌های اپراتور "
@@ -2299,10 +2298,11 @@ class ProductWizardPage(QWidget):
             return
         product_id = int(self.product_id)
         self._start_image_task(
-            "رفرش DB / فایل Local / رسانه Site…",
+            "رفرش دقیق رسانه از DB / فایل Local…",
             lambda progress: self.kernel.refresh_product_media_truth(
                 product_id,
                 recover_site_media=False,
+                include_site=False,
                 progress=progress,
             ),
         )
@@ -2393,6 +2393,7 @@ class ProductWizardPage(QWidget):
             local_files = int(data.get("local_file_count") or 0)
             selected_local = int(data.get("selected_local_count") or 0)
             site_media = int(data.get("site_media_count") or 0)
+            site_compare = bool(data.get("site_compare"))
             recovered = len(data.get("recovered") or [])
             selected_media_error = str(
                 data.get("selected_media_error") or ""
@@ -2401,7 +2402,8 @@ class ProductWizardPage(QWidget):
             site_error = str(data.get("site_error") or "").strip()
             self.image_task_status.setText(
                 f"✅ Truth Sync • DB {canonical} • ارسال سایت {selected} • "
-                f"Local {local_files} • Selected Local {selected_local} • Site {site_media}"
+                f"Local {local_files} • Selected Local {selected_local}"
+                + (f" • Site {site_media}" if site_compare else " • DB/Local only")
                 + (f" • {recovered} candidate بازیابی شد" if recovered else "")
                 + (f" • ⚠ {len(mismatches)} اختلاف" if mismatches else " • parity")
             )
@@ -2410,7 +2412,11 @@ class ProductWizardPage(QWidget):
                 f"انتخاب «ارسال سایت»: {selected}",
                 f"فایل Local canonical قابل نمایش: {local_files}",
                 f"فایل Local دقیق برای تصاویر انتخاب‌شده: {selected_local}",
-                f"رسانه فعلی Site Product: {site_media}",
+                (
+                    f"رسانه فعلی Site Product: {site_media}"
+                    if site_compare
+                    else "Site Product در این رفرش محلی بررسی نشد"
+                ),
                 f"لینک Source ثبت‌شده در DB: {int(data.get('source_link_count') or 0)}",
                 f"candidate بازیابی‌شده از Site: {recovered}",
             ]

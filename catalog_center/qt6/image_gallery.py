@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 from PySide6.QtCore import Qt, Signal
@@ -92,7 +93,16 @@ class ImageCard(QFrame):
             self.preview.setMinimumSize(190, 145)
             self.preview.setMaximumHeight(180)
         path = str(self.item.get("path") or "")
-        pixmap = QPixmap(path) if path else QPixmap()
+        # Always decode the current on-disk bytes instead of letting Qt reuse a
+        # pixmap previously loaded from the same filename. Finalized SEO files
+        # are intentionally rewritten/reordered in-place, so filename-only
+        # caching can show an older image than the bytes that publish will read.
+        pixmap = QPixmap()
+        if path:
+            try:
+                pixmap.loadFromData(Path(path).read_bytes())
+            except OSError:
+                pass
         if pixmap.isNull():
             self.preview.setText("⚠ تصویر محلی دریافت نشده")
             self.preview.setObjectName("MissingImage")
@@ -345,6 +355,12 @@ class ProductImageGrid(QWidget):
             item = self.grid.takeAt(0)
             widget = item.widget()
             if widget is not None:
+                # takeAt()+deleteLater() alone leaves the old child visible
+                # until the next deferred-delete turn. A refresh can therefore
+                # momentarily (or under nested signals, visibly) overlay stale
+                # cards on the newly rebuilt DB/local gallery.
+                widget.hide()
+                widget.setParent(None)
                 widget.deleteLater()
         self.cards.clear()
         self.summary.setText("0 تصویر")

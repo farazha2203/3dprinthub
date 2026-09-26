@@ -279,7 +279,28 @@ class Phase50A2ZO2EMediaTruthTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         marker = "recover_site_media=False"
         self.assertIn(marker, source)
+        self.assertIn("include_site=False", source)
         self.assertIn("current_local_items", source)
+
+    def test_local_refresh_never_calls_site_bridge(self):
+        product_id, _url1, _url2, _final1, _final2 = self._product(
+            selected_only_first=False
+        )
+        self.db.update_product(product_id, {"server_product_id": 77})
+        with patch.object(
+            self.kernel.connection,
+            "bridge_settings",
+            side_effect=AssertionError("local refresh must not touch Site"),
+        ):
+            result = self.kernel.refresh_product_media_truth(
+                product_id,
+                recover_site_media=False,
+                include_site=False,
+            )
+        self.assertFalse(result["site_compare"])
+        self.assertEqual(result["canonical_count"], 2)
+        self.assertEqual(result["selected_count"], 2)
+        self.assertEqual(result["selected_local_count"], 2)
 
 
 if __name__ == "__main__":

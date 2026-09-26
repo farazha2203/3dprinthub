@@ -1,3 +1,24 @@
+## ERR-49-259 - Stage-3 stale card display and Story default fallback regressed accepted runtime truth (2026-09-26)
+
+**Observed**
+- Owner screenshot of real Product #862 showed five Stage-3 image cards after the canonical Product had already moved to four `images_json` / four `selected_images_json`; publish/Social consumed current finalized files, so the editor could visually disagree with what would be sent.
+- The current Catalog has no explicit `instagram_story_link_mode` setting. Current source had changed both absent-setting fallbacks from the accepted automatic `bio_shop_grid` route to `native_sticker_notification`, reintroducing the Buffer-mobile blocker that ERR-49-228 had already closed for the default route.
+
+**Root cause**
+- `ProductImageGrid.clear()` removed layout items but only scheduled child widgets with `deleteLater()`; old visible cards could survive until a later deferred-delete turn while the same gallery was rebuilt.
+- Image preview used a stable path directly even though finalized SEO WebPs may be rewritten/reordered in place; display must consume current file bytes just like publish authority.
+- Two later Social edits silently changed the missing-setting default rather than preserving the Production-proven Story mode.
+
+**Correct fix / verification**
+- Hide and detach old image-card widgets synchronously before deferred deletion; decode preview pixmaps from current file bytes; make the blue Stage-3 action explicit DB/Local-only truth refresh with no Site/Source recovery.
+- Restore absent `instagram_story_link_mode` fallback to `bio_shop_grid` in both Buffer publish and Qt readiness. Keep `native_sticker_notification` only as explicit opt-in.
+- Changed-condition 31/31 and related Product/Image/Buffer/Story/Social 84/84 PASS; compileall/pip/diff/Qt VerifyOnly PASS.
+- Real read-only #862 now resolves DB=4 / selected=4 / visible current cards=4 / exact selected Local=4 with zero mismatches. Live Buffer readiness reports Story `bio_shop_grid`, ready=true and no mobile handoff while the channel still reports hasActiveMemberDevice=false.
+
+**Prevention**
+- Gallery refresh tests must cover rebuilding after count changes and rewriting bytes behind the same finalized filename.
+- The accepted automatic Story default must have an explicit missing-setting regression test. Optional native-sticker capability must never become the implicit default again.
+
 ## ERR-49-258 - O5F first backup verifier used named row access on a tuple-row backup connection (2026-09-26)
 
 **Observed**

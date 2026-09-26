@@ -1,3 +1,12 @@
+## 2026-09-26 - Owner: Stage-3 media must show exact DB/Local truth; restore successful Story route
+Status: `O6A1 LOCAL_TESTED / GITHUB+RUNTIME ACCEPTANCE NEXT`.
+
+Owner reported that the blue media refresh could leave the Product Wizard showing the wrong images/count and that what was later posted could differ from what the editor displayed. Real #862 evidence confirmed the UI screenshot still showed five cards after canonical DB/history had moved to four current images. Required behavior: blue refresh must rebuild from the exact current Product DB/Local files and reopening the Product must show the same media authority used by publish/Social.
+
+Owner also required returning to the previously successful automatic Story workflow instead of the mobile-notification route. Repository history confirms the proven route is Buffer automatic Story with `bio_shop_grid` / Product-specific Shop-Grid destination; native Link Sticker notification is optional and separately mobile-dependent. The current absent setting had accidentally defaulted back to native notification and is restored locally.
+
+No arbitrary real Instagram post/story is permitted as a test. Exact-SHA acceptance is isolated/read-only for provider readiness unless the owner explicitly selects a real Social action later.
+
 ## 2026-09-26 - Owner Product/Crawl truth re-audit + O5C focused hardening
 Status: `O6A ACCEPTED / O6B NEXT`; O5G NOT_REQUIRED by owner choice, external Story gaps preserved without auto-publish.
 

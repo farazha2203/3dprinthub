@@ -188,6 +188,43 @@ class BufferStoryCompanionTests(unittest.TestCase):
 
     @patch("app.buffer_publish.get_secret", return_value="secret")
     @patch("app.buffer_publish._request_graphql")
+    def test_absent_story_mode_setting_defaults_to_proven_automatic_route(
+        self, request, _secret
+    ):
+        request.side_effect = [
+            {"createPost": {"post": {"id": "feed-default", "status": "sent", "externalLink": "feed-link"}}},
+            {"createPost": {"post": {"id": "story-default", "status": "sent", "externalLink": "story-link"}}},
+        ]
+        db = _DB()
+        original_setting = db.setting
+
+        def setting_without_story_mode(key, default=""):
+            if key == "instagram_story_link_mode":
+                return default
+            return original_setting(key, default)
+
+        db.setting = setting_without_story_mode
+        with patch(
+            "app.buffer_publish.require_clickable_story_device",
+            side_effect=AssertionError("automatic Story must not require Buffer mobile"),
+        ):
+            result = publish_product(
+                db,
+                11,
+                BufferConfig(channel_id="chan-1"),
+                site_url="https://3dprinthub.ir",
+            )
+        story_input = request.call_args_list[1].kwargs["variables"]["input"]
+        self.assertEqual(story_input["schedulingType"], "automatic")
+        self.assertNotIn("stickerFields", story_input["metadata"]["instagram"])
+        self.assertEqual(
+            result["companion_story"]["story_link_strategy"],
+            "bio_shop_grid",
+        )
+        self.assertIn("utm_source=instagram", result["companion_story"]["tracking_url"])
+
+    @patch("app.buffer_publish.get_secret", return_value="secret")
+    @patch("app.buffer_publish._request_graphql")
     def test_story_can_remain_fully_automatic_without_clickable_sticker(
         self, request, _secret
     ):

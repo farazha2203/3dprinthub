@@ -1,3 +1,9 @@
+## 2026-09-26 - O6A1 Stage-3 media display / automatic Story regression hotfix
+- Real Product #862 showed stale Stage-3 UI truth: screenshot retained five visible cards while current DB/history and publish authority were already four images. Gallery rebuild now detaches stale widgets immediately and previews decode current file bytes, so stable rewritten SEO filenames cannot display old bytes.
+- The blue media action is now a strict DB/Local-only refresh; no Site/Source recovery and no automatic selection mutation.
+- Restored the documented Production-proven Story default: absent `instagram_story_link_mode` means automatic `bio_shop_grid`; native sticker notification remains explicit opt-in/mobile-dependent only.
+- Changed-condition 31/31 + related Product/Image/Buffer/Story/Social 84/84 PASS; compileall/pip/diff/Qt VerifyOnly PASS. Live read-only #862 = 4 DB / 4 selected / 4 visible-current / 4 exact Local, mismatches=0. Buffer Story readiness = ready=true / bio_shop_grid / no mobile handoff. No real Social publish or Catalog/Host/Production mutation.
+
 ## 2026-09-26 - O6A integrated Product/Crawl/Media/Social regression
 - Owner skipped optional real-provider O5G; no Instagram action was auto-run.
 - Integrated 28-module Product/Crawl/Media/Social suite passes 224/224; compileall, pip check, git diff-check and Qt VerifyOnly PASS.
