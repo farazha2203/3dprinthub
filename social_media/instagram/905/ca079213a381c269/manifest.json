@@ -1,0 +1,18 @@
+{
+  "asset_revision": "ca079213a381c269",
+  "feed_sha256": [
+    "8ebb0a79753ab3c045a468d4dc776b630f3015d99860af9dac69e073d35fd1f2",
+    "31b19148523c6dd4979747205d1e7e4338504dabffad69f6b110e87eb7e64d18",
+    "584b86899a3cd618699e52acea36083400261aac494d510d8eb26b01749e4ddb"
+  ],
+  "product_id": 905,
+  "purpose": "Buffer public media compatibility",
+  "site_product_id": 60,
+  "site_revision": 1,
+  "source_media_urls": [
+    "local://the-striped-swirl-lamp-3d-print-02.webp",
+    "local://the-striped-swirl-lamp-3d-print-03.webp",
+    "local://the-striped-swirl-lamp-3d-print-01.webp"
+  ],
+  "story_sha256": ""
+}
