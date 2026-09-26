@@ -1,0 +1,16 @@
+{
+  "asset_revision": "a203052917cd5552",
+  "feed_sha256": [
+    "99183b6dc63c56bfcc9d36a9415a58ddd6ae9b5fedf79809c8adbe1bd09f0ddb",
+    "671d2eb87f223d1e85463886811e86fda48ae1c898250e822096ddb26c6c5874"
+  ],
+  "product_id": 899,
+  "purpose": "Buffer public media compatibility",
+  "site_product_id": 59,
+  "site_revision": 1,
+  "source_media_urls": [
+    "local://minimalist-japandi-owl-autumn-decor-3d-print-01.webp",
+    "local://minimalist-japandi-owl-autumn-decor-3d-print-02.webp"
+  ],
+  "story_sha256": ""
+}
