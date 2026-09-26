@@ -1,9 +1,9 @@
 {
   "asset_revision": "ca079213a381c269",
   "feed_sha256": [
-    "8ebb0a79753ab3c045a468d4dc776b630f3015d99860af9dac69e073d35fd1f2",
-    "31b19148523c6dd4979747205d1e7e4338504dabffad69f6b110e87eb7e64d18",
-    "584b86899a3cd618699e52acea36083400261aac494d510d8eb26b01749e4ddb"
+    "e88531b7aa6955159488132073a6ebc8fd06484b1b99387c2ed7d5dadc34101e",
+    "ec728dfc7d85523b4f62f371a09237ea8d0999ad4bc6fecd739fa500bca26491",
+    "21ede70a5fd5237cf84db9956309a6082bb0a6b2a72dfd4cc2f6f37eec2547dd"
   ],
   "product_id": 905,
   "purpose": "Buffer public media compatibility",
