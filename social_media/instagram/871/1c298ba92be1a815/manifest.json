@@ -1,0 +1,22 @@
+{
+  "asset_revision": "1c298ba92be1a815",
+  "feed_sha256": [
+    "3deee2f50584462b4a809ec3ec4ca8b0f3d4b616b6e10c99592121f732afe1d4",
+    "5b6b33b22a559e01ee97c588fa5008bbd2bbf5e850832d161bfa633ab266845b",
+    "bbcc30829a37228b203b2d4bb6a21c0bd6e42b8710dee70ae0a16bdeebc54739",
+    "d10d794c37628ba70d09d4b9ba50bf946b113bc0ffa831ea826f3bbe32a55972",
+    "294d5cf95a1e074dc9c77ff8d032f2062e963ed22b216b0b1d3d7875b9e18768"
+  ],
+  "product_id": 871,
+  "purpose": "Buffer public media compatibility",
+  "site_product_id": 58,
+  "site_revision": 1,
+  "source_media_urls": [
+    "https://makerworld.bblmw.com/makerworld/model/US1a4b414f2be77b/design/c47929c164113902.png",
+    "https://makerworld.bblmw.com/makerworld/model/US1a4b414f2be77b/839540823/instance/plate_1.png",
+    "local://source-page-screenshot-20260926-151943.png",
+    "local://03.webp",
+    "local://05.webp"
+  ],
+  "story_sha256": ""
+}
