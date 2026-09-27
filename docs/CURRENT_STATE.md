@@ -2587,3 +2587,11 @@ persistence, Site copy/checksum and public verification. No Reel publishing is
 claimed complete. Contract and microphases are recorded in
 `docs/phases/PHASE50_A2Z_W6_SOURCE_VIDEO_REEL.md`; next exact task is W6A
 Source video review/status visibility on an isolated Catalog.
+
+W6A is now `LOCAL_TESTED` in Build `2026.09.27.19`: Source video candidates
+are normalized/deduped by canonical URL, Stage 3 exposes operator checkboxes for
+`selected_video_links_json`, repeated selection is idempotent, and unsupported
+extension/cross-domain/download failure reasons are classified before save.
+Video/reacquire/crawl regression passed `18/18`. No Reel/Post/Story publish and
+no canonical Catalog/Host/Production mutation occurred. Exact next task is W6B
+isolated Site video acceptance; W6C Reel handoff follows.

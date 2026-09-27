@@ -28,6 +28,25 @@ from app.crawler import (
     public_http,
 )
 from app.db import normalize_url, utc_now
+
+
+VIDEO_SUFFIXES = {".mp4", ".webm", ".mov", ".m4v", ".gif"}
+
+
+def normalize_video_candidates(values: list[str] | tuple[str, ...] | None) -> list[str]:
+    """Return stable HTTPS video identities without consuming duplicates."""
+    result: list[str] = []
+    seen: set[str] = set()
+    for value in values or []:
+        url = str(value or "").strip()
+        if not url.startswith(("http://", "https://")):
+            continue
+        identity = normalize_url(url)
+        if identity in seen:
+            continue
+        seen.add(identity)
+        result.append(url)
+    return result
 from app.page_extractor import extract_direct_link
 from app.epic49_desktop_schema import ensure_epic49_desktop_schema
 from app.phase49_3h_image_limits import normalize_image_limit
@@ -1078,6 +1097,7 @@ def _download_public_model_files(
     from urllib.parse import unquote, urlsplit
 
     saved: list[str] = []
+    reasons: list[dict[str, str]] = []
     referer_host = urlsplit(str(referer or "")).netloc.lower()
     target_dir = Path(local_dir) / "files"
     for index, url in enumerate(_iter_public_file_urls(payload)[: max(1, int(limit))], 1):
@@ -1138,19 +1158,23 @@ def _download_public_videos(
     limit: int = 5,
 ) -> list[str]:
     saved: list[str] = []
+    reasons: list[dict[str, str]] = []
     referer_host = urlsplit(str(referer or "")).netloc.lower()
     target_dir = Path(local_dir) / "videos"
-    for index, url in enumerate(_iter_public_video_urls(payload)[: max(1, int(limit))], 1):
+    for index, url in enumerate(normalize_video_candidates(_iter_public_video_urls(payload))[: max(1, int(limit))], 1):
         parsed = urlsplit(url)
         if same_domain_only and referer_host and not _allowed_public_media_host(referer_host, parsed.netloc.lower()):
+            reasons.append({"url": url, "reason": "blocked_cross_domain"})
             continue
         suffix = Path(parsed.path).suffix.lower()
-        if suffix not in {".mp4", ".webm", ".mov", ".m4v", ".gif"}:
-            suffix = ".mp4"
+        if suffix not in VIDEO_SUFFIXES:
+            reasons.append({"url": url, "reason": "unsupported_mime_or_extension"})
+            continue
         target = target_dir / f"product-video-{index:02d}{suffix}"
         try:
             saved.append(str(download_public_file(url, target, max_bytes=80_000_000, referer=referer)))
-        except Exception:
+        except Exception as exc:
+            reasons.append({"url": url, "reason": f"download_failed:{type(exc).__name__}"})
             continue
     return saved
 
@@ -3078,7 +3102,7 @@ async def download_product_video_from_source_async(
         download_images=False,
         image_limit=1,
     )
-    links = _iter_public_video_urls(fresh)
+    links = normalize_video_candidates(_iter_public_video_urls(fresh))
     if not links:
         raise RuntimeError("در Source ویدیوی عمومی مستقیم قابل دریافت پیدا نشد.")
 

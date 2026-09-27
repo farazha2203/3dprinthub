@@ -61,3 +61,21 @@ Server delta and explicit release gate.
 Implement W6A review/status visibility on an isolated Catalog, then add focused
 tests for idempotent video selection, duplicate URL handling, MIME/size failure
 reasons and no accidental Reel/Post/Story publish.
+
+## W6A implementation checkpoint — 2026-09-27
+
+Status: `LOCAL_TESTED` in Build `2026.09.27.19`.
+
+- Source video candidates are normalized and deduped by canonical URL before
+  download/selection.
+- Product Wizard Stage 3 now exposes an operator-checkable Source video list
+  backed by `selected_video_links_json`.
+- Repeated selection is idempotent and does not create duplicate identities.
+- Cross-domain, unsupported-extension and download-failure reasons are
+  classified before a file is accepted; bounded download remains unchanged.
+- Video/reacquire/crawl regression: `18/18 PASS`.
+- No Reel, Post or Story publish and no canonical Catalog/Host/Production
+  mutation occurred.
+
+Next exact phase: W6B isolated Site video acceptance, including MIME/size,
+public URL, HTML embedding and rollback verification.

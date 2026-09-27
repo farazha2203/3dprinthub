@@ -14,6 +14,24 @@ from qt6 import acquisition_runtime
 
 
 class Phase50A2RVideoTests(unittest.TestCase):
+    def test_video_candidates_are_normalized_and_idempotent(self):
+        values = [
+            "https://example.com/a.mp4",
+            "https://example.com/a.mp4#fragment",
+            "ftp://example.com/not-video.mp4",
+            "https://example.com/b.gif",
+        ]
+        self.assertEqual(
+            acquisition_runtime.normalize_video_candidates(values),
+            ["https://example.com/a.mp4", "https://example.com/b.gif"],
+        )
+
+    def test_wizard_exposes_operator_video_selection_contract(self):
+        source = (Path(__file__).resolve().parents[1] / "qt6" / "product_wizard.py").read_text(encoding="utf-8")
+        self.assertIn("self.video_selection = QTableWidget(0, 1)", source)
+        self.assertIn("_video_selection_changed", source)
+        self.assertIn("selected_video_links_json", source)
+
     def test_database_adds_video_columns_without_changing_queue_contract(self):
         with tempfile.TemporaryDirectory() as td:
             db = Database(Path(td) / "catalog.sqlite3")

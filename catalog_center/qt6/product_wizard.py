@@ -585,6 +585,12 @@ class ProductWizardPage(QWidget):
         self.product_video_status.setFont(status_font)
         self.product_video_status.setWordWrap(True)
         layout.addWidget(self.product_video_status)
+        self.video_selection = QTableWidget(0, 1)
+        self.video_selection.setHorizontalHeaderLabels(["ویدئوی Source — انتخاب اپراتور"])
+        self.video_selection.setMaximumHeight(105)
+        self.video_selection.setToolTip("فقط لینک‌های تیک‌خورده برای دریافت/انتشار کنترل‌شده انتخاب می‌شوند.")
+        self.video_selection.itemChanged.connect(self._video_selection_changed)
+        layout.addWidget(self.video_selection)
 
         self.image_grid = ProductImageGrid(
             columns=3,
@@ -1007,6 +1013,17 @@ class ProductWizardPage(QWidget):
         video_links = _json_list(
             row.get("selected_video_links_json") or row.get("video_links_json")
         )
+        discovered_links = list(dict.fromkeys(_json_list(row.get("video_links_json"))))
+        selected_links = set(_json_list(row.get("selected_video_links_json")))
+        self.video_selection.blockSignals(True)
+        self.video_selection.setRowCount(0)
+        for url in discovered_links:
+            item = QTableWidgetItem(str(url))
+            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+            item.setCheckState(Qt.CheckState.Checked if url in selected_links else Qt.CheckState.Unchecked)
+            self.video_selection.insertRow(self.video_selection.rowCount())
+            self.video_selection.setItem(self.video_selection.rowCount() - 1, 0, item)
+        self.video_selection.blockSignals(False)
         local_videos = _json_list(row.get("local_video_files_json"))
         if local_videos:
             self.product_video_status.setText(
@@ -1018,6 +1035,22 @@ class ProductWizardPage(QWidget):
             )
         else:
             self.product_video_status.setText("ویدئو: هنوز در Source کشف/دریافت نشده")
+
+    def _video_selection_changed(self, _item) -> None:
+        if self.product_id is None or not hasattr(self, "video_selection"):
+            return
+        selected = []
+        for row in range(self.video_selection.rowCount()):
+            item = self.video_selection.item(row, 0)
+            if item and item.checkState() == Qt.CheckState.Checked:
+                selected.append(item.text().strip())
+        current = self.kernel.db.product(int(self.product_id)) or {}
+        if selected == _json_list(current.get("selected_video_links_json")):
+            return
+        self.kernel.db.update_product(
+            int(self.product_id),
+            {"selected_video_links_json": json.dumps(selected, ensure_ascii=False)},
+        )
 
     def _load_stage4(self, row: dict[str, Any]) -> None:
         self.content_source_title.setText(str(row.get("source_title") or ""))
