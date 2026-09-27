@@ -1,0 +1,63 @@
+# Phase50.A2Z-W6 — Source Video + Reel
+
+Status: `IN_PROGRESS / BASELINE_LOCAL_TESTED`  
+Date: 2026-09-27  
+Branch: `wip/phase50-a2z-w5-manual-product-20260927`  
+Start commit: `48b7bfd123c1c537e78f73a654292211318423fd`
+
+## Scope
+
+W6 extends the existing canonical motion-media authority:
+
+- `video_links_json` — discovered Source links with provenance;
+- `selected_video_links_json` — operator-selected Source links;
+- `local_video_files_json` — bounded local files with safe ownership/checksum;
+- Site Product video presentation and public verification;
+- supported Social Reel/Story handoff only after provider capability is
+  verified.
+
+No private Instagram API, guessed provider capability, fake clickable state, or
+automatic Reel completion claim is allowed.
+
+## Baseline evidence
+
+- Source video extraction/serialization, MakerWorld animated GIF discovery,
+  same-domain bounded download, local persistence, Site copy/checksum and public
+  video verification: `16/16 PASS` across the existing video/reacquire/crawl
+  suites.
+- Current Product Wizard already exposes Source/local video truth in Stage 3.
+- Buffer Feed/Story remains image-based; Reel/video Social delivery is not yet
+  claimed complete.
+- No Catalog, Provider, Host or Production mutation occurred in this W6 start.
+
+## Ordered microphases
+
+### W6A — Source video truth and operator review
+
+Trace Source discovery → selected link → bounded local download → checksum →
+Product/Wizard preview. Add explicit status/reason for missing, blocked,
+unsupported, duplicate or failed video without changing Product identity.
+
+### W6B — Site video acceptance
+
+Verify Product-owned video copy, MIME/size limits, public URL, HTML embedding,
+canonical Product identity and rollback on an isolated Catalog/site fixture.
+
+### W6C — Reel handoff contract
+
+Research and verify the supported provider's current Reel contract. Build
+Preview → operator approval → handoff status; keep image Story/Post contracts
+unchanged. Do not send real media before explicit approval.
+
+### W6D — Full acceptance / GitHub gate
+
+Run video/media/Product/Social regression, compileall, diff-check, Qt VerifyOnly,
+isolated foreground smoke, integrity backup, source/server delta audit, then
+commit/push and verify Local=Remote. Host deploy is conditional on a verified
+Server delta and explicit release gate.
+
+## Immediate next task
+
+Implement W6A review/status visibility on an isolated Catalog, then add focused
+tests for idempotent video selection, duplicate URL handling, MIME/size failure
+reasons and no accidental Reel/Post/Story publish.

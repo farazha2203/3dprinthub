@@ -2579,3 +2579,11 @@ Fresh backup integrity passed with `quick_check=ok`, SHA256
 `975294464`. Source/Server delta audit found zero Server/static/migration/Host
 files. No canonical Product or Provider mutation occurred. Next operation is
 commit/push and exact Local=Remote verification; W6 starts afterward.
+
+W6 has started as `IN_PROGRESS / BASELINE_LOCAL_TESTED`. Existing Source video
+authority and Site video foundation passed `16/16` across video/reacquire/crawl
+tests: extraction, GIF discovery, bounded same-domain download, local file
+persistence, Site copy/checksum and public verification. No Reel publishing is
+claimed complete. Contract and microphases are recorded in
+`docs/phases/PHASE50_A2Z_W6_SOURCE_VIDEO_REEL.md`; next exact task is W6A
+Source video review/status visibility on an isolated Catalog.
