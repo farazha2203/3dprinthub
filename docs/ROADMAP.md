@@ -1500,4 +1500,3 @@ Status: `LOCAL_TESTED / GITHUB PROMOTION NEXT`. The existing managed Django Hero
 ## 2026-09-17 runtime gate
 - Windows Publisher exact-SHA runtime: PASS and foreground UI launched.
 - Production test-product reset: still pending solely because the automation safety layer blocked the destructive write; verified rollback backup already exists.
-

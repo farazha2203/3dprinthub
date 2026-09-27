@@ -1336,3 +1336,6 @@ Implemented locally in Build `2026.09.27.21`: Reel Preview is review-only and ha
 ## 2026-09-27 - W6D final acceptance
 
 W6 Source Video + Site Video + Reel handoff is accepted locally and at the GitHub gate after Qt VerifyOnly, isolated desktop smoke, regression, compileall, diff-check, integrity backup and Server-delta audit. W6 is Windows/Catalog-only; no Host deploy, Production change, provider API call or real Reel publish occurred. Next phase awaits the master-roadmap selection.
+## 2026-09-27 - A2Z-C dynamic carriers kickoff
+
+W5 completion was verified and A2Z-C started in contract-audit mode. The existing fallback remains authoritative. Carrier adapter work is blocked until official Post/Tipax/Mahex merchant API/sandbox contracts and credentials are verified; no endpoint or secret was guessed and no Deploy/Production mutation occurred.
