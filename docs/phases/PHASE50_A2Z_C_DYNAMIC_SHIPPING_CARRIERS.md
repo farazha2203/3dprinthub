@@ -59,3 +59,41 @@ Inventory existing Store shipping tests/models and prepare a read-only quote
 contract matrix. Then, only after an official provider contract is available,
 implement one adapter behind the fallback interface and run Local tests. No
 Deploy until Server delta, backup and owner release approval are complete.
+
+## Read-only quote contract matrix — 2026-09-27
+
+| Domain | Current authoritative field | Quote use | State |
+|---|---|---|---|
+| Product shipping mass | `ProductVariant.shipping_weight_grams`, fallback to `final_weight_grams` / `material_weight_grams` in Store cart logic | Per-unit grams × quantity; must be positive/verified | Available locally |
+| Quantity | `StoreOrderItem.quantity` | Total shipment mass and package count input | Available locally |
+| Subtotal | `StoreOrder.subtotal` | Existing `free_over` fallback rule and quote context | Available locally |
+| Destination | `StoreOrder.province`, `county`, `city`, `address`, `postal_code` | Provider destination mapping; postal code must be validated | Available locally; provider mapping pending |
+| Package dimensions | Product/profile data may contain dimensions, but no canonical StoreOrder package snapshot field is present | Required only if the provider contract requires volumetric weight | Not yet authoritative; do not invent |
+| Packaging | `StoreOrder.packaging_fee` exists as an amount, not package dimensions/material facts | Preserve existing fee; carrier package facts need explicit contract | Amount exists; facts pending |
+| Selected fallback method | `StoreOrder.shipping_method` + copied `shipping_title` | Deterministic fallback and historical display | Available locally |
+| Fallback amount | `ShippingMethod.calculate_fee(subtotal, total_weight_grams)` using active `ShippingRateRule` or `flat_fee` | Safe quote when provider unavailable | Available locally |
+| Order snapshot | `shipping_title`, `shipping_fee`, `total_weight_grams`, destination fields | Prevent later rate changes rewriting an order | Available locally |
+| Provider quote identity | No current `provider_quote_id`, expiry or raw quote payload on `StoreOrder` | Required for dynamic quote reconciliation/idempotency | Requires approved schema/contract |
+
+### Normalized quote input (future adapter boundary)
+
+```text
+quantity: positive integer
+total_weight_grams: Decimal > 0, from selected Variant facts
+subtotal: non-negative integer
+destination: province/county/city/postal_code/address
+package: dimensions only when explicitly factual and provider-required
+fallback: ShippingMethod + active ShippingRateRule result
+```
+
+### Fallback and immutable snapshot rules
+
+- Quote order: verified carrier quote → existing ShippingMethod/rate rule →
+  fail closed for customer/operator selection; never guess a price.
+- Every selected result must copy carrier/service/title, amount/currency,
+  weight/destination inputs, provider quote ID, expiry and raw response into
+  an immutable order/audit snapshot once the provider contract authorizes those
+  fields. Existing orders must remain readable without a provider.
+- Retry of the same quote key must be idempotent; a changed weight, quantity,
+  destination or expired quote requires a new quote rather than overwriting a
+  paid/placed order.

@@ -1339,3 +1339,6 @@ W6 Source Video + Site Video + Reel handoff is accepted locally and at the GitHu
 ## 2026-09-27 - A2Z-C dynamic carriers kickoff
 
 W5 completion was verified and A2Z-C started in contract-audit mode. The existing fallback remains authoritative. Carrier adapter work is blocked until official Post/Tipax/Mahex merchant API/sandbox contracts and credentials are verified; no endpoint or secret was guessed and no Deploy/Production mutation occurred.
+## 2026-09-27 - A2Z-C quote matrix
+
+Extracted the Local Store quote contract and recorded fallback/snapshot rules. Dynamic adapters remain blocked until official Post/Tipax/Mahex API/sandbox credentials and response semantics are supplied. No guessed endpoint, secret, migration or Production change.
