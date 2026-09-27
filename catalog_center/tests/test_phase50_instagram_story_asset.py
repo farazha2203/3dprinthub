@@ -52,7 +52,7 @@ class InstagramStoryAssetTests(unittest.TestCase):
     @patch("app.instagram_story_asset.subprocess.run")
     @patch("app.instagram_story_asset._render_html", return_value="<html><body>story</body></html>")
     def test_render_uses_isolated_headless_profile(self, _render_html, run):
-        with tempfile.TemporaryDirectory() as local_appdata:
+        with tempfile.TemporaryDirectory() as local_appdata, tempfile.TemporaryDirectory() as data_root:
             def fake_run(command, **_kwargs):
                 direct = next(
                     (item for item in command if item.startswith("--screenshot=")),
@@ -67,7 +67,7 @@ class InstagramStoryAssetTests(unittest.TestCase):
                 Path(screenshot).write_bytes(b"x" * 60000)
 
             run.side_effect = fake_run
-            with patch.dict("os.environ", {"LOCALAPPDATA": local_appdata}):
+            with patch.dict("os.environ", {"LOCALAPPDATA": local_appdata, "CATALOG_DATA_ROOT": data_root}, clear=False):
                 path = _render_story(
                     {
                         "id": 7,
@@ -85,6 +85,8 @@ class InstagramStoryAssetTests(unittest.TestCase):
             command = run.call_args.args[0]
             rendered_command = " ".join(str(arg) for arg in command)
             self.assertTrue(path.is_file())
+            self.assertTrue(path.is_relative_to(Path(data_root)))
+            self.assertNotIn(str(Path(local_appdata)), str(path))
             self.assertIn("--user-data-dir=", rendered_command)
             self.assertIn("--no-first-run", rendered_command)
             self.assertIn("--no-default-browser-check", rendered_command)

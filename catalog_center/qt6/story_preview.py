@@ -45,6 +45,9 @@ class StoryPreviewTab(QWidget):
         root.addLayout(grid)
         self.status = QLabel("محصول انتخاب‌شده از گالری/جدول را انتخاب کن."); self.status.setWordWrap(True)
         root.addWidget(self.status)
+        self.link_status = QLabel("Link Sticker: هنوز تأیید نشده — PNG به‌تنهایی کلیک‌پذیر نیست.")
+        self.link_status.setWordWrap(True)
+        root.addWidget(self.link_status)
         self.generate = QPushButton("🖼 تولید Preview چهار قالب")
         self.approve = QPushButton("✅ تأیید Preview و آماده‌سازی انتشار دستی")
         self.approve.setEnabled(False)
@@ -72,16 +75,25 @@ class StoryPreviewTab(QWidget):
             QMessageBox.warning(self, "Story", "در این نسخه Preview فقط با عکس واقعی و قابل ردیابی محصول مجاز است."); return
         try:
             settings = self.kernel.connection.settings(require_bridge=False)
+            generated_paths = []
             for template_id, (image, _button) in enumerate(self.cards, 1):
                 result = prepare_product_story_asset(self.db, product_id, settings, payload, publish_to_site=False, template_id=template_id)
                 pixmap = QPixmap(result["local_path"])
                 image.setPixmap(pixmap.scaled(image.size(), Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+                generated_paths.append(result["local_path"])
             self.selected_template = 1; self._approved = False; self.approve.setEnabled(True)
-            self.status.setText(f"۴ Preview محلی برای Product #{product_id} آماده شد. URL: {payload['product_url']} — ارسال واقعی انجام نشده.")
+            self.status.setText(
+                f"۴ Preview محلی برای Product #{product_id} آماده شد.\n"
+                f"URL دقیق محصول: {payload['product_url']}\n"
+                f"فایل قالب ۱: {generated_paths[0]}\n"
+                "ارسال واقعی انجام نشده است."
+            )
+            self.link_status.setText(
+                "Link Sticker: دستی لازم است — همین URL را در Instagram Link Sticker وارد و سپس تأیید اپراتور را ثبت کنید."
+            )
         except Exception as exc:
             QMessageBox.critical(self, "Story Preview", str(exc))
 
     def approve_preview(self):
         self._approved = True; self.approve.setEnabled(False)
         self.status.setText("Preview تأیید شد؛ مرحله بعد فقط آماده‌سازی دستی Link Sticker/Mention است. انتشار خودکار همچنان قفل است.")
-

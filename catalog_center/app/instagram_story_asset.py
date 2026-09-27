@@ -11,6 +11,7 @@ from pathlib import Path, PurePosixPath
 from urllib import request as urllib_request
 
 from .instagram_feed_asset import resolve_local_product_media
+from .runtime_paths import data_root
 from .site_connection import SiteConnection, _ensure_remote_dir, connect_ftp
 from .social_content_policy import STORY_STYLE_ID, build_story_copy
 
@@ -113,18 +114,10 @@ def _revision_key(row: dict, template_id: int = 1) -> str:
 def _render_story(row: dict, payload: dict, *, template_id: int = 1) -> Path:
     copy = build_story_copy(row)
     revision = _revision_key(row, template_id)
-    local_root = Path(
-        os.environ.get("LOCALAPPDATA")
-        or (Path.home() / "AppData" / "Local")
-    )
-    out_dir = (
-        local_root
-        / "3DPrintHub"
-        / "CatalogCenter"
-        / "social"
-        / "stories"
-        / str(int(row.get("id") or 0))
-    )
+    # Story assets are project data, not an opaque Windows cache.  Use the
+    # canonical runtime data root so Local development stays on the D: drive
+    # and the operator can inspect/backup the exact rendered asset.
+    out_dir = data_root() / "social" / "stories" / str(int(row.get("id") or 0))
     out_dir.mkdir(parents=True, exist_ok=True)
     png = out_dir / f"{revision}.png"
     if png.is_file() and png.stat().st_size > 50_000:
@@ -143,8 +136,7 @@ def _render_story(row: dict, payload: dict, *, template_id: int = 1) -> Path:
     chrome_profile = render_dir / "chrome-profile"
     chrome_profile.mkdir(parents=True, exist_ok=True)
     # On Windows Chrome can return from its small launcher process before a
-    # headless child is done. Keep the render workspace under LOCALAPPDATA,
-    # wait through PowerShell Start-Process, and never accept a stale image.
+    # Wait through PowerShell Start-Process and never accept a stale image.
     png.unlink(missing_ok=True)
     browser = _browser_path()
     chrome_args = [

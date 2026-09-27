@@ -1342,3 +1342,7 @@ W5 completion was verified and A2Z-C started in contract-audit mode. The existin
 ## 2026-09-27 - A2Z-C quote matrix
 
 Extracted the Local Store quote contract and recorded fallback/snapshot rules. Dynamic adapters remain blocked until official Post/Tipax/Mahex API/sandbox credentials and response semantics are supplied. No guessed endpoint, secret, migration or Production change.
+## 2026-09-27 - Owner correction: Story path, four previews and clickable-link truth
+- Owner reported that the displayed Story asset path under `C:\Users\...\AppData\Local` is not the project-owned D: data location and that prior four-template/link claims were not visibly verifiable.
+- Required contract: render to the canonical runtime data root, show all four selectable previews in the dedicated Story tab, expose the exact Product URL, and keep manual Link Sticker confirmation separate from the PNG asset.
+- Product image selection/deletion mismatch remains a separate open request until exact media-identity regression and isolated UI smoke pass.

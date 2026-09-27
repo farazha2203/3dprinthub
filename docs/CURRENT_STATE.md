@@ -2625,3 +2625,14 @@ Store model/test extraction and the prior W5/Crawl/Video/Buffer regression remai
 ## 2026-09-27 - A2Z-C provider API research update
 
 Research confirms three different states: Psend exposes a commercial Post price API using city code, weight, size, service and API key; Tapin documents Tipax quote/order fields including weight, service, packing and calculated send/tax totals; no sufficiently detailed official Mahex quote/order API was verified. These are leads, not authorization or proof of a direct carrier contract. A2Z-C remains blocked before adapter code until the owner verifies the merchant account/terms and provides sandbox credentials or an approved intermediary contract. No live request or shipment/payment action occurred.
+## 2026-09-27 - Story correction checkpoint / Build pending
+
+Status: `LOCAL_TESTED`; commit/push pending. The active checkout remains `D:\projects\3DPrintHub-a2z-a2r-converge`, branch `wip/phase50-a2z-w5-manual-product-20260927`, current pre-change HEAD `ba71a561006b8bbf0383e47f88dca4bf07e94142`.
+
+- Fixed Story local rendering to use `data_root()/social/stories/<product_id>`; with the configured development root this is on D:, not `C:\Users\...\AppData\Local`.
+- Dedicated Story tab exposes four selectable local templates and now reports the exact Product URL, local asset path and manual Link Sticker state.
+- Focused Story/Social tests: `18/18 PASS`; compileall and `git diff --check`: PASS.
+- No Catalog, Host, Production, FTP, provider or Instagram mutation occurred. No deploy has occurred.
+- Important unresolved issue: Product media thumbnail/source/delete mismatch reported by the owner is not accepted as fixed; it requires a separate exact media-identity audit and isolated delete/reload regression.
+
+Exact next operation: run Qt VerifyOnly and isolated writable-Catalog Story-tab smoke on this change, then trace and test Product media card identity before any release claim. Following phase: commit/push the verified Catalog-only correction; then the media identity hotfix. Required gates: isolated backup, focused/related regression, Qt VerifyOnly, foreground smoke, diff-check, exact GitHub SHA; no Host/Production deploy unless a separate Server delta is proven.

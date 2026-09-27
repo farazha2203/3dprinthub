@@ -1783,3 +1783,9 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - A2Z-C quote matrix recorded from Store models/tests: weight, quantity, subtotal, destination, fallback rate rules and order snapshot fields are authoritative; package dimensions and provider quote identity remain pending official contract. No migration or provider integration was added.
 ## 2026-09-27
 - A2Z-C provider research updated: Post price API lead (Psend), Tipax integration lead (Tapin) and no verified public Mahex quote contract. No adapter or credential code added.
+## 2026-09-27 - Story asset path and operator handoff correction
+- Corrected local Story output from the hidden Windows `LOCALAPPDATA` cache to the canonical runtime data root (`CATALOG_DATA_ROOT`; D: during development).
+- Story Preview now reports the exact Product URL, generated local asset path and the still-unconfirmed manual Link Sticker state.
+- Four local templates remain selectable and are rendered with distinct template revisions; no Instagram/provider/catalog mutation occurs.
+- Verification: Story/Social focused suite `18/18 PASS`, compileall and diff-check PASS.
+- Product media card/delete identity mismatch is still an open, unaccepted issue and was not falsely marked fixed.
