@@ -1333,3 +1333,6 @@ Implemented locally in Build `2026.09.27.20`: isolated Site video copy validates
 ## 2026-09-27 - W6C Reel handoff
 
 Implemented locally in Build `2026.09.27.21`: Reel Preview is review-only and handoff is fail-closed until explicit operator approval. Provider payload uses a public HTTPS video, `type=reel`, `thumbnailOffset`, draft/approval mode and AI disclosure. No Buffer API call, Instagram publish, Catalog write, Host or Production change occurred. Focused tests pass 17/17; W6D is next.
+## 2026-09-27 - W6D final acceptance
+
+W6 Source Video + Site Video + Reel handoff is accepted locally and at the GitHub gate after Qt VerifyOnly, isolated desktop smoke, regression, compileall, diff-check, integrity backup and Server-delta audit. W6 is Windows/Catalog-only; no Host deploy, Production change, provider API call or real Reel publish occurred. Next phase awaits the master-roadmap selection.

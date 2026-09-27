@@ -5,13 +5,21 @@ from pathlib import Path
 
 APP_NAME = "3DPrintHub Catalog Center"
 APP_VERSION = "8.9.11"
-BUILD_ID = "2026.09.27.21"
+BUILD_ID = "2026.09.27.22"
 APP_TITLE = f"{APP_NAME} v{APP_VERSION}"
 SOURCE_ROOT = Path(__file__).resolve().parents[1]
 
 # Operator-visible release notes. Keep this tuple authoritative for the Qt
 # About dialog so the active build explains both completed and pending work.
 RELEASE_HISTORY = (
+    {
+        "date": "2026-09-27",
+        "build": BUILD_ID,
+        "status": "W6 ACCEPTED / LOCAL + GITHUB",
+        "done": "W6D passed Qt VerifyOnly, isolated foreground smoke, Video/Media/Social/Product regression, compileall and diff-check. Integrity backup passed quick_check/integrity_check; W6 range contains no Server/Host files.",
+        "not_done": "No Host deploy, Production verification, Buffer API call, Reel publish or canonical Catalog mutation was performed.",
+        "next": "Proceed to the next planned project phase after owner direction; W6 Source Video/Reel is closed locally and on GitHub.",
+    },
     {
         "date": "2026-09-27",
         "build": BUILD_ID,

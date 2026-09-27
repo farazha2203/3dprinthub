@@ -1,6 +1,6 @@
 # Phase50.A2Z-W6 — Source Video + Reel
 
-Status: `IN_PROGRESS / W6C_LOCAL_TESTED`
+Status: `ACCEPTED / W6D_GITHUB_UPDATED`
 Date: 2026-09-27  
 Branch: `wip/phase50-a2z-w5-manual-product-20260927`  
 Start commit: `48b7bfd123c1c537e78f73a654292211318423fd`
@@ -114,3 +114,24 @@ Status: `LOCAL_TESTED` in Build `2026.09.27.21`.
 Exact next phase: W6D full video/media/Social regression, compileall,
 diff-check, Qt VerifyOnly, isolated foreground smoke, integrity backup and
 GitHub gate.
+
+## W6D final acceptance checkpoint — 2026-09-27
+
+Status: `ACCEPTED` in Build `2026.09.27.22`.
+
+- Qt `RUN_QT.ps1 -VerifyOnly`: PASS (`QT6_FOUNDATION_VERIFY=OK`,
+  `QT6_42B2_FULL_PARITY_VERIFY=OK`, operator launcher PASS).
+- Isolated foreground MainWindow smoke: PASS; Routes=6, Actions=11,
+  WizardStages=7, using the integrity backup rather than the canonical DB.
+- Video/Media/Social/Product regression: `49/49 PASS`; prior W6C combined
+  regression: `55/55 PASS`.
+- compileall and `git diff --check`: PASS.
+- Backup `D:\projects\3dprinthub-backups\phase50-w6d-20260927-202858`:
+  quick_check=ok, integrity_check=ok, Products=1076, SHA256
+  `9a64e4ed834e9f98940f481649ca7e464371847cda7ea7d2c58ffa9f8d41e60c`.
+- W6 range contains only Catalog/tests/docs. No Server/Host file was changed
+  by W6; no Host deploy, Production mutation, provider API call or Reel
+  publish occurred.
+
+W6 is closed. The next phase is selected from the master roadmap by owner
+direction; no deployment gate is pending for this Windows/Catalog-only delta.
