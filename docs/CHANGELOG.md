@@ -1781,3 +1781,5 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - Started A2Z-C dynamic shipping carrier contract audit. Verified existing ShippingMethod/rate-rule fallback and order snapshot boundary; no authorized Post/Tipax/Mahex adapter or credential contract exists yet, so no provider or Production change was attempted.
 ## 2026-09-27
 - A2Z-C quote matrix recorded from Store models/tests: weight, quantity, subtotal, destination, fallback rate rules and order snapshot fields are authoritative; package dimensions and provider quote identity remain pending official contract. No migration or provider integration was added.
+## 2026-09-27
+- A2Z-C provider research updated: Post price API lead (Psend), Tipax integration lead (Tapin) and no verified public Mahex quote contract. No adapter or credential code added.

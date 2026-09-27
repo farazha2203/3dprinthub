@@ -53,6 +53,22 @@ for all three carriers. The implementation is therefore intentionally stopped
 before adapter or credential code. Official documentation/credentials from the
 merchant accounts are the next required input.
 
+## Provider/API research update — 2026-09-27
+
+| Provider | API/quote evidence found | Implementation decision |
+|---|---|---|
+| National Post | A public commercial Psend Price API documents `GET /api/getprice.aspx` with API key, postal city code, weight, size and service, returning a price. It enforces domain and rate limits. This is a third-party price service, not proof of a direct National Post merchant contract. | Candidate quote source only after owner verifies account, terms, currency and accuracy. Do not hard-code it as official Post. |
+| Tipax | Tipax publishes a cost-calculator route; Tapin's integration PDF documents a Tipax order-register API and response fields such as send price, tax, total receive price, weight and service/packing inputs. Tapin is an intermediary and requires shop/account identifiers. | Candidate adapter through the verified intermediary contract, only after merchant account/sandbox credentials and ownership are confirmed. |
+| Mahex | No official, sufficiently detailed public quote/order API contract was found in this research pass. | Remains discovery-blocked; keep existing fallback. |
+
+Evidence links: [Psend price API](https://psend.ir/PriceApi/Customer/CustomerApiDocs.aspx),
+[Tipax official cost-calculator announcement](https://t.me/s/Tipaxco?before=3665),
+[Tapin Tipax integration guide](https://www.tapin.ir/wp-content/uploads/2024/12/follow-tapin-tipax-1.pdf).
+
+This evidence does not authorize credentials, live requests, order creation or
+payment/shipping activation. The first Local adapter should be selected only
+after the owner provides the actual merchant contract and sandbox access.
+
 ## Exact next task
 
 Inventory existing Store shipping tests/models and prepare a read-only quote
