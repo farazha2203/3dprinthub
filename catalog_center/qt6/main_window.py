@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from app.version import APP_TITLE, APP_VERSION, BUILD_ID
+from app.version import APP_TITLE, APP_VERSION, BUILD_ID, RELEASE_HISTORY
 
 from .actions import ActionRegistry, ActionSpec
 from .command_palette import CommandPalette
@@ -376,6 +376,14 @@ class MainWindow(QMainWindow):
         )
 
     def show_about(self) -> None:
+        history = []
+        for item in RELEASE_HISTORY:
+            history.append(
+                "• {date} | Build {build} | {status}\n"
+                "  انجام شد: {done}\n"
+                "  انجام نشده: {not_done}\n"
+                "  گام بعدی: {next}".format(**item)
+            )
         QMessageBox.information(
             self,
             f"{APP_TITLE} — Qt 6",
@@ -384,7 +392,9 @@ class MainWindow(QMainWindow):
             "Qt6 Shell + shared Application Kernel + Product lifecycle + "
             "Filament palette/inventory + multi-image SEO + Bulk AI + "
             "Site Bridge foundation.\n\n"
-            "Legacy launch.py تا پایان Acceptance و Cutover حفظ می‌شود.",
+            "تاریخچه تغییرات این build:\n"
+            + "\n\n".join(history)
+            + "\n\nLegacy launch.py تا پایان Acceptance و Cutover حفظ می‌شود.",
         )
 
     def _restore_ui_state(self) -> None:

@@ -239,6 +239,70 @@ class Phase493I42CAcquisitionRuntimeTests(unittest.TestCase):
         self.assertGreater(policy_300["preview_rounds"], 8)
         self.assertGreaterEqual(policy_300["maximum"], policy_300["preview_rounds"])
 
+    def test_hard_quota_probe_overfetches_known_first_page_without_changing_quota(self):
+        self.assertEqual(acquisition_runtime._listing_probe_target(1), 54)
+        self.assertEqual(acquisition_runtime._listing_probe_target(100), 450)
+        self.assertEqual(acquisition_runtime._listing_probe_target(500), 500)
+        self.assertGreater(
+            acquisition_runtime._listing_probe_target(100),
+            acquisition_runtime._listing_target_policy(100)["target"],
+        )
+
+    def test_isolated_quota_100_skips_known_first_page_and_registers_100_new(self):
+        listing = "https://makerworld.com/en/search/models?keyword=duplicate-first"
+        for number in range(10_000, 10_100):
+            self.db.add_discovered(
+                "makerworld",
+                str(number),
+                self._model(number)[1],
+                listing,
+            )
+            row_id = self.db.conn.execute(
+                "SELECT id FROM discovered_urls WHERE source_code=? AND external_id=?",
+                ("makerworld", str(number)),
+            ).fetchone()[0]
+            self.db.mark_url(row_id, "collected")
+
+        candidates = [
+            {
+                "source_code": "makerworld",
+                "external_id": str(number),
+                "source_url": self._model(number)[1],
+            }
+            for number in range(10_000, 10_200)
+        ]
+        modern = AsyncMock(return_value=candidates)
+        with (
+            patch.object(acquisition_runtime, "ModernHttpClient", _FakeModernClient),
+            patch.object(acquisition_runtime, "discover_conditional_http", new=modern),
+            patch.object(acquisition_runtime, "_browser_robots_gate", new=AsyncMock(return_value=0.0)),
+        ):
+            result = asyncio.run(
+                acquisition_runtime._discover_listing(
+                    self.db,
+                    self._source(),
+                    listing,
+                    100,
+                    strategy="hybrid",
+                )
+            )
+
+        self.assertTrue(result["target_reached"])
+        self.assertEqual(result["new"], 100)
+        self.assertEqual(result["duplicates"], 100)
+        self.assertEqual(modern.await_args.kwargs["requested"], 450)
+        pending = list(
+            self.db.conn.execute(
+                "SELECT * FROM discovered_urls WHERE source_code=? AND status='new'",
+                ("makerworld",),
+            )
+        )
+        self.assertEqual(len(pending), 100)
+        self.assertEqual(
+            {str(row["external_id"]) for row in pending},
+            {str(number) for number in range(10_100, 10_200)},
+        )
+
     def test_hybrid_mode_prefers_modern_candidates_without_browser_when_enough(self):
         listing = "https://makerworld.com/en/search/models?keyword=lamp"
         candidates = [

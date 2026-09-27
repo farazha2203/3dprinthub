@@ -4,6 +4,7 @@ import json
 import unittest
 
 from app.openai_content import CONTENT_SCHEMA
+from app.social_content_policy import build_ai_social_pack
 from app.phase49_3c_persian_content import (
     _generic_persian_pack,
     ensure_html_fragment,
@@ -13,6 +14,25 @@ from app.phase49_3c_persian_content import (
 
 
 class Phase493CPersianContentTests(unittest.TestCase):
+    def test_ai_social_pack_is_factual_and_distinguishes_clickable_link(self):
+        pack = build_ai_social_pack(
+            {
+                "title_fa": "چراغ رومیزی گارلیک",
+                "short_description_fa": "چراغ دکوراتیو برای سفارش چاپ سه‌بعدی",
+                "seo_description_fa": "چراغ رومیزی دکوراتیو برای سفارش.",
+                "sales_bullets_json": '["بدنه دکوراتیو", "مناسب میز"]',
+                "hashtags_fa_json": '["#چراغ", "#دکور"]',
+                "selected_images_json": '["https://example.test/garlic.webp"]',
+            },
+            canonical_url="https://3dprinthub.ir/store/product/garlic-lamp/",
+        )
+        self.assertEqual(pack["source"], "reviewed_product_facts")
+        self.assertEqual(pack["story"]["canonical_url"], "https://3dprinthub.ir/store/product/garlic-lamp/")
+        self.assertFalse(pack["story"]["clickable_link_confirmed"])
+        self.assertTrue(pack["story"]["manual_handoff_required"])
+        self.assertTrue(pack["post"]["caption_fa"])
+        self.assertTrue(pack["guardrails"]["review_required"])
+
     def test_english_editorial_text_is_rejected(self):
         self.assertFalse(has_persian_editorial_text("Fanart Solidarity Bear"))
         self.assertTrue(has_persian_editorial_text("خرس همبستگی"))

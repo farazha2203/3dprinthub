@@ -1,3 +1,25 @@
+## 2026-09-27 - Phase50.A.2Z-W5 Crawl/Dedupe/Staging recovery - Phase D accepted / Phase E audit / Build 2026.09.27.13
+
+Verified checkout remains `D:\projects\3DPrintHub-a2z-a2r-converge`, branch `wip/phase50-a2z-w5-manual-product-20260927`, with pre-existing W5 dirty work preserved. Phase B isolated quota test passed 18/18 and the prior Qt VerifyOnly gate passed. Phase C now stops Qt Search/Listing `run_batch` after discovery: candidates remain in staging, the run records `promotion_required`, and canonical Product creation is reserved for the explicit Add Products selection path. No canonical Catalog, Host, or Production data was changed.
+
+Local source compilation and diff-check passed. Phase C evidence remains `59/59` plus isolated Qt VerifyOnly. Image truth hotfix maps exact source URLs before normalized fallbacks, normalizes legacy local-display aliases, excludes stale uncanonical Local files, and dedupes one physical path to one card. Phase D now blocks a second Product when a non-empty fingerprint or server_product_id already belongs to an authoritative row and returns that row instead; identity regression passes `10/10`. About history is Build `2026.09.27.9`; no canonical Catalog, Host or Production data changed.
+
+Remaining order: full related Phase D regression → Phase E read-only duplicate audit and safe merge → Phase F full regression/desktop acceptance → resume W5 manual-product acceptance → W6. Exact next step: run the related Crawl/Acquisition/Product identity suite, then create the read-only duplicate report; no canonical cleanup yet.
+
+Requested downstream phase registered: `PHASE50_A2Z_W5_SOCIAL_SEO_COMMERCE_DISCOVERY.md` (`PLANNED / RESEARCHED`). Research confirms that a canonical URL in Story metadata is not proof of a clickable Instagram Link Sticker; the implementation must expose confirmed-clickable versus manual-handoff states. Google ecommerce work requires a read-only audit of Product/Offer, variants, canonical URLs, sitemap, shipping/returns and indexability before code or deploy. No authoritative public Torob feed contract was found, so no Torob connector or submission is being guessed. This phase begins only after the current D→E→F gates unless explicitly reprioritized.
+
+S1 Social AI Content Contract is now `LOCAL_TESTED` in Build `2026.09.27.11`: `build_ai_social_pack` creates deterministic, review-required Post/Story content from authoritative Product facts, and the Qt Products page now has `🧷 آماده‌سازی Story دستی`. It renders a local Story asset without publish, copies the exact canonical Product URL to Clipboard, and displays the suggested Link Sticker label `مشاهده و سفارش`; clickable confirmation remains operator-controlled. Social/Persian tests pass `12/12`; no canonical data or provider state changed.
+
+Story design contract is registered: four implementable templates (Classic Gold/Navy Hero, Technical Blueprint, Editorial Classic, Premium Conversion) are selected by Product type/use-case and harmonized with a deterministic palette extracted from the real Product image. Approved future variants include Normal, operator-approved exact-percentage Discount, and operator-entered Instagram Mention; discount and mention are never invented by AI, and clickable URL/Mention confirmation remain separate manual states.
+
+Owner approval contract is now recorded for Story generation: choose the lowest-cost configured model that passes Persian/JSON/style gates, reuse cached revisions to avoid repeat cost, use strict factual prompts, and require `Preview → operator approve/edit → manual Sticker/Mention/discount confirmation → send`. Sending is disabled before explicit Preview approval; rejected/edited previews retain revision traceability.
+
+S1 implementation is now `LOCAL_TESTED`: Products has a separate `Story — چهار Preview` tab with four selectable local previews, an explicit real-product-photo setting, discount approval and @handle validation. Rendering accepts template IDs 1–4 and includes the template in the local revision key. The tab calls `prepare_product_story_asset(..., publish_to_site=False)` only; no FTP, provider, canonical Catalog or Instagram mutation occurs. Build `2026.09.27.12`; foreground Qt VerifyOnly/UI smoke remains the next gate.
+
+S1 isolated UI gate is now `LOCAL_TESTED`: a writable Catalog copy passed Qt VerifyOnly (`QT6_FOUNDATION_VERIFY=OK`, `QT6_42B2_FULL_PARITY_VERIFY=OK`) and direct ProductsPage smoke confirmed three tabs with `Story — چهار Preview`. Phase D related regression passed `19/19` for identity/media and `52/52` for Crawl/Acquisition. Read-only canonical audit: quick_check=ok, Products=1076, Source+External ID duplicate groups=0, normalized URL duplicate groups=0, fingerprint duplicate groups=0, and valid nonzero server-linked duplicate groups=0. No canonical row, media, provider, Host or Production mutation occurred.
+
+Current remaining order: finish D evidence/acceptance → Phase E read-only duplicate audit report and safe merge design (no destructive merge without explicit acceptance) → Phase F full regression and desktop acceptance → resume W5 manual-product acceptance → W6. Exact next task: prepare the Phase E audit artifact with authoritative survivor scoring and rollback plan.
+
 ## 2026-09-27 - Phase50.A.2Z-O7A MakerWorld acquisition UX - ACCEPTED / O PHASE CLOSED / W5 NEXT
 
 Correct Windows lineage is v8.9.11 Build 2026.09.20.1 on `D:\projects\3DPrintHub-a2z-a2r-converge`, branch `wip/phase50-a2z-o7a-acquisition-ui-20260926`, entry HEAD `eba70a55bd6907564744f3805005cac1f7659531`. Ancestry verification confirms the accepted A2U/A2X/A2Y/A2Z/O1-O6 lineage is preserved, including independent Instagram Post/Story actions, Product categories and O6A1 automatic Story Product-link behavior.
@@ -2451,3 +2473,109 @@ Status: `BUFFER_CHANNEL_CONNECTED / API_TRANSPORT_PENDING_CREDENTIAL`.
 - `buffer-ker.txt` is explicitly Git-ignored and must never be committed.
 - Current workstation verification found `buffer-ker.txt` empty (0 bytes) and no `BUFFER_API_KEY` in the secure store; therefore no live API/channel probe or real Instagram post is claimed yet.
 - Publish order remains fail-closed: Site publish -> public HTTPS Product/media verification -> Buffer -> Instagram, with duplicate-public-revision protection.
+## 2026-09-27 - Phase50.A2Z Crawl visibility hotfix — A IN_PROGRESS / LOCAL TESTED
+
+On the verified W5 checkout `D:\projects\3DPrintHub-a2z-a2r-converge`, the Qt live acquisition panel now separates the operator-visible candidate states `Preview / review`, `queued`, `downloading`, `completed`, `skipped / duplicate`, and `failed`. Each candidate card and tooltip preserves the skip/error reason when available, and the run header reports non-zero counts per state instead of collapsing everything into received/waiting/error.
+
+Scope is UI-only and read-only against the canonical Catalog. No Product creation, Crawl import, Product deletion/merge, migration, Host, Production, or provider action occurred. Integrity checkpoint remains `D:\projects\3dprinthub-backups\phase50-a2z-w5-pre-crawl-audit-20260927-095927`; source and backup SHA256 are identical (`e62462aba9f434eaa39034b0910c9cdf8769b5d4e48567d58f7e2ec9c7f42b20`), and SQLite quick/integrity checks are `ok`.
+
+Verification: `catalog_center/qt6/pages.py` py_compile PASS; focused Qt workspace regression `32/32 PASS`; the earlier system-Python pytest collection failures were environment-only and were not repeated unchanged. Remaining A gate: add/execute focused assertions for the six visible status buckets, inspect the final diff, then run Qt VerifyOnly and isolated foreground smoke. After A: B hard dedupe quota, C promotion gate, D duplicate prevention, E read-only duplicate audit/safe merge, F full regression/desktop acceptance; only then resume W5 and W6.
+## 2026-09-27 - Build history contract — LOCAL_TESTED
+
+The Qt About dialog now exposes the active `APP_VERSION=8.9.11`, build
+`2026.09.27.1`, and an operator-readable release history with completed work,
+explicitly not-completed work, and the exact next phase. The version remains
+8.9.11; only the date build identifier advanced. `version.py` is the source of
+truth for this history. No Catalog/Product/Host/Production data changed.
+
+Verification: version/main-window py_compile PASS; Operator workflow 8/8 PASS;
+git diff --check PASS. The next requested implementation remains Phase B hard
+dedupe quota; the About history must be updated again for every subsequent
+build and must not claim B–F, W5, or W6 as complete before their gates pass.
+## 2026-09-27 - Phase B hard dedupe quota — LOCAL TESTED
+
+Build `2026.09.27.2` keeps application version `8.9.11` and adds a bounded
+probe target to Search/Preview discovery. For a requested quota of 100 the
+collector may inspect up to 450 bounded candidates, while the ledger still
+registers no more than 100 genuinely new identities. Existing Product rows,
+published/blocked identities, ledger duplicates and normalized URL duplicates
+do not consume the requested quota. Preview applies the same remaining-quota
+limit when persisting candidates.
+
+Verification: acquisition compile PASS; focused acquisition regression `17/17
+PASS`; diff-check PASS. No canonical Catalog/Product/Host/Production write was
+performed. B still requires the isolated duplicate-first-page acceptance and
+Qt VerifyOnly before it can be marked ACCEPTED. Next phase is C promotion gate.
+## 2026-09-27 - Phase B isolated quota acceptance — LOCAL_TESTED
+
+Build `2026.09.27.3` keeps application version `8.9.11`. The isolated quota
+scenario seeded 100 already-collected identities followed by 100 genuinely new
+identities and requested quota=100. Result: exactly 100 duplicate skips and
+exactly 100 new `discovered_urls` rows; no canonical Catalog was used or
+modified. The modern discovery loop now enforces the remaining quota after
+bounded over-fetch, not merely the collector fetch size.
+
+Verification: full acquisition regression `18/18 PASS`; acquisition
+py_compile PASS; git diff-check PASS. The initial isolated assertion failures
+were fixture defects (pending helper included collected rows; then the test
+treated the boolean add result as a row id); both were corrected and the final
+scenario passed. B is ready for the next Qt VerifyOnly gate. Next phase is C —
+promotion gate.
+
+## 2026-09-27 — Phase F full regression gate
+
+Phase F is `IN_PROGRESS / BLOCKED_BY_W5_TESTS`: the selected full
+Crawl/Product/Media/Social/UI regression ran `161` tests with `159 PASS`, one
+W5 manual-product failure and one W5 manual-product error. Compileall with a
+writable cache, diff-check, final isolated Qt VerifyOnly, and Story-tab UI
+smoke passed. The canonical Catalog SHA256 and size were unchanged before and
+after: `9A64E4ED834E9F98940F481649CA7E464371847CDA7EA7D2C58FFA9F8D41E60C`
+and `975294464`. No Catalog mutation occurred. Phase F acceptance is withheld
+until the two W5 test contracts are corrected and the full suite is rerun.
+
+Phase F is now `ACCEPTED / LOCAL_ONLY` in Build `2026.09.27.14`: W5 focused
+tests passed `7/7`; full Crawl/Product/Media/Social/UI regression passed
+`161/161`; compileall and diff-check passed; final isolated Qt VerifyOnly
+returned `QT6_FOUNDATION_VERIFY=OK` and `QT6_42B2_FULL_PARITY_VERIFY=OK`; and
+direct Story-tab UI smoke passed. Canonical Catalog SHA256 and size remained
+unchanged. No Host, Production, provider or Catalog mutation occurred.
+
+Exact next phase: continue W5 manual-product acceptance on this same dirty
+worktree, then W6 source video/reel. Commit/push remains required before any
+deploy; no deploy is authorized by this Windows/catalog-only acceptance.
+
+W5A manual-product isolated acceptance is now `LOCAL_TESTED` in Build
+`2026.09.27.15`: related W5/Product/Wizard/Profile/Filament/Image/Social tests
+passed `46/46`; isolated creation/media/Wizard smoke passed; immutable `manual-*`
+identity and zero `discovered_urls` manual rows were verified. No canonical
+manual Product was created. Exact next task is W5B manual AI safety and its
+no-invention regression; W6 follows W5 acceptance.
+
+W5B Manual AI Safety is now `LOCAL_TESTED` in Build `2026.09.27.16`: direct
+no-invention tests passed `4/4`. Manual AI uses saved operator data with
+editorial-only target stages (`quick`, `content`, `slider`); Specs/Commerce/
+Production estimation is blocked; visual AI schema contains no weight,
+dimensions, print-time, material, filament or license fact fields; and manual
+Products remain outside Crawl discovery. No provider call, canonical Product,
+Host or Production mutation occurred. Exact next task is W5C acceptance and
+GitHub gate; W6 follows W5 closure.
+
+## 2026-09-27 — Phase D acceptance and Phase E read-only audit
+
+Phase D is `ACCEPTED / LOCAL_ONLY` in Build `2026.09.27.13`. Isolated Qt
+VerifyOnly/UI smoke passed; identity/media regression `19/19`; Crawl/Acquisition
+regression `52/52`. Canonical read-only audit passed with `quick_check=ok`,
+Products=1076, and zero duplicate groups for Source+External ID, normalized URL,
+fingerprint, or valid nonzero server-linked identity. The Phase E report and
+rollback plan are in `docs/PHASE50_A2Z_PHASE_E_DUPLICATE_AUDIT_20260927.md`.
+No merge/delete or Catalog/Host/Production mutation occurred. Next exact phase
+is Phase F full regression and desktop acceptance; W5 then W6.
+
+W5C is now `LOCAL_TESTED / READY_FOR_GITHUB_GATE` in Build `2026.09.27.17`:
+related W5 acceptance `46/46`, compileall/diff-check, final isolated Qt
+VerifyOnly, and isolated Manual Product create/media/Wizard acceptance passed.
+Fresh backup integrity passed with `quick_check=ok`, SHA256
+`9a64e4ed834e9f98940f481649ca7e464371847cda7ea7d2c58ffa9f8d41e60c` and size
+`975294464`. Source/Server delta audit found zero Server/static/migration/Host
+files. No canonical Product or Provider mutation occurred. Next operation is
+commit/push and exact Local=Remote verification; W6 starts afterward.

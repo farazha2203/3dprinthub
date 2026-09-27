@@ -242,3 +242,41 @@ def build_story_copy(row: dict[str, Any]) -> dict[str, Any]:
         "style_id": STORY_STYLE_ID,
         "font_family": "IRANSansWeb(FaNum)",
     }
+
+
+def build_ai_social_pack(row: dict[str, Any], *, canonical_url: str = "") -> dict[str, Any]:
+    """Project the reviewed AI/Product facts into Post and Story copy.
+
+    This is deliberately deterministic: AI enrichment supplies the factual
+    fields, while this boundary controls channel length, CTA, hashtags and the
+    distinction between an attached URL and a confirmed clickable sticker.
+    """
+    story = build_story_copy(row)
+    caption, hashtags = build_caption(row, canonical_url)
+    url = _plain(canonical_url, 1000)
+    title = _plain(row.get("title_fa") or row.get("source_title"), 180)
+    technical = _sales_bullets(row)
+    return {
+        "policy_version": POLICY_VERSION,
+        "source": "reviewed_product_facts",
+        "post": {
+            "caption_fa": caption,
+            "hashtags": hashtags,
+            "alt_texts": build_alt_texts(row, _json_list(row.get("selected_images_json"))),
+            "canonical_url": url,
+        },
+        "story": {
+            **story,
+            "technical_facts": technical,
+            "cta_fa": "مشاهده و سفارش محصول",
+            "link_label_fa": "مشاهده محصول",
+            "canonical_url": url,
+            "clickable_link_confirmed": False,
+            "manual_handoff_required": bool(url),
+        },
+        "guardrails": {
+            "invented_facts_allowed": False,
+            "source_title": title,
+            "review_required": True,
+        },
+    }

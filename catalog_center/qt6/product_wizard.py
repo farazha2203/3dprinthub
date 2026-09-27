@@ -412,10 +412,14 @@ class ProductWizardPage(QWidget):
             self._review_source_filament_mapping
         )
         profile_actions.addWidget(self.source_filament_map_btn)
-        ai_estimate = QPushButton("AI تخمین تولید (Preview)")
-        ai_estimate.setToolTip("Source/Link و عکس‌های محصول برای تخمین تقریبی ابعاد، وزن و زمان چاپ خوانده می‌شوند؛ Preview بدون تأیید شما چیزی را ذخیره نمی‌کند.")
-        ai_estimate.clicked.connect(self._estimate_production_ai)
-        profile_actions.addWidget(ai_estimate)
+        self.production_estimate_btn = QPushButton("AI تخمین تولید (Preview)")
+        self.production_estimate_btn.setToolTip(
+            "Source/Link و عکس‌های محصول برای تخمین تقریبی ابعاد، وزن و زمان چاپ "
+            "خوانده می‌شوند؛ Preview بدون تأیید شما چیزی را ذخیره نمی‌کند. "
+            "برای محصول دستی این قابلیت عمداً غیرفعال است تا داده فنی حدس زده نشود."
+        )
+        self.production_estimate_btn.clicked.connect(self._estimate_production_ai)
+        profile_actions.addWidget(self.production_estimate_btn)
         profile_actions.addStretch(1)
         layout.addLayout(profile_actions)
         self.source_profile_status = QLabel("Source Profile: هنوز دریافت نشده")
@@ -892,6 +896,9 @@ class ProductWizardPage(QWidget):
         self.product_id = int(product_id)
         self.edit_all_btn.setEnabled(True)
         self.finalize_all_btn.setEnabled(True)
+        is_manual = (
+            str(row.get("source_code") or "").strip().casefold() == "manual"
+        )
         title = row.get("title_fa") or row.get("source_title") or "بدون عنوان"
         self.product_label.setText(f"#{product_id} — {title}")
         self.product_meta.setText(
@@ -899,9 +906,21 @@ class ProductWizardPage(QWidget):
             f"  •  وضعیت: {row.get('workflow_status') or '—'}"
             f"  •  Server ID: {row.get('server_id') or '—'}"
         )
-        self.product_source_btn.setEnabled(
-            str(row.get("source_url") or "").startswith(("http://", "https://"))
+        reference_url = self.kernel.products.external_reference_url(row)
+        self.product_source_btn.setText(
+            "🌐 باز کردن لینک مرجع"
+            if is_manual
+            else "🌐 باز کردن صفحه محصول"
         )
+        self.product_source_btn.setEnabled(bool(reference_url))
+        self.source_profile_btn.setEnabled(not is_manual)
+        self.source_filament_map_btn.setEnabled(not is_manual)
+        self.production_estimate_btn.setEnabled(not is_manual)
+        self.ai_source.setEnabled(not is_manual)
+        if is_manual:
+            data_index = self.ai_source.findData("data")
+            if data_index >= 0:
+                self.ai_source.setCurrentIndex(data_index)
 
         self._load_stage1(row)
         self._load_stage2(row)
@@ -943,7 +962,11 @@ class ProductWizardPage(QWidget):
             for item in _json_list(row.get("source_print_profiles_json"))
             if isinstance(item, dict)
         ]
-        if source_profiles:
+        if str(row.get("source_code") or "").strip().casefold() == "manual":
+            self.source_profile_status.setText(
+                "محصول دستی: Profile/وزن/زمان/ابعاد را فقط از داده واقعی اپراتور وارد کن."
+            )
+        elif source_profiles:
             summary = " • ".join(
                 f"{item.get('name') or 'Source'}: {float(item.get('weight_grams') or 0):g}g / "
                 f"{float(item.get('print_minutes') or 0):.1f}min"
@@ -2032,9 +2055,13 @@ class ProductWizardPage(QWidget):
         if self.product_id is None:
             return
         row = self.kernel.products.get(self.product_id) or {}
-        url = str(row.get("source_url") or "").strip()
-        if not url.startswith(("http://", "https://")):
-            QMessageBox.warning(self, "صفحه محصول", "لینک عمومی معتبر برای این محصول ثبت نشده است.")
+        url = self.kernel.products.external_reference_url(row)
+        if not url:
+            QMessageBox.warning(
+                self,
+                "صفحه محصول",
+                "لینک عمومی/مرجع معتبر برای این محصول ثبت نشده است.",
+            )
             return
         if not QDesktopServices.openUrl(QUrl(url)):
             QMessageBox.warning(self, "صفحه محصول", "مرورگر سیستم نتوانست لینک محصول را باز کند.")
@@ -2518,8 +2545,21 @@ class ProductWizardPage(QWidget):
             )
             return
 
-        mode = str(self.ai_source.currentData() or "data")
+        row = self.kernel.products.get(int(self.product_id)) or {}
+        is_manual = (
+            str(row.get("source_code") or "").strip().casefold() == "manual"
+        )
+        mode = "data" if is_manual else str(self.ai_source.currentData() or "data")
         code = STAGE_CODES[self.stack.currentIndex()]
+        if current_only and is_manual and code == "specs":
+            QMessageBox.information(
+                self,
+                "هوش مصنوعی محصول دستی",
+                "مرحله مشخصات/مجوز محصول دستی factual است. AI حق حدس وزن، زمان، "
+                "ابعاد، متریال یا مجوز را ندارد؛ این موارد را از اندازه‌گیری/اسلایسر/"
+                "مدرک واقعی وارد کن.",
+            )
+            return
         if current_only and code in {"commerce", "publish"}:
             QMessageBox.information(
                 self,
@@ -2533,18 +2573,30 @@ class ProductWizardPage(QWidget):
             return
 
         if not current_only:
+            if is_manual:
+                confirm_text = (
+                    "محصول دستی: AI فقط عنوان/محتوا/SEO/اسلایدر را از توضیحات "
+                    "واقعی اپراتور تکمیل می‌کند.\n\n"
+                    "وزن، زمان چاپ، ابعاد، Profile، Filament، متریال، مجوز و انتشار "
+                    "تغییر نمی‌کنند و باید از داده واقعی اپراتور/اسلایسر/مدرک وارد شوند.\n\n"
+                    "ادامه داده شود؟"
+                )
+            else:
+                confirm_text = (
+                    "این اجرا برای اصلاح ترجمه و SEO، مراحل محتوایی نهایی‌شده "
+                    "(عنوان/محتوا/اسلایدر) را دوباره برای بازبینی باز می‌کند.\n\n"
+                    "داده‌های فنی قابل اثبات Source (دسته، زمان چاپ، وزن، ابعاد و "
+                    "Filamentهای موجود در کتابخانه) بدون حدس به محصول/Profile اول "
+                    "افزوده می‌شوند. قیمت فقط از تنظیمات واقعی Filament محاسبه می‌شود.\n\n"
+                    "منبع/مجوز طبق سیاست سراسری مالک مجاز و سبز می‌شود؛ انتشار نهایی "
+                    "همچنان اپراتوری می‌ماند. تصاویر با Finalizer محلی WebP/SEO "
+                    "بازسازی می‌شوند و هر مرحله واقعاً کامل "
+                    "به‌صورت خودکار سبز می‌شود.\n\nادامه داده شود؟"
+                )
             answer = QMessageBox.question(
                 self,
                 "اصلاح کامل محتوایی با AI",
-                "این اجرا برای اصلاح ترجمه و SEO، مراحل محتوایی نهایی‌شده "
-                "(عنوان/محتوا/اسلایدر) را دوباره برای بازبینی باز می‌کند.\n\n"
-                "داده‌های فنی قابل اثبات Source (دسته، زمان چاپ، وزن، ابعاد و "
-                "Filamentهای موجود در کتابخانه) بدون حدس به محصول/Profile اول "
-                "افزوده می‌شوند. قیمت فقط از تنظیمات واقعی Filament محاسبه می‌شود.\n\n"
-                "منبع/مجوز طبق سیاست سراسری مالک مجاز و سبز می‌شود؛ انتشار نهایی "
-                "همچنان اپراتوری می‌ماند. تصاویر با Finalizer محلی WebP/SEO "
-                "بازسازی می‌شوند و هر مرحله واقعاً کامل "
-                "به‌صورت خودکار سبز می‌شود.\n\nادامه داده شود؟",
+                confirm_text,
                 (
                     QMessageBox.StandardButton.Yes
                     | QMessageBox.StandardButton.No
@@ -2554,9 +2606,14 @@ class ProductWizardPage(QWidget):
             if answer != QMessageBox.StandardButton.Yes:
                 return
             try:
-                self.kernel.stages.prepare_ai_content_repair(
-                    int(self.product_id)
-                )
+                if is_manual:
+                    self.kernel.stages.prepare_manual_content_repair(
+                        int(self.product_id)
+                    )
+                else:
+                    self.kernel.stages.prepare_ai_content_repair(
+                        int(self.product_id)
+                    )
             except Exception as exc:
                 QMessageBox.warning(
                     self,

@@ -5,13 +5,13 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PIL import Image
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QAbstractItemView, QApplication, QLabel, QListWidget, QMessageBox
+from PySide6.QtWidgets import QAbstractItemView, QApplication, QLabel, QListWidget, QListWidgetItem, QMessageBox
 
 from app.db import Database, normalize_url
 from app.phase49_3i_discovery_review import (
@@ -634,6 +634,32 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
         finally:
             page.close()
 
+    def test_phase_c_live_add_button_dispatches_selected_candidate_to_promotion(self):
+        page = OperationsPage(self.db, kernel=self.kernel)
+        try:
+            item = QListWidgetItem("Preview Product 990003")
+            item.setData(Qt.ItemDataRole.UserRole, 73)
+            item.setData(Qt.ItemDataRole.UserRole + 1, 0)
+            item.setData(Qt.ItemDataRole.UserRole + 2, "990003")
+            item.setData(
+                Qt.ItemDataRole.UserRole + 3,
+                "https://makerworld.com/en/models/990003-ui-promotion",
+            )
+            page.live_results.addItem(item)
+            item.setSelected(True)
+            page._collect_queue_ids = MagicMock()
+
+            page.live_add_btn.click()
+
+            page._collect_queue_ids.assert_called_once_with(
+                [73],
+                run_ai=False,
+                seed_product_ids=[],
+                origin_label="نتایج همین جستجو",
+            )
+        finally:
+            page.close()
+
     def test_receive_tabs_dispatch_single_and_search_urls_to_distinct_paths(self):
         page = OperationsPage(self.db, kernel=self.kernel)
         captured = []
@@ -799,16 +825,16 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
                 progress=lambda value, message: progress.append((value, message)),
             )
 
-        self.assertEqual(result["collected"], 2)
+        self.assertEqual(result["collected"], 0)
+        self.assertEqual(result["staged"], 2)
+        self.assertTrue(result["promotion_required"])
         deeper.assert_not_awaited()
         self.assertTrue(
             any("پیش‌نمایش" in message for _value, message in progress)
         )
-        self.assertTrue(
-            any("عکس 3/5" in message for _value, message in progress)
-        )
+        self.assertFalse(any("عکس 3/5" in message for _value, message in progress))
         candidate = candidate_by_identity(self.db, "makerworld", "520020")
-        self.assertEqual(candidate["status"], "imported")
+        self.assertEqual(candidate["status"], "review")
 
     def test_new_search_clears_previous_live_cards_before_worker_starts(self):
         page = OperationsPage(self.db, kernel=self.kernel)
@@ -1111,9 +1137,10 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
                 collection_method="rich",
             )
 
-        self.assertEqual(result["collected"], 2)
-        self.assertEqual(preferred, ["rich", "network_capture"])
-        self.assertEqual(result["preferred_method"], "network_capture")
+        self.assertEqual(result["collected"], 0)
+        self.assertEqual(result["staged"], 2)
+        self.assertEqual(preferred, [])
+        self.assertEqual(result["preferred_method"], "rich")
 
     def test_batch_stops_after_all_methods_fail_and_leaves_remaining_new(self):
         listing = "https://makerworld.com/en/search/models?keyword=circuit"
@@ -1150,16 +1177,16 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
                 image_limit=5,
             )
 
-        self.assertEqual(result["failed"], 1)
-        self.assertTrue(result["circuit_breaker"])
-        self.assertEqual(result["unattempted"], 1)
+        self.assertEqual(result["failed"], 0)
+        self.assertFalse(result["circuit_breaker"])
+        self.assertEqual(result["unattempted"], 0)
         rows = list(
             self.db.conn.execute(
                 "SELECT external_id, status FROM discovered_urls ORDER BY external_id"
             )
         )
         states = {str(row["external_id"]): str(row["status"]) for row in rows}
-        self.assertEqual(states["952020"], "failed")
+        self.assertEqual(states["952020"], "new")
         self.assertEqual(states["952021"], "new")
 
     def test_bulk_recovery_stops_after_first_exhausted_product(self):
@@ -1363,14 +1390,15 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
                 image_limit=5,
             )
 
-        self.assertEqual(result["collected"], 1)
-        self.assertEqual(result["failed"], 1)
-        self.assertTrue(result["circuit_breaker"])
+        self.assertEqual(result["collected"], 0)
+        self.assertEqual(result["staged"], 2)
+        self.assertEqual(result["failed"], 0)
+        self.assertFalse(result["circuit_breaker"])
         run = next(
             row for row in self.db.runs(limit=10)
             if int(row["id"]) == int(result["run_id"])
         )
-        self.assertEqual(str(run["status"]), "failed")
+        self.assertEqual(str(run["status"]), "completed")
 
     def test_batch_log_separates_discovery_success_from_product_fetch(self):
         listing = "https://makerworld.com/en/search/models?keyword=trace-boundary"
@@ -1404,7 +1432,9 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
                 image_limit=5,
             )
 
-        self.assertTrue(result["circuit_breaker"])
+        self.assertFalse(result["circuit_breaker"])
+        self.assertEqual(result["staged"], 1)
+        self.assertEqual(result["collected"], 0)
         events = self.kernel.acquisition.recent_acquisition_events(limit=50)
         boundary = [
             row for row in events
@@ -1416,7 +1446,82 @@ class Phase493I52CCrawlReviewRecoveryTests(unittest.TestCase):
         self.assertEqual(detail["previewed"], 1)
         self.assertEqual(detail["pending_product_fetch"], 1)
         self.assertTrue(detail["discovery_succeeded"])
+        staging = [
+            row for row in events
+            if row.get("action") == "staging_ready"
+            and row.get("url") == listing
+        ]
+        self.assertTrue(staging)
 
+    def test_phase_c_search_stays_in_staging_without_creating_product(self):
+        listing = "https://makerworld.com/en/search/models?keyword=phase-c"
+        candidates = [self._candidate("990001", listing)]
+        with patch(
+            "qt6.acquisition_runtime.discover_preview_candidates_safe",
+            new=AsyncMock(return_value=candidates),
+        ), patch(
+            "qt6.acquisition_runtime._browser_robots_gate",
+            new=AsyncMock(return_value=0),
+        ), patch(
+            "qt6.acquisition_runtime._cache_candidate_thumbnail",
+            return_value="",
+        ), patch(
+            "qt6.acquisition_runtime._discover_listing",
+            new=AsyncMock(),
+        ), patch(
+            "qt6.acquisition_runtime._collect_one_adaptive",
+            new=AsyncMock(side_effect=AssertionError("Phase C must not collect during Search")),
+        ):
+            before = int(self.db.conn.execute("SELECT COUNT(*) FROM products").fetchone()[0])
+            result = acquisition_runtime.run_batch(
+                self.db, source_code="makerworld", listing_url=listing,
+                requested=1, image_limit=5,
+            )
+            after = int(self.db.conn.execute("SELECT COUNT(*) FROM products").fetchone()[0])
+        self.assertEqual(before, after)
+        self.assertEqual(result["collected"], 0)
+        self.assertEqual(result["staged"], 1)
+        self.assertTrue(result["promotion_required"])
+        candidate = candidate_by_identity(self.db, "makerworld", "990001")
+        self.assertIsNotNone(candidate)
+        self.assertEqual(candidate["status"], "review")
+
+    def test_phase_c_explicit_single_promotion_is_exactly_once(self):
+        url = "https://makerworld.com/en/models/990002-phase-c"
+        calls = []
+
+        async def fake_collect(db, source_cfg, **kwargs):
+            calls.append(str(kwargs["external_id"]))
+            db.upsert_product({
+                "source_code": "makerworld", "external_id": kwargs["external_id"],
+                "source_url": url, "source_title": "Promoted once",
+            })
+            row = db.conn.execute(
+                "SELECT id FROM products WHERE source_code=? AND external_id=?",
+                ("makerworld", kwargs["external_id"]),
+            ).fetchone()
+            return {"product_id": int(row["id"]), "selected_method": "rich"}
+
+        with patch(
+            "qt6.acquisition_runtime._collect_one_adaptive",
+            new=AsyncMock(side_effect=fake_collect),
+        ):
+            first = acquisition_runtime.run_single(
+                self.db, source_code="makerworld", product_url=url,
+                image_limit=5, adaptive_fallback=True,
+            )
+            second = acquisition_runtime.run_single(
+                self.db, source_code="makerworld", product_url=url,
+                image_limit=5, adaptive_fallback=True,
+            )
+        count = int(self.db.conn.execute(
+            "SELECT COUNT(*) FROM products WHERE source_code=? AND external_id=?",
+            ("makerworld", "990002"),
+        ).fetchone()[0])
+        self.assertEqual(first["product_id"], second["product_id"])
+        self.assertTrue(second["already_collected"])
+        self.assertEqual(calls, ["990002"])
+        self.assertEqual(count, 1)
 
 if __name__ == "__main__":
     unittest.main()

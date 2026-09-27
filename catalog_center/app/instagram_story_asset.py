@@ -51,7 +51,7 @@ def _logo_uri() -> str:
     if not path.is_file():
         raise RuntimeError("لوگوی 3DPrintHub برای Story پیدا نشد.")
     return path.resolve().as_uri()
-def _render_html(*, image_url: str, product_url: str, copy: dict) -> str:
+def _render_html(*, image_url: str, product_url: str, copy: dict, template_id: int = 1) -> str:
     bullets = "".join(
         f'<div class="feature"><span class="dot">◆</span><span>{html.escape(str(item))}</span></div>'
         for item in copy["bullets"]
@@ -64,6 +64,8 @@ def _render_html(*, image_url: str, product_url: str, copy: dict) -> str:
     font_regular = _font_uri("IRANSansWeb(FaNum).ttf")
     font_medium = _font_uri("IRANSansWeb(FaNum)_Medium.ttf")
     font_bold = _font_uri("IRANSansWeb(FaNum)_Bold.ttf")
+    template_id = max(1, min(4, int(template_id or 1)))
+    template_class = f"template-{template_id}"
     return f"""<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8">
 <style>
 @font-face{{font-family:IRANSans;src:url('{font_regular}') format('truetype');font-weight:400}}
@@ -85,29 +87,32 @@ body{{font-family:IRANSans,Tahoma,sans-serif;color:#fff;position:relative}}
 .cta{{position:absolute;left:220px;right:220px;top:1435px;height:116px;border-radius:58px;border:3px solid #f3c25c;background:linear-gradient(180deg,rgba(122,68,15,.86),rgba(24,13,7,.92));display:flex;align-items:center;justify-content:center;font-size:41px;font-weight:800;color:#ffe29a;box-shadow:0 0 36px rgba(255,173,39,.3)}}
 .url{{position:absolute;top:1575px;left:70px;right:70px;text-align:center;direction:ltr;font-family:'Segoe UI';font-size:21px;letter-spacing:2px;color:#f5eee1}}
 .footer{{position:absolute;bottom:75px;left:70px;right:70px;display:flex;direction:ltr;justify-content:space-between;align-items:flex-end}}.signature{{font-family:'Segoe Script';font-size:44px;color:#efb848;transform:rotate(-4deg)}}.small{{font-family:'Segoe UI';font-size:13px;letter-spacing:5px;line-height:1.9;color:#f9e7c2;text-align:right}}
+.template-2 .hero{{right:70px;top:720px;width:940px;height:610px;border-radius:18px;border-style:dashed}}.template-2 .features{{left:70px;top:1360px;width:940px;display:grid;grid-template-columns:1fr 1fr;gap:18px}}.template-2 .copy{{width:900px}}.template-2 .title{{font-size:62px}}.template-2 .cta{{top:1570px}}
+.template-3 .bg{{filter:blur(18px) brightness(.42) saturate(1.15)}}.template-3 .overlay{{background:linear-gradient(180deg,rgba(20,10,4,.35),rgba(4,12,20,.62) 58%,rgba(0,0,0,.94))}}.template-3 .hero{{right:150px;top:500px;width:780px;height:900px;border-radius:390px 390px 38px 38px;border-color:#fff0d0}}.template-3 .copy{{top:180px;left:100px;width:880px;text-align:center}}.template-3 .kicker{{color:#f7e1b1}}.template-3 .title{{font-size:64px}}.template-3 .features{{left:100px;top:1450px;width:880px;display:flex;flex-direction:row;justify-content:center;gap:22px}}.template-3 .feature{{font-size:18px;border:0;padding:0}}.template-3 .cta{{top:1600px}}
+.template-4 .hero{{right:80px;top:585px;width:920px;height:760px;border-radius:34px;border-width:4px}}.template-4 .copy{{top:245px;left:90px;width:900px}}.template-4 .title{{font-size:66px}}.template-4 .features{{left:90px;top:1390px;width:900px;flex-direction:row;gap:16px}}.template-4 .feature{{font-size:18px;border:0;padding:12px 18px;border-radius:30px;background:rgba(0,0,0,.35)}}.template-4 .cta{{top:1535px}}
 </style></head><body>
-<div class="bg"></div><div class="overlay"></div><div class="glow"></div>
+<div class="{template_class}"><div class="bg"></div><div class="overlay"></div><div class="glow"></div>
 <div class="header"><div class="brandbox"><img class="logo" src="{logo}"><div><div class="brand">3DPRINTHUB</div><div class="tag">IDEAS INTO REALITY</div></div></div><div class="micro">ORIGINAL<br>PRODUCT<br>DESIGN</div></div>
 <div class="copy"><div class="kicker">محصول 3DPrintHub</div><div class="title">{title}</div><div class="subtitle">{subtitle}</div></div>
 <div class="features">{bullets}</div><div class="hero"><img src="{html.escape(image_url)}"></div>
 <div class="cta">{purchase_cta} <span style="margin-right:18px;font-family:'Segoe UI';font-size:50px">›</span></div>
 <div class="url">{purchase_hint}</div>
-<div class="footer"><div class="signature">Ideas into Reality</div><div class="small">3D PRINT<br>A BRIGHTER<br>TOMORROW</div></div>
+<div class="footer"><div class="signature">Ideas into Reality</div><div class="small">3D PRINT<br>A BRIGHTER<br>TOMORROW</div></div></div>
 </body></html>"""
-def _revision_key(row: dict) -> str:
+def _revision_key(row: dict, template_id: int = 1) -> str:
     authority = str(
         row.get("server_ack_json")
         or row.get("fingerprint")
         or row.get("updated_at")
         or ""
     )
-    raw = f"{authority}|story-style={STYLE_ID}"
+    raw = f"{authority}|story-style={STYLE_ID}|template={int(template_id or 1)}"
     return hashlib.sha256(raw.encode("utf-8", errors="ignore")).hexdigest()[:16]
 
 
-def _render_story(row: dict, payload: dict) -> Path:
+def _render_story(row: dict, payload: dict, *, template_id: int = 1) -> Path:
     copy = build_story_copy(row)
-    revision = _revision_key(row)
+    revision = _revision_key(row, template_id)
     local_root = Path(
         os.environ.get("LOCALAPPDATA")
         or (Path.home() / "AppData" / "Local")
@@ -128,6 +133,7 @@ def _render_story(row: dict, payload: dict) -> Path:
         image_url=str(payload["media_urls"][0]),
         product_url=str(payload["product_url"]),
         copy=copy,
+        template_id=template_id,
     )
     render_dir = out_dir / f".render-{revision}"
     shutil.rmtree(render_dir, ignore_errors=True)
@@ -212,6 +218,7 @@ def prepare_product_story_asset(
     payload: dict,
     *,
     publish_to_site: bool = True,
+    template_id: int = 1,
 ) -> dict:
     row_obj = db.product(int(product_id))
     if row_obj is None:
@@ -231,8 +238,8 @@ def prepare_product_story_asset(
             local_source.as_uri(),
             *media_urls[1:],
         ]
-    png = _render_story(row, render_payload)
-    revision = _revision_key(row)
+    png = _render_story(row, render_payload, template_id=template_id)
+    revision = _revision_key(row, template_id)
     public_url = ""
 
     if publish_to_site:
@@ -279,4 +286,5 @@ def prepare_product_story_asset(
         "height": STORY_HEIGHT,
         "revision": revision,
         "published_to_site": bool(publish_to_site),
+        "template_id": max(1, min(4, int(template_id or 1))),
     }

@@ -23,6 +23,7 @@ from .phase49_3i33_ai_core import (
     capture_source_screenshot,
     generate_translation_pack,
     live_source_for_ai,
+    manual_visual_editorial_facts,
     repair_allowed,
     row_value,
     saved_source_for_ai,
@@ -380,6 +381,56 @@ def _progress(dialog, value: float, message: str):
         dialog.set_progress(value, message)
 
 
+def _manual_image_paths(row) -> list[Path]:
+    data = dict(row or {})
+    if str(data.get("source_code") or "").strip().casefold() != "manual":
+        return []
+    raw_root = str(data.get("local_dir") or "").strip()
+    if not raw_root:
+        return []
+    image_dir = (Path(raw_root).resolve() / "images").resolve()
+    if not image_dir.is_dir():
+        return []
+
+    values: list[str] = []
+    for field in ("selected_images_json", "images_json"):
+        try:
+            parsed = json.loads(data.get(field) or "[]")
+        except Exception:
+            parsed = []
+        if isinstance(parsed, list):
+            for item in parsed:
+                value = str(item or "").strip()
+                if value and value not in values:
+                    values.append(value)
+
+    output: list[Path] = []
+    for value in values:
+        if not value.startswith(("local://", "local-display://")):
+            continue
+        name = value.rsplit("/", 1)[-1].strip()
+        if not name or Path(name).name != name:
+            continue
+        target = (image_dir / name).resolve()
+        if target.parent != image_dir or not target.is_file():
+            continue
+        output.append(target)
+        if len(output) >= 4:
+            return output
+
+    allowed = {".webp", ".jpg", ".jpeg", ".png", ".avif", ".gif"}
+    for target in sorted(image_dir.iterdir()):
+        if (
+            target.is_file()
+            and target.suffix.lower() in allowed
+            and target not in output
+        ):
+            output.append(target)
+        if len(output) >= 4:
+            break
+    return output
+
+
 def orchestrate_once(
     app,
     product_id: int,
@@ -423,6 +474,47 @@ def orchestrate_once(
     _progress(dialog, 5, "خواندن منبع انتخاب‌شده")
     _emit(dialog, "source", f"منبع AI: {AI_SOURCE_MODES.get(mode, mode)}")
     source = resolve_source(app, row, mode, provider, key, model)
+    manual_visual_facts: dict = {}
+    manual_visual_error = ""
+    if str(row_value(row, "source_code", "")).strip().casefold() == "manual":
+        image_paths = _manual_image_paths(row)
+        if image_paths:
+            try:
+                manual_visual_facts = manual_visual_editorial_facts(
+                    provider,
+                    key,
+                    model,
+                    image_paths,
+                    product_id,
+                )
+                visual_lines = [
+                    str(manual_visual_facts.get("object_description") or "").strip(),
+                    *[
+                        str(value).strip()
+                        for value in manual_visual_facts.get("appearance_notes") or []
+                        if str(value).strip()
+                    ],
+                    *[
+                        str(value).strip()
+                        for value in manual_visual_facts.get("visible_use_cues") or []
+                        if str(value).strip()
+                    ],
+                ]
+                visual_text = " | ".join(
+                    value for value in visual_lines if value
+                )
+                if visual_text:
+                    base_description = str(
+                        source.get("source_description") or ""
+                    ).strip()
+                    source["source_description"] = (
+                        base_description
+                        + ("\n\n" if base_description else "")
+                        + "مشاهدات بصری محدود و غیر فنی: "
+                        + visual_text
+                    )
+            except Exception as exc:
+                manual_visual_error = str(exc)
     effective_mode = str(source.get("_effective_mode") or mode or "data").strip().lower()
     fallback_reason = str(source.get("_fallback_reason") or "").strip()
     if effective_mode != str(mode or "").strip().lower():
@@ -482,6 +574,8 @@ def orchestrate_once(
         "changed_fields": [],
         "target_stages": sorted(scoped_stages) if scoped_stages else list(STAGE_ORDER),
         "refresh_existing": bool(refresh_existing),
+        "manual_visual_facts": manual_visual_facts,
+        "manual_visual_error": manual_visual_error,
     }
     image_deferred = False
 

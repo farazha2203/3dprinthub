@@ -632,6 +632,17 @@ def _listing_target_policy(requested: int) -> dict[str, int]:
     }
 
 
+def _listing_probe_target(requested: int) -> int:
+    """Fetch beyond the quota so known identities cannot consume the quota.
+
+    The persisted ledger remains the authority: callers still register at most
+    ``requested`` new identities.  The bounded probe only lets the collector
+    continue past a first page made entirely of known/published/blocked rows.
+    """
+    target = _listing_target_policy(requested)["target"]
+    return min(500, max(target, (target * 4) + 50))
+
+
 async def _discover_listing(
     db,
     source_cfg: dict[str, Any],
@@ -680,7 +691,7 @@ async def _discover_listing(
                     listing_url,
                     source_code=source_code,
                     model_pattern=model_pattern,
-                    requested=requested,
+                    requested=_listing_probe_target(requested),
                 )
         except (RobotsDeniedError, RateLimitedError):
             raise
@@ -700,8 +711,20 @@ async def _discover_listing(
         except Exception:
             modern_candidates = []
 
+        existing_pending = len(
+            _pending_for_listing(
+                db,
+                source_code,
+                listing_url,
+                requested,
+                include_failed=False,
+            )
+        )
+        remaining = max(0, requested - existing_pending)
         for candidate in modern_candidates:
             if _stopped(should_stop):
+                break
+            if remaining <= 0:
                 break
             external_id = str(candidate.get("external_id") or "").strip()
             url = str(
@@ -721,6 +744,7 @@ async def _discover_listing(
                 listing_url,
             ):
                 new_count += 1
+                remaining -= 1
             else:
                 duplicate_count += 1
 
@@ -1738,7 +1762,7 @@ async def _preview_listing_candidates(
             listing_url,
             source_code=source_code,
             model_pattern=model_pattern,
-            requested=preview_policy["target"],
+            requested=_listing_probe_target(preview_policy["target"]),
             scroll_rounds=preview_policy["preview_rounds"],
             headed=False,
         )
@@ -1754,6 +1778,16 @@ async def _preview_listing_candidates(
         return {"previewed": 0, "new": 0, "duplicates": 0, "thumbs": 0}
 
     new_count = duplicate_count = 0
+    existing_pending = len(
+        _pending_for_listing(
+            db,
+            source_code,
+            listing_url,
+            preview_policy["target"],
+            include_failed=False,
+        )
+    )
+    remaining = max(0, preview_policy["target"] - existing_pending)
     prepared: list[dict[str, Any]] = []
     for candidate in candidates:
         if _stopped(should_stop):
@@ -1768,6 +1802,8 @@ async def _preview_listing_candidates(
         ):
             duplicate_count += 1
             continue
+        if remaining <= 0:
+            break
         upsert_candidate(db, item)
         if db.add_discovered(
             source_code,
@@ -1776,6 +1812,7 @@ async def _preview_listing_candidates(
             listing_url,
         ):
             new_count += 1
+            remaining -= 1
         else:
             duplicate_count += 1
         prepared.append(item)
@@ -2008,6 +2045,53 @@ async def run_batch_async(
                 "unattempted": 0,
                 "preferred_method": preferred_method,
             }
+
+        # Phase C contract: Search/Listing Crawl ends at the operator staging
+        # queue.  Product canonical creation is reserved for the explicit
+        # queue-selection workflow in the Qt Operations page.
+        staged_count = len(rows)
+        staging_message = (
+            f"Discovery complete; {staged_count} candidate(s) remain in staging. "
+            "No canonical Product was created; use explicit operator promotion."
+        )
+        db.finish_run(
+            run_id,
+            status="completed",
+            discovered_count=discovered,
+            collected_count=0,
+            duplicate_count=duplicates,
+            failed_count=0,
+            message=staging_message,
+        )
+        acquisition_event(
+            db,
+            "staging_ready",
+            status="success",
+            source_code=source_code,
+            url=listing_url,
+            method=preferred_method,
+            message=staging_message,
+            detail={
+                "staged_count": staged_count,
+                "promotion_required": True,
+                "canonical_products_created": 0,
+            },
+        )
+        _emit(progress, 100, staging_message)
+        return {
+            "run_id": run_id,
+            "discovered": discovered,
+            "staged": staged_count,
+            "collected": 0,
+            "duplicates": duplicates,
+            "failed": 0,
+            "stopped": _stopped(should_stop),
+            "failures": [],
+            "circuit_breaker": False,
+            "unattempted": 0,
+            "preferred_method": preferred_method,
+            "promotion_required": True,
+        }
 
         total = len(rows)
         for index, row in enumerate(rows, 1):

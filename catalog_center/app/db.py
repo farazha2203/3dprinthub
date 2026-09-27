@@ -756,6 +756,36 @@ class Database:
     def upsert_product(self, row: dict):
         row = dict(row)
         row["normalized_url"] = normalize_url(row["source_url"])
+        # Phase D identity gate: a non-empty source fingerprint or a linked
+        # server Product identity must never create a second local Product.
+        # Existing source+external_id/URL conflicts continue through the
+        # mature UPSERT path below; stronger cross-path identities return the
+        # authoritative existing row without overwriting it.
+        fingerprint = str(row.get("fingerprint") or "").strip()
+        if fingerprint:
+            fingerprint_match = self.find_duplicate(
+                row.get("source_code", ""),
+                row.get("external_id", ""),
+                row["normalized_url"],
+                fingerprint,
+            )
+            if fingerprint_match is not None:
+                same_identity = (
+                    str(fingerprint_match["source_code"] or "").casefold()
+                    == str(row.get("source_code", "") or "").casefold()
+                    and str(fingerprint_match["external_id"] or "")
+                    == str(row.get("external_id", "") or "")
+                )
+                if not same_identity:
+                    return int(fingerprint_match["id"])
+        server_product_id = int(row.get("server_product_id") or 0)
+        if server_product_id > 0:
+            linked = self.conn.execute(
+                "SELECT id FROM products WHERE server_product_id=? ORDER BY id LIMIT 1",
+                (server_product_id,),
+            ).fetchone()
+            if linked is not None:
+                return int(linked["id"])
         blocked = self.conn.execute(
             """
             SELECT id FROM products
@@ -795,6 +825,11 @@ class Database:
             else:
                 raise
         self.conn.commit()
+        stored = self.conn.execute(
+            "SELECT id FROM products WHERE source_code=? AND external_id=? LIMIT 1",
+            (row.get("source_code", ""), row.get("external_id", "")),
+        ).fetchone()
+        return int(stored["id"]) if stored is not None else None
 
     def _product_filter_parts(self, filter_name="all", source_code="", search=""):
         clauses, args = [], []

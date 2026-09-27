@@ -4,6 +4,7 @@ import hashlib
 import json
 import re
 import shutil
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from threading import Lock
@@ -17,6 +18,9 @@ from app.phase49_3i38_crawl_ledger_stage_ai import (
     reconcile_product_delete_semantics,
     reject_and_purge_product,
     restore_rejected_identity,
+)
+from app.phase49_3i43_modern_acquisition_intelligence import (
+    ensure_schema as ensure_modern_acquisition_schema,
 )
 from app.phase49_3i36_stage_finalization import (
     LOCK_COLUMN,
@@ -143,6 +147,125 @@ class ProductCore:
     def get(self, product_id: int) -> dict[str, Any] | None:
         row = self.db.product(int(product_id))
         return dict(row) if row is not None else None
+
+    @staticmethod
+    def _manual_provenance(row: dict[str, Any] | Any) -> dict[str, Any]:
+        data = dict(row or {})
+        raw = data.get("source_provenance_json")
+        if isinstance(raw, dict):
+            return dict(raw)
+        try:
+            parsed = json.loads(str(raw or "{}"))
+        except Exception:
+            return {}
+        return dict(parsed) if isinstance(parsed, dict) else {}
+
+    def external_reference_url(
+        self,
+        row_or_product_id: dict[str, Any] | int,
+    ) -> str:
+        if isinstance(row_or_product_id, int):
+            row = self.get(row_or_product_id) or {}
+        else:
+            row = dict(row_or_product_id or {})
+        source_url = str(row.get("source_url") or "").strip()
+        if str(row.get("source_code") or "").strip().casefold() != "manual":
+            return (
+                source_url
+                if source_url.startswith(("http://", "https://"))
+                else ""
+            )
+        reference = str(
+            self._manual_provenance(row).get("reference_url") or ""
+        ).strip()
+        return (
+            reference
+            if reference.startswith(("http://", "https://"))
+            else ""
+        )
+
+    def create_manual_product(
+        self,
+        *,
+        title: str,
+        notes: str = "",
+        category_slug: str = "external-other",
+        reference_url: str = "",
+    ) -> dict[str, Any]:
+        title = str(title or "").strip()
+        notes = str(notes or "").strip()
+        category_slug = str(category_slug or "external-other").strip() or "external-other"
+        reference_url = str(reference_url or "").strip()
+        if not title:
+            raise ValueError("عنوان محصول دستی الزامی است.")
+        ensure_modern_acquisition_schema(self.db)
+        if reference_url:
+            parsed = urlsplit(reference_url)
+            if parsed.scheme.lower() not in {"http", "https"} or not parsed.netloc:
+                raise ValueError("لینک مرجع باید یک آدرس کامل http/https باشد.")
+
+        external_id = f"manual-{uuid.uuid4().hex}"
+        source_url = f"manual://product/{external_id}"
+        local_dir = (
+            Path(self.db.path).resolve().parent
+            / "collected"
+            / "manual"
+            / external_id
+        ).resolve()
+        provenance = {
+            "kind": "manual_product",
+            "created_by": "operator",
+            "reference_url": reference_url,
+        }
+        row: dict[str, Any] = {
+            "source_code": "manual",
+            "external_id": external_id,
+            "source_url": source_url,
+            "source_title": title,
+            "title_fa": title,
+            "source_description": notes,
+            "custom_notes": notes,
+            "local_category_slug": category_slug,
+            "local_dir": str(local_dir),
+        }
+        columns = {
+            str(item["name"])
+            for item in self.db.conn.execute("PRAGMA table_info(products)")
+        }
+        if "source_name" in columns:
+            row["source_name"] = "Manual / Self-Produced"
+        if "source_provenance_json" in columns:
+            row["source_provenance_json"] = json.dumps(
+                provenance,
+                ensure_ascii=False,
+            )
+        if "acquisition_method" in columns:
+            row["acquisition_method"] = "manual_operator"
+
+        self.db.upsert_product(row)
+        created = self.db.conn.execute(
+            """
+            SELECT id FROM products
+            WHERE source_code='manual' AND external_id=?
+            LIMIT 1
+            """,
+            (external_id,),
+        ).fetchone()
+        if created is None:
+            raise RuntimeError("محصول دستی ساخته شد اما هویت آن قابل بازیابی نیست.")
+        product_id = int(created["id"])
+        after = self.get(product_id) or {}
+        try:
+            self.db.save_history(
+                product_id,
+                "manual_product_created",
+                {},
+                after,
+                "First-class operator-created Product without marketplace identity",
+            )
+        except Exception:
+            pass
+        return after
 
     def is_stage_locked(self, product_id: int, stage: str) -> bool:
         row = self.db.product(int(product_id))
@@ -348,11 +471,16 @@ class ImageCore:
         if raw.startswith(("https://", "http://")):
             parts = urlsplit(raw)
             return f"{parts.scheme.casefold()}://{parts.netloc.casefold()}{parts.path}"
+        if raw.casefold().startswith("local-display://"):
+            return "local://" + raw.rsplit("/", 1)[-1].casefold()
         return raw.casefold()
 
     def source_ordered_urls(self, row: dict[str, Any] | Any) -> list[str]:
         """Return the source gallery order without inserting derived primary aliases."""
         data = dict(row) if not isinstance(row, dict) else row
+        # Product media identity is owned by images_json.  selected_images_json
+        # only expresses current Site selection; using it as the first display
+        # source lets stale/removed aliases resurrect after a refresh.
         for field in ("images_json", "selected_images_json"):
             output: list[str] = []
             for raw in self._json_list(data.get(field)):
@@ -1516,6 +1644,7 @@ class ImageCore:
 
         output: list[dict[str, Any]] = []
         by_key: dict[str, dict[str, Any]] = {}
+        by_url: dict[str, dict[str, Any]] = {}
         for raw in self.local_items(int(product_id)):
             item = dict(raw)
             if bool(item.get("display_only")):
@@ -1530,13 +1659,17 @@ class ImageCore:
                 continue
             if not path.is_file():
                 continue
+            exact_url = str(item.get("url") or "").strip()
+            if exact_url:
+                by_url.setdefault(exact_url, item)
             by_key.setdefault(key, item)
 
         try:
             from app.phase50_a2w_media_sync import selected_local_media
             exact_selected = {
-                self._url_asset_key(str(item.get("source_url") or "")): dict(item)
+                str(item.get("source_url") or "").strip(): dict(item)
                 for item in selected_local_media(data)
+                if str(item.get("source_url") or "").strip()
             }
         except RuntimeError:
             exact_selected = {}
@@ -1558,8 +1691,11 @@ class ImageCore:
 
         for url in canonical:
             key = self._url_asset_key(url)
-            item = dict(by_key.get(key) or {})
-            exact = exact_selected.get(key)
+            # Exact URL identity wins.  Asset-key fallback intentionally comes
+            # second because two query variants can be distinct Product images
+            # while sharing the same normalized asset key.
+            item = dict(by_url.get(url) or by_key.get(key) or {})
+            exact = exact_selected.get(url) or exact_selected.get(key)
             if exact:
                 path = Path(str(exact.get("local_path") or "")).resolve()
                 if path.is_file():
@@ -1628,15 +1764,26 @@ class ImageCore:
                 continue
             output.append(item)
 
-        # Trusted files physically inside this Product's current local_dir are
-        # still shown so the operator can select/promote them. They are not
-        # Social authority until Stage 3 persists them into images_json and
-        # selected_images_json. Historical/refetch sibling folders were
-        # filtered above by the local_dir containment gate.
-        for key, raw in by_key.items():
-            if key in canonical_keys:
-                continue
-            output.append(dict(raw))
+        # When canonical DB media exists, do not re-introduce arbitrary files
+        # left in the Local folder. Those stale/derived files are not Product
+        # identity and previously appeared as extra cards (for example 05.webp)
+        # after refresh, making the operator delete the wrong image. Legacy
+        # folders without DB canonical media still expose trusted local files so
+        # the operator can recover them explicitly.
+        if not canonical:
+            for key, raw in by_key.items():
+                if key in canonical_keys:
+                    continue
+                output.append(dict(raw))
+        else:
+            # A legacy local card is eligible only when the operator already
+            # selected its identity (legacy local-display aliases included).
+            # Unselected leftovers such as stale 05.webp must never appear as
+            # a new Product image after refresh.
+            for key, raw in by_key.items():
+                if key in canonical_keys or key not in selected_keys:
+                    continue
+                output.append(dict(raw))
 
         def order_key(item: dict[str, Any]) -> tuple[int, int, int]:
             key = self._url_asset_key(str(item.get("url") or ""))
@@ -1648,7 +1795,22 @@ class ImageCore:
                 int(item.get("slot") or 0),
             )
 
-        return sorted(output, key=order_key)
+        # A canonical URL with a query variant can resolve to the same local
+        # file through both exact selected-media mapping and the trusted local
+        # folder fallback.  Showing both rows makes the operator select/delete
+        # the wrong visual card and can make the gallery disagree with publish
+        # authority.  The physical local path is the final display identity:
+        # keep the first canonical/selected row and suppress later aliases.
+        deduped: list[dict[str, Any]] = []
+        seen_paths: set[str] = set()
+        for item in sorted(output, key=order_key):
+            path_key = str(item.get("path") or "").strip().casefold()
+            if path_key and path_key in seen_paths:
+                continue
+            if path_key:
+                seen_paths.add(path_key)
+            deduped.append(item)
+        return deduped
 
     def _assert_images_editable(self, product_id: int):
         row = self.db.product(int(product_id))
@@ -4836,6 +4998,71 @@ class ApplicationKernel:
             "membership": bool(after_membership),
         }
 
+    def postprocess_manual_product_ai(
+        self,
+        product_id: int,
+        result: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Postprocess editorial AI for manual Products without technical invention."""
+        product_id = int(product_id)
+        payload = dict(result or {})
+        payload.setdefault("product_id", product_id)
+        row = self.products.get(product_id) or {}
+        if str(row.get("source_code") or "").strip().casefold() != "manual":
+            raise RuntimeError("Manual AI postprocess requires source_code=manual.")
+
+        try:
+            if self.images.urls(row):
+                finalized = self.images.finalize(product_id)
+                payload["image_finalize"] = dict(finalized or {})
+                payload.setdefault("changed_fields", [])
+                payload["changed_fields"] = list(payload["changed_fields"]) + [
+                    "image_alt_texts_json",
+                    "image_metadata_json",
+                ]
+        except Exception as exc:
+            payload["image_finalize_error"] = str(exc)
+
+        try:
+            slider = self._backfill_slider_core(product_id)
+            payload["slider_backfill"] = slider
+            if slider.get("changed"):
+                payload.setdefault("changed_fields", [])
+                payload["changed_fields"] = list(payload["changed_fields"]) + list(
+                    slider.get("changed_fields") or []
+                )
+        except Exception as exc:
+            payload["slider_backfill_error"] = str(exc)
+
+        try:
+            payload["auto_finalize"] = self.stages.auto_finalize_ready(
+                product_id,
+                {"quick", "content", "slider"},
+            )
+        except Exception as exc:
+            payload["auto_finalize_error"] = str(exc)
+
+        try:
+            active = self.providers.active()
+            self.db.update_product(
+                product_id,
+                {
+                    "ai_completed_once": 1,
+                    "ai_completed_at": utc_now(),
+                    "ai_completed_source_mode": "data",
+                    "ai_completed_provider": str(active.get("provider") or ""),
+                    "ai_completed_model": str(active.get("model") or ""),
+                },
+            )
+            payload["ai_completed_once"] = True
+            payload["ai_completed_source_mode"] = "data"
+        except Exception as exc:
+            payload["ai_completion_marker_error"] = str(exc)
+
+        payload["target_stages"] = ["quick", "content", "slider"]
+        payload["manual_editorial_only"] = True
+        return payload
+
     def postprocess_full_product_ai(
         self,
         product_id: int,
@@ -4847,9 +5074,18 @@ class ApplicationKernel:
         product_id = int(product_id)
         payload = dict(result or {})
         payload.setdefault("product_id", product_id)
+        initial_row = self.products.get(product_id) or {}
+        if (
+            str(initial_row.get("source_code") or "").strip().casefold()
+            == "manual"
+        ):
+            return self.postprocess_manual_product_ai(
+                product_id,
+                payload,
+            )
 
         try:
-            row = self.products.get(product_id) or {}
+            row = initial_row
             current_category = str(
                 row.get("local_category_slug") or ""
             ).strip()
@@ -5066,7 +5302,14 @@ class ApplicationKernel:
         failures: list[dict[str, Any]] = []
         for product_id in ids:
             try:
-                self.stages.prepare_full_product_completion(product_id)
+                row = self.products.get(product_id) or {}
+                if (
+                    str(row.get("source_code") or "").strip().casefold()
+                    == "manual"
+                ):
+                    self.stages.prepare_manual_content_repair(product_id)
+                else:
+                    self.stages.prepare_full_product_completion(product_id)
                 prepared.append(product_id)
             except Exception as exc:
                 failures.append({

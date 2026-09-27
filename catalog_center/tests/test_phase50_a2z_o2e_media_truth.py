@@ -122,6 +122,31 @@ class Phase50A2ZO2EMediaTruthTests(unittest.TestCase):
             any("refetch_20260924" in str(item["path"]) for item in items)
         )
 
+    def test_current_gallery_dedupes_alias_urls_that_resolve_to_one_local_file(self):
+        product_id, url1, url2, final1, _final2 = self._product(
+            selected_only_first=False
+        )
+        row = dict(self.db.product(product_id))
+        metadata = json.loads(row["image_metadata_json"])
+        metadata[1]["final_local_file"] = str(final1)
+        self.db.update_product(
+            product_id,
+            {"image_metadata_json": json.dumps(metadata)},
+        )
+        baseline = self.kernel.images.current_local_items(product_id)
+        duplicate = dict(baseline[0])
+        duplicate["url"] = url2
+        with patch.object(
+            self.kernel.images,
+            "local_items",
+            return_value=[baseline[0], duplicate],
+        ):
+            items = self.kernel.images.current_local_items(product_id)
+
+        self.assertEqual(len(items), 1)
+        self.assertEqual(Path(items[0]["path"]).resolve(), Path(baseline[0]["path"]).resolve())
+        self.assertIn(items[0]["url"], {url1, url2})
+
     def test_instagram_all_media_authority_uses_every_current_product_image(self):
         product_id, url1, url2, final1, final2 = self._product(
             selected_only_first=True

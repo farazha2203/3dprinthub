@@ -360,6 +360,56 @@ class Phase50A2ZO2DIdentityTests(unittest.TestCase):
         self.assertEqual(result["duplicates"], 1)
         self.assertEqual(result["thumbs"], 0)
 
+    def test_fingerprint_identity_returns_authoritative_product(self):
+        first = self.db.upsert_product(
+            {
+                "source_code": "makerworld",
+                "external_id": "700050",
+                "source_url": self.url("700050"),
+                "source_title": "Fingerprint survivor",
+                "fingerprint": "fp-700050",
+            }
+        )
+        second = self.db.upsert_product(
+            {
+                "source_code": "other-source",
+                "external_id": "different-id",
+                "source_url": "https://example.test/different-id",
+                "source_title": "Duplicate fingerprint",
+                "fingerprint": "fp-700050",
+            }
+        )
+        self.assertEqual(second, first)
+        self.assertEqual(
+            self.db.conn.execute("SELECT count(*) FROM products").fetchone()[0],
+            1,
+        )
+
+    def test_server_product_identity_returns_existing_local_product(self):
+        first = self.db.upsert_product(
+            {
+                "source_code": "site-admin",
+                "external_id": "site-product-700051",
+                "source_url": "site-admin://product/700051",
+                "source_title": "Linked survivor",
+                "server_product_id": 700051,
+            }
+        )
+        second = self.db.upsert_product(
+            {
+                "source_code": "makerworld",
+                "external_id": "700051",
+                "source_url": self.url("700051"),
+                "source_title": "Wrong second mirror",
+                "server_product_id": 700051,
+            }
+        )
+        self.assertEqual(second, first)
+        self.assertEqual(
+            self.db.conn.execute("SELECT count(*) FROM products").fetchone()[0],
+            1,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

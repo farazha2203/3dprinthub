@@ -685,6 +685,46 @@ class StageCore:
         result["commerce_opened"] = "commerce" in result["opened_stages"]
         return result
 
+    def prepare_manual_content_repair(self, product_id: int) -> dict[str, Any]:
+        """Open editorial-only stages for a manual/self-produced Product."""
+        product_id = int(product_id)
+        row = self.db.product(product_id)
+        if row is None:
+            raise RuntimeError("محصول پیدا نشد.")
+        data = _row_dict(row)
+        if str(data.get("source_code") or "").strip().casefold() != "manual":
+            raise RuntimeError("این مسیر فقط برای محصول دستی است.")
+        locks = stage_locks(row)
+        opened: list[str] = []
+        for stage in ("quick", "content", "slider"):
+            if stage in locks:
+                locks.pop(stage, None)
+                opened.append(stage)
+        before = data
+        if opened:
+            values: dict[str, Any] = {
+                LOCK_COLUMN: json.dumps(locks, ensure_ascii=False),
+            }
+            if "seo_manual_approved" in _columns(self.db):
+                values["seo_manual_approved"] = 0
+            self.db.update_product(product_id, values)
+            after = _row_dict(self.db.product(product_id))
+            try:
+                self.db.save_history(
+                    product_id,
+                    "qt_manual_editorial_repair_opened",
+                    before,
+                    after,
+                    "Manual Product AI opened quick/content/slider only",
+                )
+            except Exception:
+                pass
+        return {
+            "product_id": product_id,
+            "opened_stages": opened,
+            "manual_editorial_only": True,
+        }
+
     def prepare_ai_content_repair(self, product_id: int) -> dict[str, Any]:
         """Open only AI/content-owned finalized stages for explicit full repair."""
         product_id = int(product_id)
@@ -2598,6 +2638,13 @@ class ProviderCore:
             )
 
         data = _row_dict(row)
+        is_manual = str(data.get("source_code") or "").strip().casefold() == "manual"
+        if is_manual:
+            mode = "data"
+            if target_stage in {"commerce", "specs", "publish"}:
+                raise RuntimeError(
+                    "محصول دستی اجازه AI برای وزن/زمان/ابعاد/متریال/مجوز/انتشار را ندارد."
+                )
         source_text = "\n".join(
             str(data.get(key) or "")
             for key in (
@@ -2705,6 +2752,27 @@ class ProviderCore:
         target_stage: str | None = None,
         refresh_existing: bool = False,
     ) -> dict[str, Any]:
+        product_id = int(product_id)
+        row = self.db.product(product_id)
+        if row is None:
+            raise RuntimeError("محصول پیدا نشد.")
+        data = _row_dict(row)
+        is_manual = str(data.get("source_code") or "").strip().casefold() == "manual"
+        if is_manual:
+            mode = "data"
+            if target_stage in {"commerce", "specs", "publish"}:
+                raise RuntimeError(
+                    "AI محصول دستی فقط برای محتوای فارسی/SEO/اسلایدر مجاز است؛ "
+                    "وزن، زمان، ابعاد، متریال، مجوز و انتشار باید factual/operator-owned بماند."
+                )
+            stages = (
+                {target_stage}
+                if target_stage
+                else {"quick", "content", "slider"}
+            )
+        else:
+            stages = {target_stage} if target_stage else None
+
         proxy = SimpleNamespace(db=self.db, DATA=data_root())
         provider, key, model = active_ai_config(proxy, require_key=True)
         if provider == "openrouter":
@@ -2713,10 +2781,9 @@ class ProviderCore:
                 model,
                 refresh_if_unknown=False,
             )
-        stages = {target_stage} if target_stage else None
         return orchestrate_once(
             proxy,
-            int(product_id),
+            product_id,
             str(mode or "data"),
             provider,
             key,
@@ -2736,6 +2803,11 @@ class ProviderCore:
         row = self.db.product(product_id)
         if row is None:
             raise RuntimeError("محصول پیدا نشد.")
+        if str(_row_dict(row).get("source_code") or "").strip().casefold() == "manual":
+            raise RuntimeError(
+                "تخمین AI وزن/زمان/ابعاد برای محصول دستی مجاز نیست؛ "
+                "این داده‌ها باید از اندازه‌گیری/اسلایسر واقعی اپراتور وارد شوند."
+            )
         proxy = SimpleNamespace(db=self.db, DATA=data_root())
         provider, key, model = active_ai_config(proxy, require_key=True)
         source = resolve_source(proxy, row, mode, provider, key, model)

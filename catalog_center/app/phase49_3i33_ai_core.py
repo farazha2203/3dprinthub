@@ -124,6 +124,36 @@ SCREENSHOT_FACT_SCHEMA = {
 }
 
 
+MANUAL_VISUAL_EDITORIAL_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "object_description": {"type": "string"},
+        "appearance_notes": {
+            "type": "array",
+            "items": {"type": "string"},
+            "maxItems": 8,
+        },
+        "visible_use_cues": {
+            "type": "array",
+            "items": {"type": "string"},
+            "maxItems": 6,
+        },
+        "uncertainties": {
+            "type": "array",
+            "items": {"type": "string"},
+            "maxItems": 6,
+        },
+    },
+    "required": [
+        "object_description",
+        "appearance_notes",
+        "visible_use_cues",
+        "uncertainties",
+    ],
+}
+
+
 def row_value(row, key: str, default=""):
     try:
         value = row.get(key, default) if isinstance(row, dict) else row[key]
@@ -482,6 +512,153 @@ def generate_translation_pack(provider: str, key: str, model: str, source_title:
     result["_ai_provider"] = provider
     result["_ai_model"] = selected_model
     return result
+
+
+def manual_visual_editorial_facts(
+    provider: str,
+    key: str,
+    model: str,
+    image_paths: list[Path],
+    product_id: int,
+) -> dict[str, Any]:
+    """Describe only visible editorial facts; never infer technical Product facts."""
+    encoded: list[str] = []
+    for raw in image_paths[:4]:
+        path = Path(raw)
+        if not path.is_file():
+            continue
+        try:
+            with Image.open(path) as opened:
+                image = opened.convert("RGB")
+                image.thumbnail((1200, 1200), Image.Resampling.LANCZOS)
+                stream = io.BytesIO()
+                image.save(stream, "JPEG", quality=80, optimize=True)
+                encoded.append(base64.b64encode(stream.getvalue()).decode("ascii"))
+        except Exception:
+            continue
+    if not encoded:
+        return {}
+
+    prompt = (
+        "این تصاویر متعلق به یک محصول دستی/تولید داخلی هستند. فقط چیزهایی را که "
+        "واقعاً در تصویر دیده می‌شود برای کمک به متن فروشگاهی توصیف کن. "
+        "هیچ عدد، ابعاد، وزن، زمان چاپ، متریال، رنگ فنی/نام Filament، مجوز، "
+        "سازگاری یا عملکرد مهندسی را حدس نزن. اگر کاربرد دقیق نامطمئن است، "
+        "آن را در uncertainties بنویس. فقط JSON مطابق schema برگردان."
+    )
+    client = AIProviderClient(provider, key, model, product_id=product_id)
+    exact_model = client.choose_model(model)
+
+    if provider == "openai":
+        content = [{"type": "input_text", "text": prompt}]
+        content += [
+            {
+                "type": "input_image",
+                "image_url": f"data:image/jpeg;base64,{item}",
+                "detail": "auto",
+            }
+            for item in encoded
+        ]
+        data = _json_request(
+            f"{client.spec.base_url}/responses",
+            key,
+            payload={
+                "model": exact_model,
+                "instructions": (
+                    "Extract visible editorial facts only. Never infer technical facts."
+                ),
+                "input": [{"role": "user", "content": content}],
+                "text": {
+                    "format": {
+                        "type": "json_schema",
+                        "name": "manual_visual_editorial_v1",
+                        "schema": MANUAL_VISUAL_EDITORIAL_SCHEMA,
+                        "strict": True,
+                    }
+                },
+            },
+            method="POST",
+            timeout=210,
+            provider=provider,
+            model=exact_model,
+            operation="manual_visual_editorial",
+            product_id=product_id,
+        )
+        text = response_output_text(data)
+    elif provider == "google":
+        from . import phase49_3f_gemini_provider as gemini
+
+        parts = [{"text": prompt + " Only JSON."}]
+        parts += [
+            {"inlineData": {"mimeType": "image/jpeg", "data": item}}
+            for item in encoded
+        ]
+        data = gemini._google_request(
+            key,
+            f"models/{exact_model.replace('models/', '')}:generateContent",
+            payload={
+                "contents": [{"role": "user", "parts": parts}],
+                "generationConfig": {"responseMimeType": "application/json"},
+            },
+            method="POST",
+            timeout=210,
+            model=exact_model,
+            operation="manual_visual_editorial",
+            product_id=product_id,
+        )
+        text = gemini._gemini_text(data)
+    else:
+        content = [{"type": "text", "text": prompt + " Only JSON."}]
+        content += [
+            {
+                "type": "image_url",
+                "image_url": {"url": f"data:image/jpeg;base64,{item}"},
+            }
+            for item in encoded
+        ]
+        data = client._chat(
+            exact_model,
+            [
+                {
+                    "role": "system",
+                    "content": (
+                        "Extract visible editorial facts only. Never infer technical facts."
+                    ),
+                },
+                {"role": "user", "content": content},
+            ],
+            response_format={"type": "json_object"},
+            operation="manual_visual_editorial",
+        )
+        text = response_output_text(data)
+
+    if not text:
+        raise RuntimeError("Vision provider returned no editorial image description.")
+    try:
+        result = json.loads(_strip_json_fence(text))
+    except Exception as exc:
+        raise RuntimeError("Vision provider returned invalid JSON.") from exc
+    if not isinstance(result, dict):
+        raise RuntimeError("Vision provider returned a non-object JSON result.")
+    return {
+        "object_description": str(result.get("object_description") or "").strip(),
+        "appearance_notes": [
+            str(item).strip()
+            for item in result.get("appearance_notes") or []
+            if str(item).strip()
+        ][:8],
+        "visible_use_cues": [
+            str(item).strip()
+            for item in result.get("visible_use_cues") or []
+            if str(item).strip()
+        ][:6],
+        "uncertainties": [
+            str(item).strip()
+            for item in result.get("uncertainties") or []
+            if str(item).strip()
+        ][:6],
+    }
+
 
 
 def screenshot_chunks(path: Path, max_chunks=4):

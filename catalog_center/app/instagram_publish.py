@@ -35,6 +35,28 @@ def _json_list(value: Any) -> list:
     return list(parsed) if isinstance(parsed, list) else []
 
 
+def _public_source_url(row: dict[str, Any]) -> str:
+    source_url = str(
+        row.get("source_url") or row.get("normalized_url") or ""
+    ).strip()
+    if str(row.get("source_code") or "").strip().casefold() == "manual":
+        raw = row.get("source_provenance_json")
+        try:
+            provenance = raw if isinstance(raw, dict) else json.loads(raw or "{}")
+        except Exception:
+            provenance = {}
+        if isinstance(provenance, dict):
+            reference = str(provenance.get("reference_url") or "").strip()
+            if reference.startswith(("https://", "http://")):
+                return reference
+        return ""
+    return (
+        source_url
+        if source_url.startswith(("https://", "http://"))
+        else ""
+    )
+
+
 def _tracking_url(product_url: str, product_id: int) -> str:
     parsed = urllib_parse.urlsplit(product_url)
     blocked = {"utm_source", "utm_medium", "utm_campaign", "utm_content"}
@@ -154,11 +176,7 @@ def canonical_site_payload(row: dict[str, Any], *, site_url: str) -> dict[str, A
 
     title = str(row.get("seo_title_fa") or row.get("title_fa") or row.get("source_title") or "").strip()
     tracking_url = _tracking_url(product_url, int(row.get("id") or 0))
-    source_product_url = str(
-        row.get("source_url") or row.get("normalized_url") or ""
-    ).strip()
-    if not source_product_url.startswith(("https://", "http://")):
-        source_product_url = ""
+    source_product_url = _public_source_url(row)
     media_urls = media[:10]
     caption, hashtags = build_caption(row, tracking_url)
     alt_texts = build_alt_texts(row, media_urls)

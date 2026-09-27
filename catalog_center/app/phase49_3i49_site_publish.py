@@ -19,7 +19,7 @@ from .batch_packaging import (
     validate_batch_package,
 )
 from .crawler import download_public_file
-from .db import utc_now
+from .db import normalize_url, utc_now
 from .site_connection import import_batch, test_publish_readiness, upload_batch
 from .epic49_site_sync import (
     BridgeNotFoundError,
@@ -90,6 +90,36 @@ def _json_list(value: Any) -> list:
     except Exception:
         return []
     return list(parsed) if isinstance(parsed, list) else []
+
+
+def _manual_reference_url(data: dict[str, Any]) -> str:
+    if str(data.get("source_code") or "").strip().casefold() != "manual":
+        return ""
+    raw = data.get("source_provenance_json")
+    try:
+        provenance = raw if isinstance(raw, dict) else json.loads(raw or "{}")
+    except Exception:
+        provenance = {}
+    if not isinstance(provenance, dict):
+        return ""
+    reference = str(provenance.get("reference_url") or "").strip()
+    return reference if reference.startswith(("https://", "http://")) else ""
+
+
+def _batch_source_url(db, data: dict[str, Any]) -> str:
+    source_url = str(data.get("source_url") or "").strip()
+    if str(data.get("source_code") or "").strip().casefold() != "manual":
+        return source_url
+    reference = _manual_reference_url(data)
+    if reference:
+        return reference
+    site_url = str(
+        db.setting("site_url", "https://3dprinthub.ir")
+        or "https://3dprinthub.ir"
+    ).strip().rstrip("/")
+    if not site_url.startswith(("https://", "http://")):
+        site_url = "https://3dprinthub.ir"
+    return site_url + "/"
 
 
 def _refresh_product_pricing_snapshot(db, product_id: int) -> dict[str, Any]:
@@ -903,6 +933,14 @@ def build_publish_batch(
             editorial["local_category_name"] = (
                 str(row["local_category_slug"] or "").strip() or "سایر محصولات"
             )
+            publish_source_url = _batch_source_url(db, editorial)
+            if (
+                str(editorial.get("source_code") or "").strip().casefold()
+                == "manual"
+            ):
+                editorial["source_url"] = publish_source_url
+                editorial["normalized_url"] = normalize_url(publish_source_url)
+                editorial["manual_identity_uri"] = str(row["source_url"] or "")
             editorial["fingerprint"] = (
                 str(row["fingerprint"] or "").strip()
                 or product_fingerprint(

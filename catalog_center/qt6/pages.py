@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Callable
 
 from PySide6.QtCore import QSortFilterProxyModel, QSize, Qt, QTimer, QUrl
-from PySide6.QtGui import QDesktopServices, QIcon, QPixmap
+from PySide6.QtGui import QDesktopServices, QGuiApplication, QIcon, QPixmap
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
@@ -41,6 +41,7 @@ from app.db import utc_now
 from app.phase49_3h_image_limits import HARD_MAX_IMAGE_LIMIT
 
 from .diagnostics import show_diagnostic_error
+from .manual_product_dialog import ManualProductDialog
 from .models import (
     SORT_ROLE,
     FilamentFilterProxyModel,
@@ -61,6 +62,7 @@ from .product_explorer import (
 )
 from .product_wizard import ProductWizardPage
 from .settings_page import SettingsPage
+from .story_preview import StoryPreviewTab
 from .widgets import MetricCard
 from .workers import TaskPool, Worker
 
@@ -238,6 +240,13 @@ class ProductsPage(QWidget):
             "تغییرات Local منتشرنشده هرگز خودکار overwrite نمی‌شوند."
         )
         self.pull_site_btn.clicked.connect(self._pull_site_products)
+        self.manual_product_btn = QPushButton("➕ محصول دستی")
+        self.manual_product_btn.setToolTip(
+            "محصول تولید داخلی/دستی را بدون هویت Marketplace می‌سازد و "
+            "در همان ویزارد بالغ Profile/Filament/Image/Site/Social باز می‌کند."
+        )
+        self.manual_product_btn.setProperty("success", True)
+        self.manual_product_btn.clicked.connect(self._create_manual_product)
         crawl_btn = QPushButton("➕ افزودن محصول / Crawl")
         crawl_btn.setProperty("success", True)
         crawl_btn.clicked.connect(
@@ -259,6 +268,7 @@ class ProductsPage(QWidget):
         bar.addWidget(self.sort_combo)
         bar.addWidget(refresh_btn)
         bar.addWidget(self.pull_site_btn)
+        bar.addWidget(self.manual_product_btn)
         bar.addWidget(crawl_btn)
         bar.addWidget(self.open_source_btn)
         bar.addWidget(edit_btn)
@@ -314,6 +324,10 @@ class ProductsPage(QWidget):
         self.instagram_story_btn.setToolTip(
             "فقط Story اینستاگرام را ارسال می‌کند. اگر Product هنوز عمومی نباشد ابتدا همان Product را روی سایت منتشر می‌کند. Feed/Post جدید ساخته نمی‌شود."
         )
+        self.instagram_story_manual_btn = QPushButton("🧷 آماده‌سازی Story دستی")
+        self.instagram_story_manual_btn.setToolTip(
+            "تصویر و URL دقیق Product را برای انتشار دستی آماده می‌کند؛ Link Sticker باید داخل Instagram تأیید شود."
+        )
         self.bulk_publish_status = QLabel("")
         self.bulk_publish_status.setObjectName("Muted")
         self.ready_publish_btn.clicked.connect(self._mark_ready_selected)
@@ -324,10 +338,14 @@ class ProductsPage(QWidget):
         self.instagram_story_btn.clicked.connect(
             self._publish_instagram_story_selected
         )
+        self.instagram_story_manual_btn.clicked.connect(
+            self._prepare_manual_story_selected
+        )
         publish_bar.addWidget(self.ready_publish_btn)
         publish_bar.addWidget(self.bulk_publish_btn)
         publish_bar.addWidget(self.instagram_post_btn)
         publish_bar.addWidget(self.instagram_story_btn)
+        publish_bar.addWidget(self.instagram_story_manual_btn)
         publish_bar.addWidget(self.bulk_publish_status, 1)
         root.addLayout(publish_bar)
 
@@ -384,6 +402,8 @@ class ProductsPage(QWidget):
 
         self.tabs.addTab(self.gallery, "گالری")
         self.tabs.addTab(self.table, "جدول قابل مرتب‌سازی")
+        self.story_tab = StoryPreviewTab(self.db, self.kernel, self._selected_product_ids, self)
+        self.tabs.addTab(self.story_tab, "Story — چهار Preview")
         self.tabs.currentChanged.connect(lambda _index: self._tab_changed())
         self.gallery.verticalScrollBar().valueChanged.connect(
             lambda _value: self._fetch_gallery_if_needed()
@@ -614,7 +634,7 @@ class ProductsPage(QWidget):
 
     def _selected_product_ids(self) -> list[int]:
         values: list[int] = []
-        if self.tabs.currentIndex() == 0:
+        if self.tabs.currentIndex() in (0, 2):
             for index in self.gallery.selectedIndexes():
                 product_id = self.gallery_model.product_id_at(index.row())
                 if product_id is not None:
@@ -837,6 +857,65 @@ class ProductsPage(QWidget):
 
     def _publish_instagram_post_selected(self) -> None:
         self._publish_instagram_scope_selected("feed")
+
+    def _prepare_manual_story_selected(self) -> None:
+        """Prepare a local Story asset and operator handoff; never publish."""
+        product_ids = self._selected_product_ids()
+        if not product_ids:
+            QMessageBox.warning(self, "Story دستی", "حداقل یک محصول را انتخاب کن.")
+            return
+        prepared = []
+        failures = []
+        from app.instagram_story_asset import prepare_product_story_asset
+
+        for product_id in product_ids:
+            try:
+                payload = self.kernel.instagram.preview(int(product_id))
+                product_url = str(payload.get("product_url") or "").strip()
+                if not product_url.startswith("https://"):
+                    raise RuntimeError("URL عمومی HTTPS محصول تأیید نشد.")
+                asset = prepare_product_story_asset(
+                    self.kernel.db,
+                    int(product_id),
+                    self.kernel.connection.settings(require_bridge=False),
+                    payload,
+                    publish_to_site=False,
+                )
+                prepared.append(
+                    {
+                        "product_id": int(product_id),
+                        "product_url": product_url,
+                        "asset": str(asset.get("local_path") or asset.get("url") or ""),
+                    }
+                )
+            except Exception as exc:
+                failures.append(f"#{product_id}: {exc}")
+        if not prepared:
+            QMessageBox.warning(self, "Story دستی", "هیچ Story آماده نشد.\n" + "\n".join(failures[:6]))
+            return
+        first_url = prepared[0]["product_url"]
+        QGuiApplication.clipboard().setText(first_url)
+        lines = [
+            "وضعیت‌ها:",
+            "✅ تصویر آماده",
+            "✅ URL دقیق محصول آماده و در Clipboard کپی شد",
+            "🟡 Sticker دستی لازم است",
+            "⬜ Link Sticker هنوز تأیید نشده",
+            "",
+            "در Instagram: Sticker → Link → URL را وارد کن → متن Sticker:",
+            "مشاهده و سفارش",
+            "",
+            *[
+                f"#{item['product_id']} • {item['product_url']}\nفایل: {item['asset']}"
+                for item in prepared
+            ],
+        ]
+        if failures:
+            lines.extend(["", "ناموفق:", *failures[:6]])
+        QMessageBox.information(self, "آماده‌سازی Story دستی", "\n".join(lines))
+        self.bulk_publish_status.setText(
+            f"Story دستی آماده شد: {len(prepared)} • Sticker نیازمند تأیید اپراتور"
+        )
 
     def _publish_instagram_story_selected(self) -> None:
         self._publish_instagram_scope_selected("story")
@@ -1419,15 +1498,61 @@ class ProductsPage(QWidget):
             )
         )
 
+    def _create_manual_product(self) -> None:
+        dialog = ManualProductDialog(
+            self.kernel.categories.list(),
+            self,
+        )
+        if not dialog.exec():
+            return
+        values = dialog.values()
+        try:
+            row = self.kernel.products.create_manual_product(
+                title=values["title"],
+                notes=values["notes"],
+                category_slug=values["category_slug"],
+                reference_url=values["reference_url"],
+            )
+            product_id = int(row["id"])
+            image_error = ""
+            if values["image_paths"]:
+                try:
+                    self.kernel.images.add_local_files(
+                        product_id,
+                        list(values["image_paths"]),
+                    )
+                except Exception as exc:
+                    image_error = str(exc)
+            self.refresh()
+            self.open_product(product_id)
+            if image_error:
+                QMessageBox.warning(
+                    self,
+                    "محصول دستی ساخته شد",
+                    "Product ساخته شد، اما افزودن تصاویر اولیه کامل نشد:\n"
+                    + image_error
+                    + "\nمی‌توانی تصاویر را از مرحله ۳ اضافه کنی.",
+                )
+        except Exception as exc:
+            QMessageBox.warning(
+                self,
+                "ساخت محصول دستی",
+                str(exc),
+            )
+
     def _open_source_selected(self) -> None:
         product_id = self._selected_product_id()
         if product_id is None:
             QMessageBox.warning(self, "صفحه محصول", "یک محصول را انتخاب کن.")
             return
         row = self.kernel.products.get(product_id) or {}
-        url = str(row.get("source_url") or "").strip()
-        if not url.startswith(("http://", "https://")):
-            QMessageBox.warning(self, "صفحه محصول", "لینک عمومی معتبر برای این محصول ثبت نشده است.")
+        url = self.kernel.products.external_reference_url(row)
+        if not url:
+            QMessageBox.warning(
+                self,
+                "صفحه محصول",
+                "لینک عمومی/مرجع معتبر برای این محصول ثبت نشده است.",
+            )
             return
         if not QDesktopServices.openUrl(QUrl(url)):
             QMessageBox.warning(self, "صفحه محصول", "مرورگر سیستم نتوانست لینک محصول را باز کند.")
@@ -3203,24 +3328,52 @@ class OperationsPage(QWidget):
 
         self.live_results.setUpdatesEnabled(False)
         self.live_results.clear()
-        imported = failed = waiting = 0
+        status_counts = {
+            "review": 0,
+            "queued": 0,
+            "downloading": 0,
+            "completed": 0,
+            "skipped": 0,
+            "failed": 0,
+        }
+        status_labels = {
+            "review": "Preview / نیازمند انتخاب",
+            "queued": "در صف دریافت",
+            "downloading": "در حال دریافت",
+            "completed": "تکمیل‌شده",
+            "skipped": "ردشده / تکراری",
+            "failed": "ناموفق",
+        }
         try:
             for raw in rows:
                 row = dict(raw)
                 external_id = str(row.get("external_id") or "")
                 queue_id = int(row.get("queue_id") or 0)
                 product_id = int(row.get("product_id") or 0)
-                status = str(
+                raw_status = str(
                     row.get("status")
                     or row.get("candidate_status")
                     or "review"
-                )
-                if product_id:
-                    imported += 1
-                elif status in {"failed", "rejected", "blocked"}:
-                    failed += 1
+                ).strip().lower()
+                if product_id and raw_status not in {"failed", "skipped"}:
+                    status = "completed"
+                elif raw_status in {"rejected", "blocked", "existing", "duplicate"}:
+                    status = "skipped"
+                elif raw_status in {"collected", "imported", "done", "success"}:
+                    status = "completed"
+                elif raw_status in status_counts:
+                    status = raw_status
                 else:
-                    waiting += 1
+                    status = "review"
+                status_counts[status] += 1
+                status_label = status_labels[status]
+                reason = str(
+                    row.get("skip_reason")
+                    or row.get("reason")
+                    or row.get("last_error")
+                    or row.get("error")
+                    or ""
+                ).strip()
 
                 title = (
                     row.get("product_title_fa")
@@ -3248,11 +3401,13 @@ class OperationsPage(QWidget):
                 )
                 lines = [
                     str(title),
-                    f"{source_code} • {status}",
+                    f"{source_code} • {status_label}",
                     image_text,
                 ]
                 if progress_text:
                     lines.append(progress_text)
+                if reason:
+                    lines.append(f"علت: {reason[:120]}")
                 item = QListWidgetItem("\n".join(lines))
                 item.setIcon(icon)
                 item.setData(Qt.ItemDataRole.UserRole, queue_id)
@@ -3266,7 +3421,8 @@ class OperationsPage(QWidget):
                     f"External ID: {external_id}\n"
                     f"Queue: {queue_id or '—'}\n"
                     f"Product: {product_id or '—'}\n"
-                    f"Status: {status}\n"
+                    f"Status: {status_label}\n"
+                    f"Reason: {reason or '—'}\n"
                     f"{row.get('url') or ''}"
                 )
                 self.live_results.addItem(item)
@@ -3275,9 +3431,13 @@ class OperationsPage(QWidget):
         finally:
             self.live_results.setUpdatesEnabled(True)
 
+        summary = " • ".join(
+            f"{status_labels[key]}: {status_counts[key]}"
+            for key in status_counts
+            if status_counts[key]
+        ) or "هنوز candidateای ثبت نشده است"
         self.live_discovery_label.setText(
-            f"همین جستجو: {len(rows)} • دریافت‌شده: {imported} • "
-            f"در انتظار: {waiting} • خطا/رد: {failed}"
+            f"همین جستجو: {len(rows)} • {summary}"
         )
         self._update_live_selection_label()
 
@@ -3778,6 +3938,13 @@ class OperationsPage(QWidget):
                     0,
                     lambda: self.navigate("products"),
                 )
+        elif data.get("promotion_required"):
+            self.status.setText(
+                "✅ Crawl فقط در Add Products / staging قرار گرفت — "
+                f"کاندیدای جدید={data.get('staged', 0)} • "
+                f"تکراری/ردشده={data.get('duplicates', 0)} • "
+                "برای ورود به Products باید انتخاب صریح انجام شود."
+            )
         elif data.get("already_collected"):
             self.status.setText(
                 f"این Product قبلاً دریافت شده — ID {data.get('product_id') or '—'}"
