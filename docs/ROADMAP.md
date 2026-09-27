@@ -10,7 +10,9 @@
 - [x] Operations/Crawl 155/155 + Phase50 broad 147/147 + static/Qt gates PASS.
 - [x] Commit/push exact O7A candidate at `4a7d2771...` and prove Local=Remote 0/0.
 - [x] Fresh Catalog rollback + exact-SHA Qt VerifyOnly + foreground v8.9.11 launch.
-- [ ] Owner UAT: one disposable direct MakerWorld Product and one MakerWorld Search URL.
+- [x] Real MakerWorld UAT PASS on isolated Catalog clone: direct Product `3173877` preserved exact `#profileId`, adaptive `network_capture` fallback succeeded with 5/5 images; Search `keyword=donky` Previewed/collected 3/3 with zero failures/duplicates.
+- [x] O7A ACCEPTED; O6E final documentation closure complete; Phase50.A.2Z-O CLOSED with no Server delta/deploy requirement.
+- [ ] NEXT: Phase50.A.2Z-W5 — first-class Manual / Self-Produced Product.
 
 ## 2026-09-25 - Phase50.A.2Z-O4 Delete Semantics Repair
 - [x] Read-only real Catalog audit: 58 Product/Crawl ledger mismatches; 191 rejected Products; 22 rejected Candidate remnants; 16 Preview remnants; 4 same-identity Local remnants.

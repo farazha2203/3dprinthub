@@ -1,3 +1,9 @@
+## 2026-09-27 - A2Z-O CLOSED / A2Z-W5 Manual Product active next
+
+Phase50.A.2Z-O Catalog Operator Controls + Crawl Recovery is ACCEPTED/CLOSED on the latest v8.9.11 lineage. O7A real MakerWorld UAT passed on an isolated Catalog clone: exact direct Product `3173877...#profileId-3588661` failed over from expected HTTP 403 to `network_capture` and saved 5/5 images; Search `keyword=donky` Previewed/collected exactly 3/3 Products with zero failures/duplicates. Product categories and independent Instagram Post/Story behavior remain preserved. O6C proved the entire O-phase has zero Server runtime/static/migration delta, so no Production deployment is required for closure.
+
+A2Z Catalog Data Completion is already Production-verified/closed and A2Z-S Image/Social Authority is already accepted. The next unresolved master phase is **Phase50.A.2Z-W5 — Manual / Self-Produced Product**: first-class Product creation without a marketplace Source, reusing canonical Product/Profile/Filament/Image/readiness/Site/Social/revision authorities and forbidding AI invention of weight/time/dimensions/material/license. Immediately after W5: **A2Z-W6 — Source Video + Reel**.
+
 ## 2026-09-25 - A2Z-O O3 guarded deep Product repair ACCEPTED / O4 active next
 
 O3 is accepted at GitHub source `1c8db58a...`. Deep repair is explicit/same-identity/backup-backed/fail-closed, preserves Product/Site/receipt/operator authority, fetches into a fresh folder and quarantines only safe old active Local data after success. Focused 6/6, related 87/87 and Phase50 122/122 pass with all static/framework gates. Exact-SHA runtime is accepted; isolated real Product #1 repair succeeded with 3 mapped exact Local images and canonical Catalog digest remained unchanged. Production/Host was not changed because O3 is Windows/Catalog-only. Exact next is O4 Delete Semantics Repair, then O5 Social receipt/operator acceptance and O6 integrated closure.

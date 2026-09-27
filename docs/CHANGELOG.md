@@ -6,8 +6,11 @@
 - Source refresh now lives in Inventory with independent Product/image limits; low-frequency browser/Saved-HTML/method controls remain under Advanced.
 - Verification: O7A 5/5, Operations/Crawl 155/155, Phase50 broad 147/147, Social 65/65, Category Bridge 3/3, compileall/pip/diff/Qt VerifyOnly PASS.
 - GitHub implementation commit `4a7d2771...` is Local=Remote 0/0; fresh runtime rollback `phase50-o7a-runtime-20260926-231236` quick-check/count parity PASS.
-- Exact-SHA foreground v8.9.11 launched from the O7A worktree; Product/Crawl/Receipt counts remain unchanged from the pre-launch rollback.
-- No live crawl, Instagram publication, provider mutation, Host/Production change or migration.
+- Exact-SHA foreground v8.9.11 launched from the O7A worktree; Product/Crawl/Receipt counts remained unchanged from the pre-launch rollback.
+- Real MakerWorld Source UAT then ran only on isolated evidence root `D:\\projects\\3dprinthub-backups\\phase50-a2z-o7a-makerworld-20260926-225405`: direct Product `3173877` preserved the exact `#profileId`; rich HTTP 403 correctly failed over to `network_capture` and saved 5/5 images. Search `keyword=donky` Previewed/collected 3/3 Products with zero failures/duplicates.
+- Isolated SQLite finished `quick_check=ok`, Products 962→966 and Crawl 1178→1182. A later canonical rollback still showed 962/1178, proving the live Source UAT did not mutate the canonical Catalog.
+- O7A is ACCEPTED and the overall A2Z-O Catalog Operator Controls phase is CLOSED. O6C proved zero O-phase Server delta, so no Host/Production deploy is required. Next unresolved master phase is A2Z-W5 Manual/Self-Produced Product; W6 Source Video/Reel follows.
+- No Instagram publication, provider mutation, Host/Production change or migration occurred in O7A acceptance.
 
 ## 2026-09-26 - O6C Server delta / lineage audit
 - Local/upstream/live GitHub are exact at `d2838684c65c41e19266c7e10a9d82ee1ca717e9`; last verified selective Production `2b48a593...` is an ancestor of O baseline `82862b45...`, which is an ancestor of current HEAD.

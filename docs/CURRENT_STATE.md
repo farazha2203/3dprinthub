@@ -1,4 +1,4 @@
-## 2026-09-26 - Phase50.A.2Z-O7A MakerWorld acquisition UX - GITHUB_UPDATED / EXACT-SHA RUNTIME LAUNCHED / OWNER UAT NEXT
+## 2026-09-27 - Phase50.A.2Z-O7A MakerWorld acquisition UX - ACCEPTED / O PHASE CLOSED / W5 NEXT
 
 Correct Windows lineage is v8.9.11 Build 2026.09.20.1 on `D:\projects\3DPrintHub-a2z-a2r-converge`, branch `wip/phase50-a2z-o7a-acquisition-ui-20260926`, entry HEAD `eba70a55bd6907564744f3805005cac1f7659531`. Ancestry verification confirms the accepted A2U/A2X/A2Y/A2Z/O1-O6 lineage is preserved, including independent Instagram Post/Story actions, Product categories and O6A1 automatic Story Product-link behavior.
 
@@ -12,7 +12,13 @@ GitHub source/test/docs commit is `4a7d2771f0b982db3deea5b5e48b058ea6c1882e`; Lo
 
 Exact-SHA Qt VerifyOnly PASS after push. The visible foreground runtime is now launched only from `D:\projects\3DPrintHub-a2z-a2r-converge\catalog_center\qt_launch.py`; active window title is `3DPrintHub Catalog Center v8.9.11 - Qt 6`. No obsolete v8.9.10 runtime is active.
 
-Exact next: owner functional UAT using one disposable direct MakerWorld Product URL and one MakerWorld Search URL; if either live Source flow fails, patch only that acquisition boundary with a focused regression before any broader phase.
+Real MakerWorld UAT is PASS on isolated evidence root `D:\\projects\\3dprinthub-backups\\phase50-a2z-o7a-makerworld-20260926-225405`. Direct Product `3173877` preserved the exact `?from=recommend#profileId-3588661` URL; rich HTTP returned the expected 403, adaptive fallback selected `network_capture`, and 5/5 images plus valid title/category/author/data were persisted to the isolated Product. Search `https://makerworld.com/en/search/models?keyword=donky` produced 3 Preview candidates and collected exactly 3/3 Products (`2162325`, `2449892`, `1844876`) with zero failures/duplicates and one real local image each. Isolated SQLite finished `quick_check=ok`, Products 962→966 and Crawl 1178→1182.
+
+The UAT did not touch canonical Catalog: a later 23:12 rollback still showed Products=962/Crawl=1178. Current canonical morning truth is `quick_check=ok`, Products=965/Crawl=1181/Receipts=539; the three later Products are unrelated automatic foreground ingestion IDs `2714428`, `2724780`, `2906384`, not the four UAT identities. Catalog application bytes are unchanged between implementation commit `4a7d2771...` and docs-only head `dc9e428a...`. The isolated Chrome 9222 UAT window was closed gracefully.
+
+O7A is ACCEPTED. O6E final documentation closure is also complete: O6C already proved zero O-phase Server delta, so O6D remains NOT_REQUIRED and no Host/Production deployment is performed. The overall `Phase50.A.2Z-O — Catalog Operator Controls + Crawl Recovery` phase is CLOSED.
+
+Exact next development phase from the A2Y master remaining-work order: **Phase50.A.2Z-W5 — Manual / Self-Produced Product**. Ordered start: re-read master/docs/errors → verify clean exact forward head/lineage → register W5 phase contract → inventory existing manual Product capabilities before adding anything → implement first-class operator-created Product without marketplace identity while preserving Product/Profile/Filament/Image/Site/Social authorities → focused/related regression → fresh Catalog rollback before any real Product acceptance → exact-SHA Qt UAT → docs/GitHub closure. Immediately following phase: **A2Z-W6 — Source Video + Reel**.
 
 ## 2026-09-26 - Phase50.A.2Z-O6C Server delta / lineage audit - ACCEPTED / O6E NEXT
 

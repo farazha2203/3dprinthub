@@ -1,6 +1,6 @@
 # Phase50.A.2Z-O - Catalog Operator Controls + Crawl Recovery
 
-Status: O6C_ACCEPTED / O6D_NOT_REQUIRED / O7A_GITHUB_UPDATED_RUNTIME_LAUNCHED
+Status: ACCEPTED / CLOSED / O7A_REAL_UAT_PASS / W5_NEXT
 Date: 2026-09-26
 Branch: `wip/phase50-a2z-o7a-acquisition-ui-20260926`
 Converged baseline: `82862b4569b537406618523f7350cd3514c4c03f`
@@ -302,4 +302,8 @@ O5 is deliberately split so no single execution block is long-running. Each micr
 - **O6B — Exact-SHA Runtime/UI Smoke — ACCEPTED:** Qt VerifyOnly + responsive single runtime PID 51712; isolated owner-visible contract verifies Products/Crawl routes, DB/Local-only media refresh, full reacquire, hard-delete Crawl, separate Instagram Post/Story actions and current-revision Social filters. #862 remains 4/4/4/4 with valid pixmaps after refresh; live Story readiness ready=true/no mobile handoff; canonical read-only integrity quick_check=ok with zero duplicate/Product-backed-Crawl/current-Social-final violations. No canonical/provider/Production write. STOP.
 - **O6C — Server Delta / Lineage Audit — ACCEPTED:** Local/upstream/live GitHub exact `d2838684...`; last verified Production `2b48a593...` -> O baseline `82862b45...` -> current HEAD ancestry PASS. Full Production-to-HEAD delta contains historical pre-O Server/test/Host-script files, but exact O baseline-to-HEAD delta is only 44 Catalog + 8 docs with zero Server runtime/static/migration/Host-script delta. Dedicated reverse tunnel 22024 is currently unavailable read-only, so fresh Host HEAD is not claimed. Decision = NO DEPLOY REQUIRED for O phase. STOP.
 - **O6D — Production Gate — SKIPPED / NOT REQUIRED:** the O phase has no Production application delta; do not deploy unrelated pre-O ZarinPal/A2R/A2Z Server changes under this closure. STOP.
-- **O6E — Final Documentation Closure — NEXT:** CURRENT_STATE/ROADMAP/CHANGELOG/ERRORS/REQUESTS/active phase + final Local=Remote proof; preserve tunnel/external Story notes. STOP.
+- **O6E — Final Documentation Closure — ACCEPTED:** O7A live MakerWorld UAT is incorporated; CURRENT_STATE/ROADMAP/CHANGELOG/REQUESTS/active phases are reconciled; O6C zero-Server-delta decision remains authoritative; no Host deploy/Production gate is required. Final Local=Remote proof is the only Git closeout step. STOP.
+- **O7A — MakerWorld Single/Search Acquisition UX — ACCEPTED:** exact Product URL + Search URL live UAT passed on an isolated Catalog clone. Direct Product preserved the exact `#profileId` URL and adaptive fallback selected `network_capture` after HTTP 403; Search `keyword=donky` Previewed/collected 3/3 with 0 failures/duplicates. Product categories and independent Instagram Post/Story contracts remain unchanged.
+
+### Phase O closure / successor
+The Catalog Operator Controls + Crawl Recovery phase is closed. A2Z Catalog Data Completion is already Production-verified/closed and A2Z-S Image/Social Authority is already accepted. Per the A2Y master remaining-work order, the next unresolved development phase is **Phase50.A.2Z-W5 — Manual / Self-Produced Product**. Immediately after W5: **A2Z-W6 — Source Video + Reel**.

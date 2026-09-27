@@ -1,6 +1,6 @@
 # Phase50.A.2Z-O7A — MakerWorld Single Product / Search Acquisition UX
 
-Status: GITHUB_UPDATED / EXACT_SHA_RUNTIME_LAUNCHED / OWNER_UAT_NEXT
+Status: ACCEPTED / REAL_MAKERWORLD_UAT_PASS / PHASE_CLOSED / W5_NEXT
 Date: 2026-09-26
 Branch: `wip/phase50-a2z-o7a-acquisition-ui-20260926`
 Entry HEAD: `eba70a55bd6907564744f3805005cac1f7659531`
@@ -71,6 +71,17 @@ No Product crawl was automatically started, no Instagram Post/Story was sent, no
 - Visible runtime is v8.9.11 from the O7A worktree; window title: `3DPrintHub Catalog Center v8.9.11 - Qt 6`.
 - No obsolete v8.9.10 Catalog runtime is active.
 
+## Real MakerWorld UAT — PASS
+
+Isolated evidence root: `D:\\projects\\3dprinthub-backups\\phase50-a2z-o7a-makerworld-20260926-225405`.
+
+- Direct Product URL `https://makerworld.com/en/models/3173877-coralune-lite-organic-lamp-for-bambu-lab-mh001?from=recommend#profileId-3588661` preserved the exact query/hash/profileId and created exactly one isolated Product (#963). Rich HTTP hit the expected MakerWorld 403 and adaptive fallback selected `network_capture`; title/data/category/author quality passed and 5/5 images were saved under the isolated Product folder.
+- Search URL `https://makerworld.com/en/search/models?keyword=donky` discovered exactly three Preview candidates and collected exactly three Products with zero failures/duplicates. `network_capture` succeeded for all three after the first rich 403 fallback: external IDs `2162325`, `2449892`, `1844876`; each Product kept its resolved MakerWorld Product URL/profile fragment and a real local image.
+- Isolated SQLite final truth: `quick_check=ok`, Products `962 -> 966`, Crawl `1178 -> 1182`; canonical Catalog was not used by this UAT. The later canonical runtime rollback at 23:12 still had Products=962/Crawl=1178, independently proving the 22:56–22:57 live UAT was isolated.
+- Current canonical drift observed the next morning is unrelated foreground automatic ingestion: Products=965/Crawl=1181/Receipts=539 with new IDs `2714428`, `2724780`, `2906384`; none are the four UAT identities. Canonical `quick_check=ok`.
+- Catalog application bytes are identical from implementation commit `4a7d2771...` through docs-only head `dc9e428a...`, so the real-source UAT exercised the accepted O7A runtime code.
+- The isolated Chrome 9222 UAT window was closed gracefully after evidence collection. No Instagram publish, provider mutation, Host/Production change or migration occurred.
+
 ## Exact Next Gate
 
-Owner functional UAT: use one disposable direct MakerWorld Product URL and one MakerWorld Search URL. If a live Source method fails, patch only that acquisition boundary with a focused regression; do not alter Social/category/Product authority.
+O7A is accepted. Run O6E final documentation closure for the overall Catalog Operator Controls phase: update master status/remaining-work pointers, prove clean Local=Remote, and STOP. No Host deploy or Production verification is required because O7A/O phase is Windows/Catalog-only and O6C already proved zero O-phase Server delta.
