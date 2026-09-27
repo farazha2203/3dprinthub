@@ -19,6 +19,63 @@ class BufferConfig:
     timeout: int = 30
 
 
+def prepare_reel_preview(
+    product: dict[str, Any],
+    *,
+    video_url: str,
+    site_url: str,
+    thumbnail_offset_ms: int = 0,
+) -> dict[str, Any]:
+    """Build a review-only Reel handoff; never calls Buffer or mutates a DB."""
+    url = str(video_url or "").strip()
+    if not url.startswith("https://"):
+        raise ValueError("Reel requires a public HTTPS video URL.")
+    offset = max(0, int(thumbnail_offset_ms))
+    payload = canonical_site_payload(dict(product), site_url=site_url)
+    return {
+        "status": "preview",
+        "requires_operator_approval": True,
+        "provider": "buffer",
+        "channel": "instagram",
+        "type": "reel",
+        "product_url": payload["product_url"],
+        "video_url": url,
+        "thumbnail_offset_ms": offset,
+        "custom_thumbnail_supported": False,
+        "link_strategy": "caption_and_profile_or_manual_handoff",
+        "caption": payload["caption"],
+        "ai_disclosure": True,
+    }
+
+
+def build_reel_handoff_input(
+    preview: dict[str, Any],
+    cfg: BufferConfig,
+    *,
+    approved: bool = False,
+) -> dict[str, Any]:
+    """Create the exact provider input only after explicit operator approval."""
+    if not approved:
+        raise RuntimeError("Reel handoff requires explicit operator approval.")
+    if str(preview.get("status") or "") != "preview":
+        raise RuntimeError("Only a fresh Reel preview can be handed off.")
+    video_url = str(preview.get("video_url") or "").strip()
+    if not video_url.startswith("https://"):
+        raise RuntimeError("Reel handoff requires a public HTTPS video URL.")
+    return {
+        "text": str(preview.get("caption") or ""),
+        "aiAssisted": True,
+        "channelId": cfg.channel_id,
+        "schedulingType": "notification",
+        "mode": "shareNow",
+        "needsApproval": True,
+        "saveToDraft": True,
+        "source": "3dprinthub-windows-w6c-reel-handoff",
+        "assets": [{"video": {"url": video_url, "metadata": {"thumbnailOffset": int(preview.get("thumbnail_offset_ms") or 0)}}}],
+        "metadata": {"instagram": {"type": "reel", "shouldShareToFeed": True, "isAiGenerated": True}},
+    }
+
+
 def _request_graphql(token: str, query: str, *, variables=None, timeout: int = 30) -> dict[str, Any]:
     body = json.dumps({"query": query, "variables": variables or {}}, ensure_ascii=False).encode("utf-8")
     req = urllib_request.Request(

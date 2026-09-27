@@ -5,13 +5,21 @@ from pathlib import Path
 
 APP_NAME = "3DPrintHub Catalog Center"
 APP_VERSION = "8.9.11"
-BUILD_ID = "2026.09.27.20"
+BUILD_ID = "2026.09.27.21"
 APP_TITLE = f"{APP_NAME} v{APP_VERSION}"
 SOURCE_ROOT = Path(__file__).resolve().parents[1]
 
 # Operator-visible release notes. Keep this tuple authoritative for the Qt
 # About dialog so the active build explains both completed and pending work.
 RELEASE_HISTORY = (
+    {
+        "date": "2026-09-27",
+        "build": BUILD_ID,
+        "status": "W6C / LOCAL_TESTED / HANDOFF_ONLY",
+        "done": "Reel Preview is review-only; public HTTPS video, product URL, caption, AI disclosure and thumbnail offset are shown. Handoff is fail-closed until explicit operator approval and produces a Buffer draft/approval payload with Instagram type=reel.",
+        "not_done": "No Buffer API call, Reel creation, Instagram publish, canonical Catalog write, Host or Production change was performed.",
+        "next": "Run W6D full video/media/Social regression, compileall, diff-check, Qt VerifyOnly and isolated foreground smoke.",
+    },
     {
         "date": "2026-09-27",
         "build": BUILD_ID,

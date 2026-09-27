@@ -1,6 +1,6 @@
 # Phase50.A2Z-W6 — Source Video + Reel
 
-Status: `IN_PROGRESS / BASELINE_LOCAL_TESTED`  
+Status: `IN_PROGRESS / W6C_LOCAL_TESTED`
 Date: 2026-09-27  
 Branch: `wip/phase50-a2z-w5-manual-product-20260927`  
 Start commit: `48b7bfd123c1c537e78f73a654292211318423fd`
@@ -97,3 +97,20 @@ Status: `LOCAL_TESTED` in Build `2026.09.27.20`.
 
 Exact next phase: W6C Reel handoff contract research and Preview → operator
 approval → handoff status, with image Story/Post contracts unchanged.
+
+## W6C implementation checkpoint — 2026-09-27
+
+Status: `LOCAL_TESTED` in Build `2026.09.27.21`.
+
+- Official Buffer contract was checked: video assets use a publicly accessible
+  URL; Instagram metadata supports `type=reel`; video thumbnail selection uses
+  a frame offset and custom video thumbnail images are not used.
+- `prepare_reel_preview` is review-only and requires a public HTTPS video URL.
+- `build_reel_handoff_input` fails closed until explicit operator approval and
+  emits a draft/approval payload only; it does not call Buffer.
+- Focused Buffer/Social suite: `17/17 PASS`.
+- No Buffer API call, Instagram publish, Catalog, Host or Production mutation.
+
+Exact next phase: W6D full video/media/Social regression, compileall,
+diff-check, Qt VerifyOnly, isolated foreground smoke, integrity backup and
+GitHub gate.

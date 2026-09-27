@@ -12,6 +12,8 @@ from PIL import Image
 
 from app.buffer_publish import (
     BufferConfig,
+    build_reel_handoff_input,
+    prepare_reel_preview,
     publish_product,
     reconcile_product_receipts,
     require_clickable_story_device,
@@ -506,6 +508,45 @@ class BufferPublishTests(unittest.TestCase):
     def test_missing_key_fails_closed(self, _secret):
         with self.assertRaisesRegex(RuntimeError, "Buffer API Key"):
             test_connection(BufferConfig(channel_id="chan-1"))
+
+    def test_w6c_reel_preview_is_review_only_and_uses_public_video(self):
+        db = _DB()
+        preview = prepare_reel_preview(
+            db.row,
+            video_url="https://3dprinthub.ir/media/p/7/video.mp4",
+            site_url="https://3dprinthub.ir",
+            thumbnail_offset_ms=1200,
+        )
+        self.assertEqual(preview["status"], "preview")
+        self.assertTrue(preview["requires_operator_approval"])
+        self.assertEqual(preview["type"], "reel")
+        self.assertFalse(preview["custom_thumbnail_supported"])
+        self.assertEqual(preview["thumbnail_offset_ms"], 1200)
+
+    def test_w6c_reel_handoff_requires_approval_and_is_provider_ready(self):
+        preview = {
+            "status": "preview",
+            "caption": "محصول آزمایشی",
+            "video_url": "https://3dprinthub.ir/media/p/7/video.mp4",
+            "thumbnail_offset_ms": 800,
+        }
+        with self.assertRaisesRegex(RuntimeError, "explicit operator approval"):
+            build_reel_handoff_input(preview, BufferConfig(channel_id="chan-1"))
+        payload = build_reel_handoff_input(
+            preview, BufferConfig(channel_id="chan-1"), approved=True
+        )
+        self.assertEqual(payload["metadata"]["instagram"]["type"], "reel")
+        self.assertTrue(payload["needsApproval"])
+        self.assertTrue(payload["saveToDraft"])
+        self.assertEqual(payload["assets"][0]["video"]["metadata"]["thumbnailOffset"], 800)
+
+    def test_w6c_reel_rejects_non_public_video_url(self):
+        with self.assertRaisesRegex(ValueError, "public HTTPS"):
+            prepare_reel_preview(
+                _DB().row,
+                video_url="C:/private/video.mp4",
+                site_url="https://3dprinthub.ir",
+            )
 
 
 if __name__ == "__main__":

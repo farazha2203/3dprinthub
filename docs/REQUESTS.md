@@ -1330,3 +1330,6 @@ Status 2026-09-17: source behavior locally accepted; Production reset preflight/
 ## 2026-09-27 - W6B Site video acceptance
 
 Implemented locally in Build `2026.09.27.20`: isolated Site video copy validates MIME signature, size boundary, Product ownership and checksum; public verification covers URL and HTML embedding. Focused W6 video tests pass 11/11. No real Site upload, canonical Catalog mutation, Host/Production change or Social publish occurred. Next gate is W6D full local acceptance after W6C Reel handoff contract.
+## 2026-09-27 - W6C Reel handoff
+
+Implemented locally in Build `2026.09.27.21`: Reel Preview is review-only and handoff is fail-closed until explicit operator approval. Provider payload uses a public HTTPS video, `type=reel`, `thumbnailOffset`, draft/approval mode and AI disclosure. No Buffer API call, Instagram publish, Catalog write, Host or Production change occurred. Focused tests pass 17/17; W6D is next.
