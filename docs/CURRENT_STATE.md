@@ -2595,3 +2595,8 @@ extension/cross-domain/download failure reasons are classified before save.
 Video/reacquire/crawl regression passed `18/18`. No Reel/Post/Story publish and
 no canonical Catalog/Host/Production mutation occurred. Exact next task is W6B
 isolated Site video acceptance; W6C Reel handoff follows.
+## 2026-09-27 - W6B isolated Site video acceptance - LOCAL_TESTED / Build 2026.09.27.20
+
+W6B is locally tested on `wip/phase50-a2z-w5-manual-product-20260927`. Product-owned Site video copy now enforces the existing 512-byte–80MB boundary plus binary MIME/extension agreement for GIF, MP4/M4V/MOV and WebM, then verifies destination size and SHA256. The public verifier test covers a public video URL embedded through `<video><source>` and keeps image/video checks separate. Focused W6 video tests pass 11/11. Acceptance is isolated: no canonical Catalog, real Site, Host, Production, Reel, Post or Story mutation occurred.
+
+Current exact HEAD before documentation gate: `649f03756da28246c5fc2de58ddace4fd6d18761`; W6B changes are uncommitted until broader regression and release gates pass. Exact next task: related W6 regression, compileall, diff-check, Qt VerifyOnly and isolated foreground smoke; then commit/push and verify Local=Remote. Immediately following phase: W6C Reel handoff contract, then W6D full acceptance/GitHub gate.

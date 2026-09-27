@@ -1327,3 +1327,6 @@ Implemented and verified: 66 active inventory rows, 64 unique selectable Filamen
 ## REQ-50-011 - Final Windows publisher resend/update + empty Store handoff
 Requested behavior: clear old/test Store products; keep the professional standalone 3D Slicebox Hero; allow previously sent Windows Catalog products to be explicitly resent; update existing Site products in place when present; recreate safely when the old Site product was deleted; carry changed Profile, Filament, print time and other current product fields on republish.
 Status 2026-09-17: source behavior locally accepted; Production reset preflight/backup ready; destructive reset not yet executed due automation safety guard.
+## 2026-09-27 - W6B Site video acceptance
+
+Implemented locally in Build `2026.09.27.20`: isolated Site video copy validates MIME signature, size boundary, Product ownership and checksum; public verification covers URL and HTML embedding. Focused W6 video tests pass 11/11. No real Site upload, canonical Catalog mutation, Host/Production change or Social publish occurred. Next gate is W6D full local acceptance after W6C Reel handoff contract.

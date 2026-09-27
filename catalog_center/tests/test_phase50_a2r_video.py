@@ -119,7 +119,7 @@ class Phase50A2RVideoTests(unittest.TestCase):
             source = root / "source"
             video = source / "videos" / "received.gif"
             video.parent.mkdir(parents=True)
-            video.write_bytes(b"G" * 2048)
+            video.write_bytes(b"GIF89a" + b"G" * 2042)
             model_dir = root / "batch-model"
             model_dir.mkdir()
             names = _copy_publish_videos(
@@ -130,11 +130,47 @@ class Phase50A2RVideoTests(unittest.TestCase):
             self.assertEqual(names, ["product-video-01.gif"])
             self.assertEqual((model_dir / "videos" / names[0]).read_bytes(), video.read_bytes())
 
+    def test_site_batch_rejects_mime_mismatch_and_out_of_bounds_video(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source" / "videos"
+            source.mkdir(parents=True)
+            model_dir = root / "batch-model"
+            model_dir.mkdir()
+            bad_mime = source / "wrong.mp4"
+            bad_mime.write_bytes(b"GIF89a" + b"x" * 2042)
+            with self.assertRaisesRegex(RuntimeError, "MIME"):
+                _copy_publish_videos({"local_video_files_json": json.dumps([str(bad_mime)])}, root / "source", model_dir)
+            too_small = source / "small.gif"
+            too_small.write_bytes(b"GIF89a")
+            with self.assertRaisesRegex(RuntimeError, "size"):
+                _copy_publish_videos({"local_video_files_json": json.dumps([str(too_small)])}, root / "source", model_dir)
+
+    def test_isolated_site_video_acceptance_preserves_catalog_rollback_state(self):
+        with tempfile.TemporaryDirectory() as td:
+            db_path = Path(td) / "catalog.sqlite3"
+            db = Database(db_path)
+            before_products = db.conn.execute("SELECT COUNT(*) FROM products").fetchone()[0]
+            before_check = db.conn.execute("PRAGMA quick_check").fetchone()[0]
+            source = Path(td) / "source" / "videos"
+            source.mkdir(parents=True)
+            video = source / "accepted.gif"
+            video.write_bytes(b"GIF89a" + b"v" * 2042)
+            names = _copy_publish_videos(
+                {"local_video_files_json": json.dumps([str(video)])},
+                Path(td) / "source", Path(td) / "site-model",
+            )
+            self.assertEqual(names, ["product-video-01.gif"])
+            self.assertEqual(db.conn.execute("PRAGMA quick_check").fetchone()[0], "ok")
+            self.assertEqual(before_check, "ok")
+            self.assertEqual(db.conn.execute("SELECT COUNT(*) FROM products").fetchone()[0], before_products)
+            db.close()
+
     def test_public_verifier_separates_product_video_from_image_checks(self):
         cfg = SiteConnection("ftp", 21, "u", "p", "/", "https://3dprinthub.ir", "token")
         page_html = (
             b'<img src="/media/p/536/abc/main.webp">'
-            b'<img src="/media/store/products/videos/48/hash.gif">'
+            b'<video controls><source src="/media/store/products/videos/48/hash.gif" type="image/gif"></video>'
         )
 
         def fake_get(_cfg, value, *, expect_image=False, expect_video=False, attempts=3):

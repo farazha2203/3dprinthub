@@ -79,3 +79,21 @@ Status: `LOCAL_TESTED` in Build `2026.09.27.19`.
 
 Next exact phase: W6B isolated Site video acceptance, including MIME/size,
 public URL, HTML embedding and rollback verification.
+
+## W6B implementation checkpoint — 2026-09-27
+
+Status: `LOCAL_TESTED` in Build `2026.09.27.20`.
+
+- Site copy retains the Product-owned `videos/` root and rejects path escape,
+  unsupported suffixes, files below 512 bytes or above 80MB.
+- Binary signatures must agree with the declared media type: GIF magic for
+  `.gif`, `ftyp` for MP4/M4V/MOV, and EBML for WebM.
+- Destination size and SHA256 are verified after copy.
+- Isolated public verification covers the declared public URL and actual
+  `<video><source>` HTML embedding while keeping image checks separate.
+- Focused W6 video suite: `11/11 PASS`, including MIME mismatch and undersize
+  rejection.
+- No real Site/Host/Production, Reel, Post or Story mutation occurred.
+
+Exact next phase: W6C Reel handoff contract research and Preview → operator
+approval → handoff status, with image Story/Post contracts unchanged.

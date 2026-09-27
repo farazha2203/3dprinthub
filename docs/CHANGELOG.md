@@ -1771,3 +1771,5 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - Added `docs/مستندات اتصال به اینستاگرام/` containing architecture, API contract, security rules, official Buffer references and safe GraphQL examples.
 - Added focused Buffer provider tests: healthy Instagram channel, `shareNow` public-media post input, and fail-closed missing-secret behavior.
 - Buffer-side Instagram login is owner-confirmed; live API transport remains pending because the local handoff file and Credential Store currently contain no Buffer API key.
+## 2026-09-27
+- W6B isolated Site video acceptance: enforce binary MIME/extension agreement and 512-byte–80MB bounds, verify Product-owned copy/checksum, and test public URL plus `<video><source>` embedding. Focused suite 11/11 PASS; no canonical Catalog, Site, Host or Production mutation.

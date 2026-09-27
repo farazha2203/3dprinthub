@@ -655,6 +655,14 @@ def _copy_publish_videos(row: dict[str, Any], source_dir: Path | None, model_dir
             raise RuntimeError(f"Unsupported Product video type: {source.name}")
         if source.stat().st_size < 512 or source.stat().st_size > 80_000_000:
             raise RuntimeError(f"Product video size is outside the publish boundary: {source.name}")
+        header = source.read_bytes()[:16]
+        mime_ok = (
+            (suffix == ".gif" and header[:6] in {b"GIF87a", b"GIF89a"})
+            or (suffix in {".mp4", ".m4v", ".mov"} and header[4:8] == b"ftyp")
+            or (suffix == ".webm" and header[:4] == b"\x1a\x45\xdf\xa3")
+        )
+        if not mime_ok:
+            raise RuntimeError(f"Product video MIME does not match its extension: {source.name}")
         target.mkdir(parents=True, exist_ok=True)
         name = f"product-video-{index:02d}{suffix}"
         destination = target / name
