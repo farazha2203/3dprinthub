@@ -37,6 +37,7 @@ from .classic_methods import (
 )
 from .version import APP_TITLE, APP_VERSION, BUILD_ID
 from .env_settings import ENV_FILE, env_source, env_value
+from .post_composer import POST_STYLES, mock_openrouter_post, validate_post_metadata
 
 APP=APP_TITLE
 ROOT=Path(r"D:\projects")
@@ -945,7 +946,7 @@ class App(tk.Tk):
         ttk.Label(top,text=row["title_fa"] or row["source_title"] or f"Product #{product_id}",style="Header.TLabel").pack(anchor="w")
         ttk.Label(top,text="تمام خروجی AI قابل ویرایش است؛ هیچ چیز بدون تأیید شما منتشر نمی‌شود.",style="SubHeader.TLabel").pack(anchor="w")
         nb=ttk.Notebook(win); nb.pack(fill="both",expand=True,padx=12,pady=8)
-        tabs={name:ttk.Frame(nb,padding=12) for name in ["محتوا","مشخصات و دسته","SEO و فروش","تصاویر"]}
+        tabs={name:ttk.Frame(nb,padding=12) for name in ["محتوا","مشخصات و دسته","SEO و فروش","تصاویر","Post"]}
         for name,frame in tabs.items():nb.add(frame,text=name)
         title=tk.StringVar(value=row["title_fa"] or "")
         short=tk.Text(tabs["محتوا"],height=5,wrap="word"); desc=tk.Text(tabs["محتوا"],height=15,wrap="word"); social=tk.Text(tabs["محتوا"],height=7,wrap="word")
@@ -974,12 +975,34 @@ class App(tk.Tk):
         alts=tk.Text(tabs["تصاویر"],height=24,wrap="word")
         ttk.Label(tabs["تصاویر"],text="Alt فارسی تصاویر به ترتیب گالری (هر خط یک تصویر)").pack(anchor="w"); alts.pack(fill="both",expand=True,pady=8); alts.insert("1.0","\n".join(self._json_value(row["image_alt_texts_json"],[])))
 
+        post_saved=self._json_value(row["content_pack_json"],{}).get("post",{}) if row["content_pack_json"] else {}
+        post_style=tk.StringVar(value=post_saved.get("style") or POST_STYLES[0][0])
+        post_caption=tk.Text(tabs["Post"],height=12,wrap="word")
+        post_links=tk.StringVar(value=", ".join(post_saved.get("links") or []))
+        post_mentions=tk.StringVar(value=" ".join(post_saved.get("mentions") or []))
+        ttk.Label(tabs["Post"],text="سبک پست").pack(anchor="w")
+        style_box=ttk.Frame(tabs["Post"]); style_box.pack(fill="x",pady=5)
+        for idx,(key,label) in enumerate(POST_STYLES): ttk.Radiobutton(style_box,text=label,variable=post_style,value=key).grid(row=idx//4,column=idx%4,sticky="w",padx=6,pady=3)
+        ttk.Label(tabs["Post"],text="متن پست (قابل ویرایش)").pack(anchor="w"); post_caption.pack(fill="both",expand=True,pady=5); post_caption.insert("1.0",post_saved.get("caption") or "")
+        ttk.Label(tabs["Post"],textvariable=post_links).pack(anchor="w")
+        ttk.Label(tabs["Post"],textvariable=post_mentions).pack(anchor="w")
+        def mock_post():
+            try:
+                result=mock_openrouter_post(dict(row),post_style.get(),post_mentions.get())
+                if not validate_post_metadata(result,dict(row)): raise ValueError("POST_METADATA_VALIDATION_FAILED")
+                post_caption.delete("1.0","end"); post_caption.insert("1.0",result["caption"]); post_links.set(", ".join(result["links"])); post_mentions.set(" ".join(result["mentions"]))
+            except Exception as exc: messagebox.showerror(APP,str(exc),parent=win)
+        ttk.Button(tabs["Post"],text="🧪 Mock پاسخ OpenRouter",command=mock_post,style="Primary.TButton").pack(anchor="w",pady=6)
+
         def save_dialog():
             try:
                 specs=json.loads(specs_text.get("1.0","end").strip() or "{}")
                 if not isinstance(specs,dict):raise ValueError("مشخصات باید JSON Object باشد.")
             except Exception as exc:
                 messagebox.showerror(APP,f"JSON مشخصات معتبر نیست: {exc}",parent=win);return
+            post_meta={"style":post_style.get(),"caption":post_caption.get("1.0","end").strip(),"links":[x.strip() for x in post_links.get().split(",") if x.strip()],"mentions":[x for x in post_mentions.get().split() if x.startswith("@")],"no_invention":True}
+            content_pack=self._json_value(row["content_pack_json"],{})
+            content_pack["post"]=post_meta
             values={
                 "title_fa":title.get().strip(),"short_description_fa":short.get("1.0","end").strip(),"description_fa":desc.get("1.0","end").strip(),
                 "social_caption_fa":social.get("1.0","end").strip(),"categories_fa_json":json.dumps([x.strip() for x in cat_text.get("1.0","end").splitlines() if x.strip()],ensure_ascii=False),
@@ -989,8 +1012,10 @@ class App(tk.Tk):
                 "hashtags_fa_json":json.dumps([x.strip() for x in hashtags.get("1.0","end").splitlines() if x.strip()],ensure_ascii=False),
                 "image_alt_texts_json":json.dumps([x.strip() for x in alts.get("1.0","end").splitlines() if x.strip()],ensure_ascii=False),
                 "content_status":"ready",
+                "content_pack_json":json.dumps(content_pack,ensure_ascii=False),
             }
             before=dict(self.db.product(product_id)); self.db.update_product(product_id,values); after=dict(self.db.product(product_id)); self.db.save_history(product_id,"content_edit",before,after,"Manual content studio edit")
+            self.db.save_history(product_id,"post_revision",before,after,f"Post revision saved: style={post_meta['style']}; links={len(post_meta['links'])}; mentions={len(post_meta['mentions'])}")
             if product_id==self.current_product:self.load_product()
             messagebox.showinfo(APP,"پکیج محتوا ذخیره شد.",parent=win)
         footer=ttk.Frame(win,padding=12); footer.pack(fill="x")
