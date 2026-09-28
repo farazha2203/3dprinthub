@@ -36,6 +36,8 @@ Next gate: isolated writable Catalog + foreground Qt VerifyOnly/UI smoke, then P
 - Explicit approval + selection is now the only route that materializes a SQLite revision for the existing Story/Post preparation boundary.
 - Direct renderer smoke initially stopped on a strict stale local-media URL fixture; the selected-revision path now bypasses that obsolete resolver while the legacy renderer remains unchanged. No provider send was touched.
 - Focused Social/Video/Media/Product regression passed `119/119`; compileall, diff-check and Qt VerifyOnly passed. The full 971-test suite is not accepted: `14 failures / 15 errors` remain from baseline teardown/resource and unrelated stale assertions.
+- Baseline update: the rerun of the full suite is `12 failures / 16 errors`; all 12 failures reproduce unchanged on parent `00fd4d96`, and the selected legacy error group reproduces there as well. The count changed because the verbose rerun exposed the exact current discovery manifest; this does not alter the Social/AI focused gate.
+- Popup/Design smoke remains `10/10 PASS`. Writable isolated Qt VerifyOnly/startup passed, but native Computer Use returned no targetable window, so foreground click/reopen smoke remains unverified.
 - Canonical Catalog `quick_check=ok` and `integrity_check=ok`; the byte SHA differs from the pre-generation backup, but read-only hashes/counts for all 23 user tables, page count and freelist are identical. This is recorded as SQLite physical-byte/checkpoint variance, not a proven logical data delta.
 - Next ordered gates: baseline-proof full-suite failures → isolated UI smoke → final backup verification → commit/push decision. W5C/GitHub Gate follows; real Instagram send and deploy remain disabled.
 

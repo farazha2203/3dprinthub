@@ -3229,3 +3229,15 @@ Resolved and Production verified; do not treat as open without fresh evidence.
 
 **Prevention**
 - Do not repeat the unchanged full command as proof; run a changed-condition manifest and baseline comparison, then record each remaining failure before the W5C GitHub gate.
+## ERR-50-IMAGE-003 - Full-suite failures baseline-proven; foreground native UI surface unavailable (2026-09-28)
+
+**Observed**
+- Current full regression: `971 tests`, `12 failures / 16 errors`.
+- The 12 failures were rerun on parent `00fd4d9600b4fddbfcbee1439c2e45ab02589e3b` and reproduced unchanged. The grouped legacy DB/fixture errors also reproduced on that parent (`14` errors in the selected modules).
+- The writable isolated Qt clone passed VerifyOnly and startup, but Computer Use exposed no native window in this session, so Popup open/close/reopen was not asserted through clicks.
+
+**Handling**
+- Do not modify the healthy Social AI/Story/Post boundary to satisfy unrelated historical Epic49/3i39/3i42/3i47/3i48/3i51/v83/v87 assertions. Do not claim foreground acceptance while the native automation surface is unavailable.
+
+**Next**
+- Re-run the foreground Popup smoke from a session with a targetable native Qt window, then perform W5C/GitHub Gate and final Desktop acceptance. Real sending and deploy remain disabled.
