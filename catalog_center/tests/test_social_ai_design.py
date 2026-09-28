@@ -13,6 +13,19 @@ from app.social_ai_design import (
 
 
 class SocialAIDesignTests(unittest.TestCase):
+    def test_sqlite_revision_round_trip(self):
+        from app.db import Database
+        with tempfile.TemporaryDirectory() as temp:
+            db = Database(Path(temp) / "catalog.sqlite3")
+            row = db.save_social_ai_revision(9, "story", STORY_STYLES[0].key, "abc", b"image-bytes", {"published": False})
+            self.assertEqual(row["image_blob"], b"image-bytes")
+            loaded = db.social_ai_revisions(9, "story")
+            self.assertEqual(loaded[0]["image_blob"], b"image-bytes")
+            db.update_social_ai_revision_state(row["id"], approved=True, selected_for_publish=True)
+            self.assertEqual(db.social_ai_revisions(9, "story")[0]["approved"], 1)
+            self.assertEqual(db.social_ai_revisions(9, "story")[0]["selected_for_publish"], 1)
+            db.conn.close()
+
     def test_prompt_does_not_invent_commerce_facts(self):
         prompt = build_product_prompt({"source_title": "Lamp", "source_description": "Orange lamp"}, STORY_STYLES[0])
         self.assertIn("Preserve the exact product geometry", prompt)

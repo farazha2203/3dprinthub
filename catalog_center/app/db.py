@@ -161,6 +161,22 @@ class Database:
             created_at TEXT NOT NULL
         );
         CREATE INDEX IF NOT EXISTS ix_product_history_product ON product_history(product_id, id DESC);
+        CREATE TABLE IF NOT EXISTS social_ai_revisions(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            product_id INTEGER NOT NULL,
+            kind TEXT NOT NULL,
+            style_key TEXT NOT NULL,
+            sha256 TEXT NOT NULL,
+            mime_type TEXT NOT NULL DEFAULT 'image/png',
+            image_blob BLOB NOT NULL,
+            metadata_json TEXT NOT NULL DEFAULT '{}',
+            approved INTEGER NOT NULL DEFAULT 0,
+            selected_for_publish INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL,
+            UNIQUE(product_id, kind, style_key, sha256)
+        );
+        CREATE INDEX IF NOT EXISTS ix_social_ai_revisions_product
+        ON social_ai_revisions(product_id, kind, style_key, id DESC);
         CREATE TABLE IF NOT EXISTS sync_receipts(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             product_id INTEGER,
@@ -1212,6 +1228,55 @@ class Database:
             "SELECT * FROM product_history WHERE product_id=? ORDER BY id DESC LIMIT ?",
             (int(product_id), int(limit)),
         ))
+
+    def save_social_ai_revision(self, product_id, kind, style_key, sha256, image_blob,
+                                metadata=None, *, approved=False, selected_for_publish=False,
+                                mime_type="image/png"):
+        """Store creative bytes in SQLite so the review UI has one durable authority."""
+        import json
+        blob = bytes(image_blob or b"")
+        if not blob:
+            raise ValueError("social AI revision image is empty")
+        metadata = dict(metadata or {})
+        self.conn.execute(
+            """INSERT OR IGNORE INTO social_ai_revisions
+               (product_id,kind,style_key,sha256,mime_type,image_blob,metadata_json,
+                approved,selected_for_publish,created_at)
+               VALUES(?,?,?,?,?,?,?,?,?,?)""",
+            (int(product_id), str(kind), str(style_key), str(sha256), str(mime_type), blob,
+             json.dumps(metadata, ensure_ascii=False, default=str), int(bool(approved)),
+             int(bool(selected_for_publish)), utc_now()),
+        )
+        self.conn.commit()
+        row = self.conn.execute(
+            "SELECT * FROM social_ai_revisions WHERE product_id=? AND kind=? AND style_key=? AND sha256=?",
+            (int(product_id), str(kind), str(style_key), str(sha256)),
+        ).fetchone()
+        return dict(row) if row else None
+
+    def social_ai_revisions(self, product_id, kind=None, limit=100):
+        query = "SELECT * FROM social_ai_revisions WHERE product_id=?"
+        args = [int(product_id)]
+        if kind:
+            query += " AND kind=?"
+            args.append(str(kind))
+        query += " ORDER BY id DESC LIMIT ?"
+        args.append(int(limit))
+        return [dict(row) for row in self.conn.execute(query, args)]
+
+    def update_social_ai_revision_state(self, revision_id, *, approved=None, selected_for_publish=None):
+        changes = []
+        args = []
+        if approved is not None:
+            changes.append("approved=?"); args.append(int(bool(approved)))
+        if selected_for_publish is not None:
+            changes.append("selected_for_publish=?"); args.append(int(bool(selected_for_publish)))
+        if not changes:
+            return False
+        args.append(int(revision_id))
+        self.conn.execute(f"UPDATE social_ai_revisions SET {', '.join(changes)} WHERE id=?", args)
+        self.conn.commit()
+        return True
 
     def record_product_view(self, product_id: int) -> bool:
         """Persist a real Product Editor view without modifying Product state."""

@@ -1,7 +1,7 @@
 ## 2026-09-28 - Owner: AI Story/Post creative revisions
-Status: `MOCK_LOCAL_TESTED / REAL_GENERATION_PENDING`.
+Status: `IN_APP_SQLITE_LOCAL_TESTED / REAL_GENERATION_PENDING`.
 
-The requested popup keeps the existing Post/Story send path and adds six Story plus six Post style choices, local preview, AI Content, discount and Mention metadata, and revision reuse on the Product. The current slice persists only validated mock bytes and immutable history; it does not call OpenRouter or publish. Next requested gate is isolated Qt VerifyOnly/UI smoke, followed by explicit model/price discovery before any real image generation.
+The requested popup keeps the existing Post/Story send path and adds six Story plus six Post style choices, inline image preview, AI Content, discount and Mention metadata, and revision reuse on the Product. Revision bytes now live in SQLite and approval/prepare-for-send states are stored in Product History and the revision table. The current slice uses the real Product image as an honest local preview; it does not call OpenRouter or publish. Next requested gate is foreground isolated Qt smoke, followed by explicit model/price discovery before any real image generation and provider handoff.
 
 ## 2026-09-26 - Owner: Single Product and MakerWorld Search must be separate, on latest v8.9.11
 Status: `O7A ACCEPTED / REAL MAKERWORLD UAT PASS / A2Z-O CLOSED / W5 NEXT`.

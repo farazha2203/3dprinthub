@@ -1,14 +1,16 @@
 from __future__ import annotations
 
-import json
+import hashlib
+from pathlib import Path
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QCheckBox, QGridLayout, QGroupBox, QLabel, QLineEdit, QMessageBox,
-    QPushButton, QRadioButton, QVBoxLayout, QWidget,
+    QPushButton, QRadioButton, QVBoxLayout, QWidget, QHBoxLayout,
 )
 
-from app.social_ai_design import POST_STYLES, STORY_STYLES, build_product_prompt, persist_revision
+from app.social_ai_design import POST_STYLES, STORY_STYLES, build_product_prompt
 
 
 class SocialAICreativeTab(QWidget):
@@ -40,15 +42,45 @@ class SocialAICreativeTab(QWidget):
             box = QGroupBox(style.description); box_layout = QVBoxLayout(box); box_layout.addWidget(radio)
             grid.addWidget(box, index // 2, index % 2); self.radios.append(radio)
         root.addLayout(grid)
-        self.preview = QLabel("هنوز Mock Preview ساخته نشده"); self.preview.setAlignment(Qt.AlignmentFlag.AlignCenter); self.preview.setMinimumHeight(180)
+        self.preview = QLabel("هنوز Preview ساخته نشده")
+        self.preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.preview.setMinimumHeight(180)
+        self.preview.setScaledContents(False)
         root.addWidget(self.preview)
+        self.revision_status = QLabel("این کارت از SQLite revisionهای همین Product را می‌خواند.")
+        self.revision_status.setWordWrap(True)
+        root.addWidget(self.revision_status)
         self.generate = QPushButton("🧪 تولید Mock Revision و ذخیره History")
         self.generate.clicked.connect(self.generate_mock)
         root.addWidget(self.generate)
+        actions = QHBoxLayout()
+        self.approve = QPushButton("✅ تأیید Preview و ذخیره")
+        self.approve.setEnabled(False)
+        self.approve.clicked.connect(self.approve_revision)
+        self.prepare_send = QPushButton(f"📤 آماده‌سازی ارسال {('Story' if self.kind == 'story' else 'Post')}")
+        self.prepare_send.setEnabled(False)
+        self.prepare_send.clicked.connect(self.prepare_for_send)
+        actions.addWidget(self.approve); actions.addWidget(self.prepare_send)
+        root.addLayout(actions)
         self.status = QLabel(""); self.status.setWordWrap(True); root.addWidget(self.status)
+        self.current_revision = None
+        self._load_saved_revision()
 
     def _select(self, style):
         self.selected_style = style
+        self.current_revision = None
+        ids = list(self.selected_ids())
+        if ids:
+            for row in self.db.social_ai_revisions(int(ids[0]), self.kind, limit=100):
+                if row.get("style_key") == style.key:
+                    self.current_revision = row
+                    self._show_revision(row)
+                    break
+            else:
+                self.preview.clear()
+                self.revision_status.setText("برای این سبک هنوز revision ذخیره نشده است.")
+                self.approve.setEnabled(False)
+                self.prepare_send.setEnabled(False)
         self.status.setText(f"سبک انتخاب‌شده: {style.label} — {style.description}")
 
     def generate_mock(self):
@@ -74,9 +106,92 @@ class SocialAICreativeTab(QWidget):
             "link_mode": "provider_metadata",
             "published": False,
         }
-        mock_bytes = (f"MOCK-OPENROUTER-IMAGE|{self.kind}|{self.selected_style.key}|{product_id}".encode("utf-8") * 32)
-        revision = persist_revision(product_id, self.kind, self.selected_style, mock_bytes, metadata)
+        source_bytes = self._product_image_bytes(product)
+        if not source_bytes:
+            QMessageBox.warning(self, "Preview", "عکس واقعی Product برای ساخت Preview پیدا نشد.")
+            return
+        # This gate deliberately shows the real Product image in the same card.
+        # It is a local preview, not a claim that OpenRouter has generated it.
+        mock_bytes = source_bytes
+        metadata["preview_kind"] = "source_image_mock_preview"
+        metadata["ai_generated"] = False
+        digest = hashlib.sha256(mock_bytes).hexdigest()
+        revision = {
+            **metadata,
+            "product_id": product_id,
+            "kind": self.kind,
+            "style": self.selected_style.key,
+            "sha256": digest,
+            "bytes": len(mock_bytes),
+            "storage": "sqlite_blob",
+            "immutable_revision": True,
+            "published": False,
+        }
+        row = self.db.save_social_ai_revision(
+            product_id, self.kind, self.selected_style.key, digest, mock_bytes,
+            revision,
+        )
         self.db.save_history(product_id, f"{self.kind}_ai_revision_mock", None, metadata, "Mock AI creative; no network/publish")
-        self.db.save_history(product_id, f"{self.kind}_ai_revision_saved", None, revision, "Mock revision persisted; no network/publish")
-        self.preview.setText(f"Mock Revision\n{self.selected_style.label}\n{self.selected_style.format}\nذخیره شد — بدون API و بدون ارسال")
-        self.status.setText(f"Revision ذخیره شد: {revision['path']}\nPrompt انگلیسی ساخته شد؛ متن فارسی/URL/Mention در لایه انتشار مدیریت می‌شود.")
+        self.db.save_history(product_id, f"{self.kind}_ai_revision_saved", None, {**revision, "storage": "sqlite_blob", "db_revision_id": row.get("id") if row else None}, "Revision persisted in SQLite; no network/publish")
+        self.current_revision = row
+        self._show_revision(row)
+        self.status.setText("Preview همین‌جا از SQLite نمایش داده شد؛ تولید واقعی AI و ارسال هنوز قفل است.")
+
+    def _product_image_bytes(self, product):
+        try:
+            paths = self.kernel.images.display_local_paths(product)
+        except Exception:
+            paths = []
+        for raw in paths:
+            try:
+                path = Path(str(raw))
+                if path.is_file():
+                    data = path.read_bytes()
+                    if len(data) >= 64:
+                        return data
+            except OSError:
+                continue
+        return b""
+
+    def _load_saved_revision(self):
+        ids = list(self.selected_ids())
+        if not ids:
+            return
+        rows = self.db.social_ai_revisions(int(ids[0]), self.kind, limit=20)
+        for row in rows:
+            if row.get("style_key") == self.selected_style.key:
+                self.current_revision = row
+                self._show_revision(row)
+                return
+
+    def _show_revision(self, row):
+        raw = bytes(row.get("image_blob") or b"")
+        pixmap = QPixmap()
+        pixmap.loadFromData(raw)
+        if pixmap.isNull():
+            self.preview.setText("Revision ذخیره شده، اما bytes تصویر معتبر نیست")
+        else:
+            self.preview.setPixmap(pixmap.scaled(420, 520, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+        approved = bool(row.get("approved"))
+        selected = bool(row.get("selected_for_publish"))
+        self.approve.setEnabled(not approved)
+        self.prepare_send.setEnabled(approved)
+        self.revision_status.setText(
+            f"Revision #{row.get('id')} • ذخیره داخل SQLite • سبک: {row.get('style_key')} • "
+            f"تأیید: {'بله' if approved else 'خیر'} • آماده ارسال: {'بله' if selected else 'خیر'}"
+        )
+
+    def approve_revision(self):
+        if not self.current_revision:
+            return
+        self.db.update_social_ai_revision_state(self.current_revision["id"], approved=True)
+        self.current_revision = next((r for r in self.db.social_ai_revisions(self.current_revision["product_id"], self.kind) if r["id"] == self.current_revision["id"]), self.current_revision)
+        self._show_revision(self.current_revision)
+
+    def prepare_for_send(self):
+        if not self.current_revision or not self.current_revision.get("approved"):
+            return
+        self.db.update_social_ai_revision_state(self.current_revision["id"], selected_for_publish=True)
+        self.current_revision["selected_for_publish"] = 1
+        self._show_revision(self.current_revision)
+        self.status.setText("برای ارسال علامت‌گذاری شد؛ اتصال این revision به provider بعد از گیت OpenRouter/ارسال فعال می‌شود.")

@@ -1,8 +1,8 @@
-## 2026-09-28 - Social AI revision persistence (mock-only)
-- Added validated base64 response decoding and immutable SHA-256 keyed revision persistence under the configured Catalog data root.
-- AI Story/Post mock generation now records revision metadata and Product History with `published=false`; repeated identical bytes reuse the same revision path.
-- Focused Social AI/Instagram/Buffer verification: `38/38 PASS`; no real provider request or send was made.
-- Full compileall passed with a clean writable temporary bytecode root; a writable isolated Qt VerifyOnly/UI smoke remains the next gate.
+## 2026-09-28 - Social AI in-app revision gallery (mock-only)
+- Added SQLite `social_ai_revisions` BLOB storage with immutable SHA-256 identity, Product History, approval state and selected-for-publish state.
+- AI Story/Post popup now reloads saved revision bytes into the same style card, shows the image inline, and exposes explicit approve and prepare-for-send states.
+- Mock generation honestly uses the real Product image for local preview and records `ai_generated=false`; no provider request or send was made.
+- Focused Social AI/Instagram/Buffer verification: `39/39 PASS`; isolated Qt VerifyOnly, compileall and diff-check PASS. Canonical Catalog was not changed.
 
 ## 2026-09-26 - O7A MakerWorld Single/Search acquisition UX
 - Continued on the verified latest Windows lineage v8.9.11, preserving O1-O6 Product filters/categories and independent Instagram Post/Story behavior.
