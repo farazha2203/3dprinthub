@@ -3,6 +3,7 @@
 - AI Story/Post popup now reloads saved revision bytes into the same style card, shows the image inline, and exposes explicit approve and prepare-for-send states.
 - Mock generation honestly uses the real Product image for local preview and records `ai_generated=false`; no provider request or send was made.
 - Focused Social AI/Instagram/Buffer verification: `39/39 PASS`; isolated Qt VerifyOnly, compileall and diff-check PASS. Canonical Catalog was not changed.
+- Before the official runtime launch, canonical Catalog backup passed `quick_check=ok` with Products=1076 and SHA256 `B58DB7716E8D810CF9A6CFAC48F74ECDF88797BCC7D639D7BC5864A1E2613B77`; post-launch read-only counts remain Products=1076 and revisions=0.
 
 ## 2026-09-26 - O7A MakerWorld Single/Search acquisition UX
 - Continued on the verified latest Windows lineage v8.9.11, preserving O1-O6 Product filters/categories and independent Instagram Post/Story behavior.
