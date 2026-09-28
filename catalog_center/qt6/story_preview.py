@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QCheckBox, QGridLayout, QGroupBox, QLabel, QLineEdit, QMessageBox,
-    QPushButton, QSpinBox, QVBoxLayout, QWidget,
+    QPushButton, QRadioButton, QSpinBox, QVBoxLayout, QWidget,
 )
 
 from app.instagram_story_asset import prepare_product_story_asset
@@ -38,7 +38,7 @@ class StoryPreviewTab(QWidget):
             box = QGroupBox(name); layout = QVBoxLayout(box)
             image = QLabel("هنوز Preview ساخته نشده"); image.setAlignment(Qt.AlignmentFlag.AlignCenter); image.setMinimumSize(250, 360)
             image.setStyleSheet("background:#101923;border:1px solid #c99a3a;")
-            choose = QPushButton("انتخاب این قالب")
+            choose = QRadioButton("انتخاب این قالب")
             choose.clicked.connect(lambda _=False, i=idx: self._choose(i))
             layout.addWidget(image); layout.addWidget(choose)
             grid.addWidget(box, (idx - 1) // 2, (idx - 1) % 2); self.cards.append((image, choose))
@@ -77,11 +77,28 @@ class StoryPreviewTab(QWidget):
             settings = self.kernel.connection.settings(require_bridge=False)
             generated_paths = []
             for template_id, (image, _button) in enumerate(self.cards, 1):
-                result = prepare_product_story_asset(self.db, product_id, settings, payload, publish_to_site=False, template_id=template_id)
+                _button.setChecked(template_id == getattr(self, "selected_template", 1))
+                result = prepare_product_story_asset(
+                    self.db, product_id, settings, payload,
+                    publish_to_site=False, template_id=template_id,
+                    discount_percent=(self.discount.value() if self.discount_ok.isChecked() else 0),
+                )
                 pixmap = QPixmap(result["local_path"])
                 image.setPixmap(pixmap.scaled(image.size(), Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
                 generated_paths.append(result["local_path"])
             self.selected_template = 1; self._approved = False; self.approve.setEnabled(True)
+            self.db.save_history(
+                int(product_id),
+                "story_preview_generated",
+                None,
+                {
+                    "template_ids": [1, 2, 3, 4],
+                    "discount_percent": int(self.discount.value() if self.discount_ok.isChecked() else 0),
+                    "product_url": str(payload["product_url"]),
+                    "local_paths": generated_paths,
+                },
+                "Four-template Story Preview generated; operator approval and Link Sticker confirmation still required.",
+            )
             self.status.setText(
                 f"۴ Preview محلی برای Product #{product_id} آماده شد.\n"
                 f"URL دقیق محصول: {payload['product_url']}\n"

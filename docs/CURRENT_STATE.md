@@ -2636,3 +2636,14 @@ Status: `LOCAL_TESTED`; commit/push pending. The active checkout remains `D:\pro
 - Important unresolved issue: Product media thumbnail/source/delete mismatch reported by the owner is not accepted as fixed; it requires a separate exact media-identity audit and isolated delete/reload regression.
 
 Exact next operation: run Qt VerifyOnly and isolated writable-Catalog Story-tab smoke on this change, then trace and test Product media card identity before any release claim. Following phase: commit/push the verified Catalog-only correction; then the media identity hotfix. Required gates: isolated backup, focused/related regression, Qt VerifyOnly, foreground smoke, diff-check, exact GitHub SHA; no Host/Production deploy unless a separate Server delta is proven.
+## 2026-09-28 - Story workbench / complete media gallery checkpoint
+
+Status: `IN_PROGRESS / LOCAL TESTED PARTIAL`; current pre-commit HEAD `13b037dd` on `wip/phase50-a2z-w5-manual-product-20260927`.
+
+- The `🧷 آماده‌سازی Story دستی` action now opens the dedicated `Story — چهار Preview` tab and generates all four cards in one operation.
+- Each template has a radio selector. An operator-approved discount creates a distinct revision and Persian discount text; preview generation records the four paths/template IDs/discount in Product History.
+- Stage 3 image gallery now uses five columns, scrolls through all loaded cards, and defaults new/recovery image requests to 20 rather than 5.
+- No Host/Production/provider send occurred. The selected-template provider send is not yet accepted; existing automatic Story send must not be described as sending the selected Preview.
+- Exact image identity/delete mismatch remains open until an isolated Product fixture proves displayed bytes, URL/source identity, selected card and deleted row are the same.
+
+Exact next task: add selected-template Story send behind Preview approval and test it without real Instagram publication; then run the isolated 20-image gallery/delete/reopen regression. Following phase: Qt VerifyOnly and foreground desktop smoke, then commit/push exact SHA. Production deploy remains forbidden because this is Catalog/UI-only until server delta is audited.

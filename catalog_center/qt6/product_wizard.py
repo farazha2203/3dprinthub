@@ -491,7 +491,7 @@ class ProductWizardPage(QWidget):
 
         self.image_recover_limit = QSpinBox()
         self.image_recover_limit.setRange(1, HARD_MAX_IMAGE_LIMIT)
-        self.image_recover_limit.setValue(5)
+        self.image_recover_limit.setValue(20)
         self.image_recover_limit.setSuffix(" عکس")
         self.image_recover_limit.setFixedWidth(72)
 
@@ -593,7 +593,7 @@ class ProductWizardPage(QWidget):
         layout.addWidget(self.video_selection)
 
         self.image_grid = ProductImageGrid(
-            columns=3,
+            columns=5,
             large_cards=True,
         )
         # The top and bottom controls are now single-row compact bars, so the

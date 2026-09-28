@@ -1789,3 +1789,8 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - Four local templates remain selectable and are rendered with distinct template revisions; no Instagram/provider/catalog mutation occurs.
 - Verification: Story/Social focused suite `18/18 PASS`, compileall and diff-check PASS.
 - Product media card/delete identity mismatch is still an open, unaccepted issue and was not falsely marked fixed.
+## 2026-09-28 - Story workbench and full media gallery correction (Local pending)
+- The manual Story action now opens the dedicated Story tab instead of a one-file information dialog.
+- Four previews are generated together; each has a radio selection. Operator-approved discount percentage creates a distinct Persian discount revision and is saved in History with the four local asset paths.
+- Product image Stage 3 now defaults to 20 images and uses five columns with a scrollable gallery; it no longer presents the old five-image default as the complete set.
+- Focused Story/Social tests previously passed `18/18`; new UI/media regression and exact provider-send acceptance are still pending.

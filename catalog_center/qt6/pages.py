@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Callable
 
 from PySide6.QtCore import QSortFilterProxyModel, QSize, Qt, QTimer, QUrl
-from PySide6.QtGui import QDesktopServices, QGuiApplication, QIcon, QPixmap
+from PySide6.QtGui import QDesktopServices, QIcon, QPixmap
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
@@ -859,63 +859,13 @@ class ProductsPage(QWidget):
         self._publish_instagram_scope_selected("feed")
 
     def _prepare_manual_story_selected(self) -> None:
-        """Prepare a local Story asset and operator handoff; never publish."""
-        product_ids = self._selected_product_ids()
-        if not product_ids:
+        """Open the dedicated four-template Story workbench; never auto-publish."""
+        if not self._selected_product_ids():
             QMessageBox.warning(self, "Story دستی", "حداقل یک محصول را انتخاب کن.")
             return
-        prepared = []
-        failures = []
-        from app.instagram_story_asset import prepare_product_story_asset
-
-        for product_id in product_ids:
-            try:
-                payload = self.kernel.instagram.preview(int(product_id))
-                product_url = str(payload.get("product_url") or "").strip()
-                if not product_url.startswith("https://"):
-                    raise RuntimeError("URL عمومی HTTPS محصول تأیید نشد.")
-                asset = prepare_product_story_asset(
-                    self.kernel.db,
-                    int(product_id),
-                    self.kernel.connection.settings(require_bridge=False),
-                    payload,
-                    publish_to_site=False,
-                )
-                prepared.append(
-                    {
-                        "product_id": int(product_id),
-                        "product_url": product_url,
-                        "asset": str(asset.get("local_path") or asset.get("url") or ""),
-                    }
-                )
-            except Exception as exc:
-                failures.append(f"#{product_id}: {exc}")
-        if not prepared:
-            QMessageBox.warning(self, "Story دستی", "هیچ Story آماده نشد.\n" + "\n".join(failures[:6]))
-            return
-        first_url = prepared[0]["product_url"]
-        QGuiApplication.clipboard().setText(first_url)
-        lines = [
-            "وضعیت‌ها:",
-            "✅ تصویر آماده",
-            "✅ URL دقیق محصول آماده و در Clipboard کپی شد",
-            "🟡 Sticker دستی لازم است",
-            "⬜ Link Sticker هنوز تأیید نشده",
-            "",
-            "در Instagram: Sticker → Link → URL را وارد کن → متن Sticker:",
-            "مشاهده و سفارش",
-            "",
-            *[
-                f"#{item['product_id']} • {item['product_url']}\nفایل: {item['asset']}"
-                for item in prepared
-            ],
-        ]
-        if failures:
-            lines.extend(["", "ناموفق:", *failures[:6]])
-        QMessageBox.information(self, "آماده‌سازی Story دستی", "\n".join(lines))
-        self.bulk_publish_status.setText(
-            f"Story دستی آماده شد: {len(prepared)} • Sticker نیازمند تأیید اپراتور"
-        )
+        self.tabs.setCurrentWidget(self.story_tab)
+        self.story_tab.generate_previews()
+        self.bulk_publish_status.setText("تب Story باز شد: چهار Preview آماده انتخاب است؛ ارسال تا تأیید اپراتور قفل است.")
 
     def _publish_instagram_story_selected(self) -> None:
         self._publish_instagram_scope_selected("story")
@@ -2814,7 +2764,7 @@ class OperationsPage(QWidget):
         self.requested.setValue(100)
         self.image_limit = QSpinBox()
         self.image_limit.setRange(1, HARD_MAX_IMAGE_LIMIT)
-        self.image_limit.setValue(5)
+        self.image_limit.setValue(20)
         for spin in (self.requested, self.image_limit):
             spin.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
             spin.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -2867,7 +2817,7 @@ class OperationsPage(QWidget):
         self.source_refresh_limit.setValue(100)
         self.source_refresh_image_limit = QSpinBox()
         self.source_refresh_image_limit.setRange(1, HARD_MAX_IMAGE_LIMIT)
-        self.source_refresh_image_limit.setValue(5)
+        self.source_refresh_image_limit.setValue(20)
         for spin in (
             self.source_refresh_limit,
             self.source_refresh_image_limit,

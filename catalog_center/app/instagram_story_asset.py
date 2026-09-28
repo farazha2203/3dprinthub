@@ -100,20 +100,25 @@ body{{font-family:IRANSans,Tahoma,sans-serif;color:#fff;position:relative}}
 <div class="url">{purchase_hint}</div>
 <div class="footer"><div class="signature">Ideas into Reality</div><div class="small">3D PRINT<br>A BRIGHTER<br>TOMORROW</div></div></div>
 </body></html>"""
-def _revision_key(row: dict, template_id: int = 1) -> str:
+def _revision_key(row: dict, template_id: int = 1, discount_percent: int = 0) -> str:
     authority = str(
         row.get("server_ack_json")
         or row.get("fingerprint")
         or row.get("updated_at")
         or ""
     )
-    raw = f"{authority}|story-style={STYLE_ID}|template={int(template_id or 1)}"
+    raw = f"{authority}|story-style={STYLE_ID}|template={int(template_id or 1)}|discount={int(discount_percent or 0)}"
     return hashlib.sha256(raw.encode("utf-8", errors="ignore")).hexdigest()[:16]
 
 
-def _render_story(row: dict, payload: dict, *, template_id: int = 1) -> Path:
+def _render_story(row: dict, payload: dict, *, template_id: int = 1, discount_percent: int = 0) -> Path:
     copy = build_story_copy(row)
-    revision = _revision_key(row, template_id)
+    discount_percent = max(0, min(100, int(discount_percent or 0)))
+    if discount_percent:
+        copy = dict(copy)
+        copy["subtitle"] = f"{copy.get('subtitle', '')} • تخفیف ویژه {discount_percent}٪".strip(" •")
+        copy["bullets"] = [f"{discount_percent}٪ تخفیف تأییدشده", *list(copy.get("bullets") or [])][:4]
+    revision = _revision_key(row, template_id, discount_percent)
     # Story assets are project data, not an opaque Windows cache.  Use the
     # canonical runtime data root so Local development stays on the D: drive
     # and the operator can inspect/backup the exact rendered asset.
@@ -211,6 +216,7 @@ def prepare_product_story_asset(
     *,
     publish_to_site: bool = True,
     template_id: int = 1,
+    discount_percent: int = 0,
 ) -> dict:
     row_obj = db.product(int(product_id))
     if row_obj is None:
@@ -230,8 +236,8 @@ def prepare_product_story_asset(
             local_source.as_uri(),
             *media_urls[1:],
         ]
-    png = _render_story(row, render_payload, template_id=template_id)
-    revision = _revision_key(row, template_id)
+    png = _render_story(row, render_payload, template_id=template_id, discount_percent=discount_percent)
+    revision = _revision_key(row, template_id, discount_percent)
     public_url = ""
 
     if publish_to_site:
@@ -279,4 +285,5 @@ def prepare_product_story_asset(
         "revision": revision,
         "published_to_site": bool(publish_to_site),
         "template_id": max(1, min(4, int(template_id or 1))),
+        "discount_percent": max(0, min(100, int(discount_percent or 0))),
     }

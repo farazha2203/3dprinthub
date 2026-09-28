@@ -1346,3 +1346,7 @@ Extracted the Local Store quote contract and recorded fallback/snapshot rules. D
 - Owner reported that the displayed Story asset path under `C:\Users\...\AppData\Local` is not the project-owned D: data location and that prior four-template/link claims were not visibly verifiable.
 - Required contract: render to the canonical runtime data root, show all four selectable previews in the dedicated Story tab, expose the exact Product URL, and keep manual Link Sticker confirmation separate from the PNG asset.
 - Product image selection/deletion mismatch remains a separate open request until exact media-identity regression and isolated UI smoke pass.
+## 2026-09-28 - Owner requirement: real Story workbench and complete image gallery
+- Manual Story must open the dedicated tab/workbench, generate four previews, provide radio selection, approved discount regeneration, persistent revision/history, and send only after operator approval.
+- Product media Stage 3 must show all DB/Local-authoritative images, not silently stop at five; cards must display the exact source identity and delete only that identity.
+- The current local change covers the workbench opening, four preview/radio controls, discount revision, History record, and 20-image/5-column gallery defaults. Provider send using the selected template and exact-image delete regression remain the next acceptance gates.
