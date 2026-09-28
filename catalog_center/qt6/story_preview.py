@@ -20,7 +20,7 @@ class StoryPreviewTab(QWidget):
         self.db, self.kernel, self.selected_ids = db, kernel, selected_ids
         self._approved = False
         root = QVBoxLayout(self)
-        root.addWidget(QLabel("چهار قالب Story — ابتدا Preview محلی، سپس تأیید اپراتور و Sticker دستی"))
+        root.addWidget(QLabel("چهار قالب Story عمودی ۱۰۸۰×۱۹۲۰ — Preview محلی، سپس تأیید اپراتور و Sticker دستی"))
         self.photo_check = QCheckBox("استفاده از عکس واقعی محصول و هماهنگ‌سازی رنگ با همان عکس")
         self.photo_check.setChecked(True)
         root.addWidget(self.photo_check)

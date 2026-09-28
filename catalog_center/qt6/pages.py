@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
     QPlainTextEdit,
     QProgressBar,
     QDialog,
+    QScrollArea,
     QPushButton,
     QSpinBox,
     QSplitter,
@@ -869,7 +870,12 @@ class ProductsPage(QWidget):
         dialog.resize(1500, 1000)
         layout = QVBoxLayout(dialog)
         workbench = StoryPreviewTab(self.db, self.kernel, self._selected_product_ids, dialog)
-        layout.addWidget(workbench)
+        scroll = QScrollArea(dialog)
+        scroll.setWidgetResizable(True)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        scroll.setWidget(workbench)
+        layout.addWidget(scroll)
         workbench.generate_previews()
         dialog.exec()
         self.bulk_publish_status.setText("Popup Story بسته شد؛ ارسال فقط پس از تأیید Preview و Post معتبر مجاز است.")
