@@ -42,7 +42,6 @@ from app.ai_model_catalog import format_cost_quote
 from app.crawler import download_public_file
 from app.phase49_3h_image_limits import HARD_MAX_IMAGE_LIMIT
 from app.phase49_3i36_stage_finalization import STAGE_ORDER
-from app.post_composer import POST_STYLES, mock_openrouter_post, validate_post_metadata
 from .diagnostics import show_diagnostic_error
 from .image_gallery import ImageSeoDialog, ProductImageGrid
 from .parity_dialogs import ProfileEditorDialog
@@ -546,7 +545,6 @@ class ProductWizardPage(QWidget):
         )
 
         tabs = QTabWidget()
-        self.content_tabs = tabs
 
         source_host = QWidget()
         source_form = QFormLayout(source_host)
@@ -607,58 +605,6 @@ class ProductWizardPage(QWidget):
         form.addRow("Bullet فروش - هر خط یکی", self.sales_bullets)
         form.addRow("Social Caption فارسی", self.social_caption)
         tabs.addTab(_scroll(fa_host), "SEO و محتوای فارسی / ایران")
-
-        post_host = QWidget()
-        post_layout = QVBoxLayout(post_host)
-        post_hint = QLabel(
-            "پیش‌نویس محلی و قابل ویرایش است. پاسخ Mock هیچ درخواست شبکه‌ای، "
-            "ارسال یا انتشار واقعی انجام نمی‌دهد."
-        )
-        post_hint.setWordWrap(True)
-        post_hint.setObjectName("Muted")
-        post_layout.addWidget(post_hint)
-
-        post_layout.addWidget(QLabel("سبک پست"))
-        post_styles = QGridLayout()
-        self.post_style_group = QButtonGroup(self)
-        self.post_style_buttons: dict[str, QRadioButton] = {}
-        for index, (key, label) in enumerate(POST_STYLES):
-            button = QRadioButton(label)
-            button.setObjectName(f"post_style_{key}")
-            self.post_style_group.addButton(button)
-            self.post_style_buttons[key] = button
-            post_styles.addWidget(button, index // 4, index % 4)
-        self.post_style_buttons[POST_STYLES[0][0]].setChecked(True)
-        post_layout.addLayout(post_styles)
-
-        post_form = QFormLayout()
-        self.post_caption = QPlainTextEdit()
-        self.post_caption.setObjectName("post_caption")
-        self.post_caption.setMinimumHeight(180)
-        self.post_links = QLineEdit()
-        self.post_links.setObjectName("post_links")
-        self.post_links.setPlaceholderText("https://example.com/product")
-        self.post_mentions = QLineEdit()
-        self.post_mentions.setObjectName("post_mentions")
-        self.post_mentions.setPlaceholderText("@brand @designer")
-        post_form.addRow("متن پست (قابل ویرایش)", self.post_caption)
-        post_form.addRow("Linkهای ثبت‌شده، جداشده با کاما", self.post_links)
-        post_form.addRow("Mentionهای صریح", self.post_mentions)
-        post_layout.addLayout(post_form)
-
-        post_actions = QHBoxLayout()
-        self.post_mock_btn = QPushButton("🧪 Mock پاسخ OpenRouter")
-        self.post_mock_btn.setObjectName("post_mock_button")
-        self.post_mock_btn.setProperty("primary", True)
-        self.post_mock_btn.clicked.connect(self._mock_post)
-        self.post_status = QLabel("آماده؛ هیچ ارسال یا انتشار واقعی وجود ندارد.")
-        self.post_status.setObjectName("Muted")
-        self.post_status.setWordWrap(True)
-        post_actions.addWidget(self.post_mock_btn)
-        post_actions.addWidget(self.post_status, 1)
-        post_layout.addLayout(post_actions)
-        post_layout.addStretch(1)
-        tabs.addTab(_scroll(post_host), "Post")
 
         layout.addWidget(tabs, 1)
         self.stack.addWidget(page)
@@ -974,46 +920,6 @@ class ProductWizardPage(QWidget):
         self.keywords_fa.setPlainText("\n".join(str(item) for item in _json_list(row.get("keywords_json"))))
         self.sales_bullets.setPlainText("\n".join(str(item) for item in _json_list(row.get("sales_bullets_json"))))
         self.social_caption.setPlainText(str(row.get("social_caption_fa") or ""))
-        post = _json_dict(_json_dict(row.get("content_pack_json")).get("post"))
-        style = str(post.get("style") or POST_STYLES[0][0])
-        self.post_style_buttons.get(
-            style, self.post_style_buttons[POST_STYLES[0][0]]
-        ).setChecked(True)
-        self.post_caption.setPlainText(str(post.get("caption") or ""))
-        self.post_links.setText(", ".join(str(value) for value in _json_list(post.get("links"))))
-        self.post_mentions.setText(" ".join(str(value) for value in _json_list(post.get("mentions"))))
-        self.post_status.setText(
-            "پیش‌نویس ذخیره‌شده آماده است؛ هیچ ارسال یا انتشار واقعی وجود ندارد."
-            if post
-            else "آماده؛ هیچ ارسال یا انتشار واقعی وجود ندارد."
-        )
-
-    def _selected_post_style(self) -> str:
-        for key, button in self.post_style_buttons.items():
-            if button.isChecked():
-                return key
-        return POST_STYLES[0][0]
-
-    def _mock_post(self) -> None:
-        if self.product_id is None:
-            QMessageBox.warning(self, "Post", "ابتدا یک محصول را انتخاب کن.")
-            return
-        row = self.kernel.products.get(self.product_id) or {}
-        try:
-            result = mock_openrouter_post(
-                row,
-                self._selected_post_style(),
-                self.post_mentions.text(),
-            )
-            if not validate_post_metadata(result, row):
-                raise ValueError("POST_METADATA_VALIDATION_FAILED")
-        except Exception as exc:
-            QMessageBox.warning(self, "Post", str(exc))
-            return
-        self.post_caption.setPlainText(str(result["caption"]))
-        self.post_links.setText(", ".join(str(value) for value in result["links"]))
-        self.post_mentions.setText(" ".join(str(value) for value in result["mentions"]))
-        self.post_status.setText("Mock محلی آماده شد؛ برای ثبت در History، تغییرات مرحله را ذخیره کن.")
 
     def _load_stage5(self, row: dict[str, Any]) -> None:
         self.source_url.setText(str(row.get("source_url") or ""))
@@ -1177,19 +1083,6 @@ class ProductWizardPage(QWidget):
         # The image-grid choice is kept in the live UI and persisted by Stage 6.
 
     def _save_stage4(self) -> None:
-        current = self.kernel.products.get(self.product_id) or {}
-        content_pack = _json_dict(current.get("content_pack_json"))
-        post_meta = {
-            "style": self._selected_post_style(),
-            "caption": self.post_caption.toPlainText().strip(),
-            "links": _lines(self.post_links.text()),
-            "mentions": [
-                value for value in _lines(self.post_mentions.text())
-                if value.startswith("@")
-            ],
-            "no_invention": True,
-        }
-        content_pack["post"] = post_meta
         self.kernel.stages.update(
             self.product_id,
             "content",
@@ -1205,22 +1098,8 @@ class ProductWizardPage(QWidget):
                 "keywords_json": json.dumps(_lines(self.keywords_fa.toPlainText()), ensure_ascii=False),
                 "sales_bullets_json": json.dumps(_lines(self.sales_bullets.toPlainText()), ensure_ascii=False),
                 "social_caption_fa": self.social_caption.toPlainText().strip(),
-                "content_pack_json": json.dumps(content_pack, ensure_ascii=False),
             },
         )
-        after = self.kernel.products.get(self.product_id) or {}
-        if str(current.get("content_pack_json") or "{}") != str(after.get("content_pack_json") or "{}"):
-            self.db.save_history(
-                self.product_id,
-                "post_revision",
-                current,
-                after,
-                (
-                    f"Qt Post revision saved: style={post_meta['style']}; "
-                    f"links={len(post_meta['links'])}; mentions={len(post_meta['mentions'])}"
-                ),
-            )
-        self.post_status.setText("پیش‌نویس Post و History ذخیره شد؛ هیچ ارسال یا انتشار واقعی انجام نشد.")
 
     def _save_stage5(self) -> None:
         try:
