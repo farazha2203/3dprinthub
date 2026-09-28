@@ -1,6 +1,6 @@
 # Phase50.A.2Z-W5 — Social SEO + Commerce Discovery
 
-Status: IN_PROGRESS / LOCAL_TESTED (S1 foundation)
+Status: IN_PROGRESS / LOCAL_TESTED (S1 popup + SQLite revision gate; provider credential pending)
 Date: 2026-09-27
 Branch: `wip/phase50-a2z-w5-manual-product-20260927`
 
@@ -25,6 +25,16 @@ Next gate: isolated writable Catalog + foreground Qt VerifyOnly/UI smoke, then P
 - Crawl/Acquisition regression: `52/52 PASS`.
 - Canonical read-only audit: `quick_check=ok`, Products `1076`, Source+External ID duplicate groups `0`, normalized URL duplicate groups `0`, fingerprint duplicate groups `0`, valid nonzero server-linked duplicate groups `0`.
 - No Catalog write, provider mutation, Host operation, Production deployment, or Instagram send occurred.
+
+## AI revision popup gate — 2026-09-28
+
+- Added SQLite-backed `social_ai_revisions` BLOB storage and approval/selected-for-publish state.
+- Isolated Popup smoke passed `40/40`: six Story styles, six Post styles, image render, save, approve, prepare-for-send, close and reopen.
+- Related Video/Media/Social/Product regression passed `83/83`; compileall, isolated Qt VerifyOnly and diff-check passed.
+- Canonical backup: `D:\projects\3dprinthub-backups\phase50-social-ai-sqlite-20260928-01\catalog-before-social-ai.sqlite3`, `quick_check=ok`, Products=1076, SHA256 `B58DB7716E8D810CF9A6CFAC48F74ECDF88797BCC7D639D7BC5864A1E2613B77`.
+- OpenRouter discovery was fail-closed because the existing secure secret boundary reports `Not configured`; no key, model request, generation or publish occurred.
+
+Exact next gate: configure the existing OpenRouter key in Windows Credential Store, run discovery-only, record the cheapest compatible endpoint and cost, then perform a separately approved isolated generation test. The current send path remains unchanged and real publication is blocked.
 
 S1 is locally tested. The next gate belongs to Phase D evidence closure and then Phase E: generate a read-only duplicate report with authoritative survivor scoring, receipt/history/media preservation checks, and a verified rollback plan. Destructive merge remains explicitly blocked until owner acceptance.
 
