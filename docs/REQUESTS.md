@@ -1356,3 +1356,6 @@ Extracted the Local Store quote contract and recorded fallback/snapshot rules. D
 ## 2026-09-28 - Owner AI creative request
 - Owner requested AI-assisted subject-aware Story/Post generation through OpenRouter, six style options, Persian local overlays, SEO-safe copy, selected revision storage and official link/mention handoff.
 - The Local-only discovery/prompt foundation is added. Popup integration, mock generation, revision persistence and selected provider handoff remain next.
+## 2026-09-28 - Popup AI Story/Post tabs
+- Added the requested six-style AI Story and six-style AI Post tabs inside the existing Popup, with Radio selection, AI Content and Mention controls.
+- Current generation is mock-only and records revision metadata in Product History. Real image API calls and publishing remain gated.

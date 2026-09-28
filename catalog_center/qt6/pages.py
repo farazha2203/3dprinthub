@@ -65,6 +65,7 @@ from .product_explorer import (
 from .product_wizard import ProductWizardPage
 from .settings_page import SettingsPage
 from .story_preview import StoryPreviewTab
+from .social_ai_tab import SocialAICreativeTab
 from .widgets import MetricCard
 from .workers import TaskPool, Worker
 
@@ -869,14 +870,20 @@ class ProductsPage(QWidget):
         dialog.setWindowTitle("Story دستی — چهار Preview عمودی 1080×1920")
         dialog.resize(1500, 1000)
         layout = QVBoxLayout(dialog)
-        workbench = StoryPreviewTab(self.db, self.kernel, self._selected_product_ids, dialog)
+        tabs = QTabWidget(dialog)
+        legacy = StoryPreviewTab(self.db, self.kernel, self._selected_product_ids, tabs)
+        tabs.addTab(legacy, "Story چهار Preview")
+        ai_story = SocialAICreativeTab(self.db, self.kernel, self._selected_product_ids, kind="story", parent=tabs)
+        tabs.addTab(ai_story, "AI Story — ۶ سبک")
+        ai_post = SocialAICreativeTab(self.db, self.kernel, self._selected_product_ids, kind="post", parent=tabs)
+        tabs.addTab(ai_post, "AI Post — ۶ سبک")
         scroll = QScrollArea(dialog)
         scroll.setWidgetResizable(True)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
-        scroll.setWidget(workbench)
+        scroll.setWidget(tabs)
         layout.addWidget(scroll)
-        workbench.generate_previews()
+        legacy.generate_previews()
         dialog.exec()
         self.bulk_publish_status.setText("Popup Story بسته شد؛ ارسال فقط پس از تأیید Preview و Post معتبر مجاز است.")
 

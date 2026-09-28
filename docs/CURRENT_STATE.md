@@ -2663,3 +2663,10 @@ Status: `LOCAL_TESTED`; uncommitted foundation. Added `app/social_ai_design.py` 
 Contract smoke passed: `SOCIAL_AI_DESIGN_CONTRACT=OK`; py_compile and diff-check passed. No secret was printed, no real OpenRouter call, no Catalog/Provider/Instagram/Host/Production mutation.
 
 Exact next operation: wire this contract into the Popup's Story/Post tabs, mock the OpenRouter image response and persist generated revisions on Product history. Then add selected-revision provider handoff with Link Sticker/Mention states. No real generation or send before mock/UI gates pass.
+## 2026-09-28 - AI Story/Post Popup checkpoint
+
+Status: `LOCAL_TESTED`; commit pending. The Story popup now contains three tabs: legacy four-template Story preview, AI Story with six styles, and AI Post with six styles. Each AI tab has Radio selection, AI Content toggle, exact Mention input and mock revision generation.
+
+Mock generation saves Product History metadata including style, format, English fact-bound prompt, Mention and provider-metadata link mode. It makes no OpenRouter request and no Instagram/Buffer send. Focused regression `35/35 PASS`; compile and diff-check PASS.
+
+Remaining: add a real mocked image-response adapter and persist image bytes/revision paths, then UI smoke on isolated writable Catalog. Only after no-invention and metadata tests pass may selected revisions be connected to the existing send path.

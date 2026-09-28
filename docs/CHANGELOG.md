@@ -1804,3 +1804,8 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - Added OpenRouter image endpoint discovery that selects the cheapest endpoint supporting image input references and image output at runtime; no generation or provider send was performed.
 - Variation is limited to approved creative composition; no automation-evasion or fake human behavior is implemented.
 - Contract smoke: `SOCIAL_AI_DESIGN_CONTRACT=OK`.
+## 2026-09-28 - AI Story/Post Popup tabs and mock revisions
+- Popup now contains the legacy Story preview plus `AI Story — ۶ سبک` and `AI Post — ۶ سبک` tabs.
+- Each AI tab exposes six radio-selectable styles, AI Content toggle and exact Mention field.
+- Mock generation stores style, format, fact-bound English prompt, link metadata mode and Mention in Product History; it never calls OpenRouter or publishes.
+- Focused Social/Instagram regression: `35/35 PASS`; Python compile and diff-check PASS.
