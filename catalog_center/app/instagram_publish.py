@@ -112,6 +112,7 @@ def _request_json(url: str, token: str, *, payload: dict | None = None, timeout:
 
 
 def canonical_site_payload(row: dict[str, Any], *, site_url: str) -> dict[str, Any]:
+    site_url = str(site_url or "https://3dprinthub.ir").strip().rstrip("/")
     ack = {}
     try:
         ack = json.loads(row.get("server_ack_json") or "{}")

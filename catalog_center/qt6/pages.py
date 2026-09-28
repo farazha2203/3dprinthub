@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPlainTextEdit,
     QProgressBar,
+    QDialog,
     QPushButton,
     QSpinBox,
     QSplitter,
@@ -859,13 +860,19 @@ class ProductsPage(QWidget):
         self._publish_instagram_scope_selected("feed")
 
     def _prepare_manual_story_selected(self) -> None:
-        """Open the dedicated four-template Story workbench; never auto-publish."""
+        """Open an isolated four-template Story workbench; never auto-publish."""
         if not self._selected_product_ids():
             QMessageBox.warning(self, "Story دستی", "حداقل یک محصول را انتخاب کن.")
             return
-        self.tabs.setCurrentWidget(self.story_tab)
-        self.story_tab.generate_previews()
-        self.bulk_publish_status.setText("تب Story باز شد: چهار Preview آماده انتخاب است؛ ارسال تا تأیید اپراتور قفل است.")
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Story دستی — چهار Preview عمودی 1080×1920")
+        dialog.resize(1500, 1000)
+        layout = QVBoxLayout(dialog)
+        workbench = StoryPreviewTab(self.db, self.kernel, self._selected_product_ids, dialog)
+        layout.addWidget(workbench)
+        workbench.generate_previews()
+        dialog.exec()
+        self.bulk_publish_status.setText("Popup Story بسته شد؛ ارسال فقط پس از تأیید Preview و Post معتبر مجاز است.")
 
     def _publish_instagram_story_selected(self) -> None:
         self._publish_instagram_scope_selected("story")

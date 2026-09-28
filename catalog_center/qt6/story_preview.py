@@ -36,7 +36,7 @@ class StoryPreviewTab(QWidget):
         names = ("1 — Classic Gold/Navy Hero", "2 — Technical Blueprint", "3 — Editorial Classic", "4 — Premium Conversion")
         for idx, name in enumerate(names, 1):
             box = QGroupBox(name); layout = QVBoxLayout(box)
-            image = QLabel("هنوز Preview ساخته نشده"); image.setAlignment(Qt.AlignmentFlag.AlignCenter); image.setMinimumSize(250, 360)
+            image = QLabel("هنوز Preview ساخته نشده"); image.setAlignment(Qt.AlignmentFlag.AlignCenter); image.setMinimumSize(300, 533)
             image.setStyleSheet("background:#101923;border:1px solid #c99a3a;")
             choose = QRadioButton("انتخاب این قالب")
             choose.clicked.connect(lambda _=False, i=idx: self._choose(i))
@@ -68,6 +68,18 @@ class StoryPreviewTab(QWidget):
         if handle and (not handle.startswith("@") or len(handle) > 31 or not handle[1:].replace("_", "").replace(".", "").isalnum()):
             QMessageBox.warning(self, "Story", "Mention باید به شکل @handle معتبر باشد."); return
         product_id = ids[0]
+        post_receipts = {
+            "instagram_published",
+            "instagram_submitted",
+        }
+        receipts = self.db.sync_receipts(int(product_id), limit=100)
+        if not any(str(item["status"] or "") in post_receipts for item in receipts):
+            QMessageBox.warning(
+                self,
+                "Story",
+                "این Product هنوز Post اینستاگرام تأییدشده ندارد؛ ابتدا Post را ارسال و receipt آن را ثبت کن.",
+            )
+            return
         payload = self.kernel.instagram.preview(product_id).get("canonical_site_payload") or {}
         if not str(payload.get("product_url") or "").startswith("https://"):
             QMessageBox.warning(self, "Story", "URL canonical عمومی Product آماده نیست."); return

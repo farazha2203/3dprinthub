@@ -2647,3 +2647,12 @@ Status: `IN_PROGRESS / LOCAL TESTED PARTIAL`; current pre-commit HEAD `13b037dd`
 - Exact image identity/delete mismatch remains open until an isolated Product fixture proves displayed bytes, URL/source identity, selected card and deleted row are the same.
 
 Exact next task: add selected-template Story send behind Preview approval and test it without real Instagram publication; then run the isolated 20-image gallery/delete/reopen regression. Following phase: Qt VerifyOnly and foreground desktop smoke, then commit/push exact SHA. Production deploy remains forbidden because this is Catalog/UI-only until server delta is audited.
+## 2026-09-28 - Story popup and Post prerequisite checkpoint
+
+Status: `LOCAL_TESTED`; commit pending. The manual Story action now opens a separate Popup, not the Products tab. It renders four vertical previews, supports radio selection and operator-approved discount revisions, and persists preview history.
+
+- Story Preview requires a Product receipt proving Instagram Post submission/publication before generation.
+- `canonical_site_payload` now resolves verified relative Product paths using the documented site URL fallback; this fixes the screenshot error for published Product rows such as #913.
+- Focused Story/Social suite: `18/18 PASS`; compileall and diff-check PASS.
+- No real Instagram send, Host, Production or canonical destructive media operation occurred.
+- Remaining: connect the selected popup template/revision to the provider send path, then isolated 20-image exact-identity display/delete/reopen regression.

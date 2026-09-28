@@ -1794,3 +1794,8 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - Four previews are generated together; each has a radio selection. Operator-approved discount percentage creates a distinct Persian discount revision and is saved in History with the four local asset paths.
 - Product image Stage 3 now defaults to 20 images and uses five columns with a scrollable gallery; it no longer presents the old five-image default as the complete set.
 - Focused Story/Social tests previously passed `18/18`; new UI/media regression and exact provider-send acceptance are still pending.
+## 2026-09-28 - Story popup, Post prerequisite and relative URL correction
+- Manual Story now opens in a separate popup workbench with four vertical 1080x1920 previews and radio selection.
+- Story Preview fails closed unless the Product has an Instagram Post receipt (`instagram_published` or `instagram_submitted`).
+- Relative public Product paths from verified publish receipts are now resolved against the documented site URL fallback.
+- Preview/Provider send using the selected template remains unaccepted until isolated provider-contract tests pass; no real send was performed.

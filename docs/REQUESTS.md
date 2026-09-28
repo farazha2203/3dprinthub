@@ -1350,3 +1350,6 @@ Extracted the Local Store quote contract and recorded fallback/snapshot rules. D
 - Manual Story must open the dedicated tab/workbench, generate four previews, provide radio selection, approved discount regeneration, persistent revision/history, and send only after operator approval.
 - Product media Stage 3 must show all DB/Local-authoritative images, not silently stop at five; cards must display the exact source identity and delete only that identity.
 - The current local change covers the workbench opening, four preview/radio controls, discount revision, History record, and 20-image/5-column gallery defaults. Provider send using the selected template and exact-image delete regression remain the next acceptance gates.
+## 2026-09-28 - Story popup and Post prerequisite
+- Owner requires Story only for Products that have also been Posted, a separate full-size vertical Popup, four selectable/savable revisions, and no silent empty Preview when the Product URL is relative in a verified receipt.
+- Implemented Local: Popup, Post receipt gate, relative URL fallback and 1080x1920 preview sizing. Provider send with the selected revision remains the next acceptance task.
