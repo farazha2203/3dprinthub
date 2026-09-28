@@ -80,7 +80,11 @@ class StoryPreviewTab(QWidget):
                 "این Product هنوز Post اینستاگرام تأییدشده ندارد؛ ابتدا Post را ارسال و receipt آن را ثبت کن.",
             )
             return
-        payload = self.kernel.instagram.preview(product_id).get("canonical_site_payload") or {}
+        payload = self.kernel.instagram.preview(product_id)
+        # InstagramCore.preview already returns the canonical payload directly;
+        # older UI code incorrectly expected an extra wrapper key and therefore
+        # reported a missing Product URL for valid published Products.
+        payload = payload.get("canonical_site_payload") or payload
         if not str(payload.get("product_url") or "").startswith("https://"):
             QMessageBox.warning(self, "Story", "URL canonical عمومی Product آماده نیست."); return
         if not self.photo_check.isChecked():
