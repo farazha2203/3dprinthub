@@ -1,3 +1,10 @@
+## 2026-09-28 - Build 2026.09.28.1 - OpenRouter Image AI isolated generation and guarded handoff
+- v8.9.11 now records Build `2026.09.28.1` in the About/version history and `docs/DESKTOP_VERSION.md`.
+- OpenRouter discovery found 59 reference-capable image endpoints; `bytedance-seed/seedream-4.5` / provider `seed` was selected at recorded cost `0`.
+- One real isolated generation for Product 609 returned a 1,373,903-byte PNG, persisted as a SQLite BLOB; request-fingerprint reuse, no-invention prompt coverage and approved/selected handoff passed.
+- Focused Social/Video/Media/Product regression `119/119 PASS`; compileall, diff-check and Qt VerifyOnly pass. Full 971-test suite remains non-accepted with 14 failures / 15 errors from baseline teardown/resource and unrelated stale assertions.
+- Canonical/backup/isolated Catalogs pass `quick_check` and `integrity_check`; all 23 user tables are logically identical in the read-only comparison. No Instagram send, Host operation, Production mutation or deploy occurred.
+
 ## 2026-09-28 - Social AI in-app revision gallery (mock-only)
 - Added SQLite `social_ai_revisions` BLOB storage with immutable SHA-256 identity, Product History, approval state and selected-for-publish state.
 - AI Story/Post popup now reloads saved revision bytes into the same style card, shows the image inline, and exposes explicit approve and prepare-for-send states.
@@ -1817,3 +1824,32 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - Each AI tab exposes six radio-selectable styles, AI Content toggle and exact Mention field.
 - Mock generation stores style, format, fact-bound English prompt, link metadata mode and Mention in Product History; it never calls OpenRouter or publishes.
 - Focused Social/Instagram regression: `35/35 PASS`; Python compile and diff-check PASS.
+## 2026-09-28 - OpenRouter 401 credential-boundary hardening
+
+- Diagnosed the owner-reported Qt Provider Settings failure: OpenRouter returned HTTP 401 `User not found` for `openrouter / qwen/qwen3.8-27b:free`.
+- Normalized only pasted `Bearer `/matching-quote wrappers before secure use and improved the Qt diagnostic to distinguish rejected ordinary API keys from model/provider failures.
+- Focused tests `2/2 PASS`; isolated compileall and diff-check PASS. No secret, Catalog, Host, Production or real generation change.
+## 2026-09-28 - OpenRouter 429 diagnostic boundary
+
+- Confirmed the key now authenticates successfully; OpenRouter returned a user identity but the free `qwen/qwen3.8-27b` upstream shared pool returned HTTP 429.
+- Added a precise diagnostic without automatic aggressive retry or any change to the Story/Post send path.
+- Focused tests `3/3 PASS`; no Catalog, Host or Production mutation.
+## 2026-09-28 - Independent Image AI Provider/Model selection
+
+- Added a separate Image AI settings section for Story/Post; Text Provider/Model remains independent.
+- Added discovery-only OpenRouter image endpoint listing, cost ordering and `input_references` capability filtering.
+- Persisted selected image provider/model/endpoint cost in SQLite and showed it inside the Story/Post popup metadata.
+- Focused image/settings/popup tests `7/7 PASS`; no real image generation or publish occurred.
+## 2026-09-28 - Independent Image AI generation gate
+
+- Added separate OpenRouter Image provider/model discovery; image generation is no longer coupled to the Text AI model.
+- Added reference-image generation adapter, cost/provider metadata, stable request fingerprinting and SQLite BLOB revision reuse.
+- Added tests for image payload contract, reference input, no-invention prompt, SQLite persistence and idempotency; focused suite `9/9 PASS`.
+- Real generation remains blocked until the selected Image Model and secure key are verified in the active v8.9.11 runtime. No publish, Host or Production change occurred.
+## 2026-09-28 - Build 2026.09.28.1 — isolated Image AI generation
+
+- OpenRouter discovery found 59 reference-capable image endpoints; the saved Seedream 4.5 model was used without changing Text AI.
+- One isolated Product generation returned a 1,373,903-byte PNG and persisted it as a SQLite BLOB.
+- No-invention and request-fingerprint idempotency passed; repeated generation reused revision `#5` in the isolated Catalog.
+- Approved/selected revisions now hand off to the existing Story/Post preparation path; unapproved revisions remain blocked.
+- No canonical Catalog, Instagram, Host or Production mutation. Full regression and GitHub gate remain pending.

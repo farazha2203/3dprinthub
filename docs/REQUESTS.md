@@ -1364,3 +1364,18 @@ Extracted the Local Store quote contract and recorded fallback/snapshot rules. D
 ## 2026-09-28 - Popup AI Story/Post tabs
 - Added the requested six-style AI Story and six-style AI Post tabs inside the existing Popup, with Radio selection, AI Content and Mention controls.
 - Current generation is mock-only and records revision metadata in Product History. Real image API calls and publishing remain gated.
+## 2026-09-28 - Owner-reported OpenRouter Provider Settings 401
+
+The correct v8.9.11 desktop runtime reached OpenRouter but received HTTP 401 `User not found` while testing `qwen/qwen3.8-27b:free`. The issue is recorded as an authentication boundary. Key wrapper normalization and actionable diagnostics were added locally; ordinary API-key verification remains the gate before discovery or generation. No real Story/Post send or Catalog mutation occurred.
+## 2026-09-28 - Owner request: independent AI for image generation
+
+Story/Post now has a separate Image Provider/Model selection from Text AI. The first adapter is OpenRouter Image API discovery-only, filtered to image-reference-capable endpoints and ordered by reported cost. The selected identity is stored with the Product revision; real generation remains behind the isolated generation gate.
+## 2026-09-28 — Independent Image AI generation and idempotency
+
+- Owner requested one isolated generation using the selected Image Model, SQLite BLOB persistence, no-invention and idempotency tests, then controlled connection of an approved revision to the existing Story/Post send path and commit/push.
+- Implementation and local contract tests are ready. Execution is pending verified persistence of `social_image_model` and the secure OpenRouter key in the active v8.9.11 runtime.
+## 2026-09-28 — Image AI generation and Story/Post handoff
+
+- Completed one real isolated generation with the selected Image Model, stored the output BLOB in isolated SQLite, and verified no-invention/idempotency.
+- Connected explicitly approved/selected revisions to the existing Story/Post preparation boundary without enabling real publication.
+- Remaining owner gate: full regression, Qt VerifyOnly, isolated UI smoke, backup evidence, then commit/push Build `2026.09.28.1`.

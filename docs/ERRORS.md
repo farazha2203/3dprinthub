@@ -3174,3 +3174,58 @@ Resolved and Production verified; do not treat as open without fresh evidence.
 **Observed:** after a fully eligible read-only preflight and a verified MySQL/media rollback backup, the tool layer blocked the destructive reset POST before execution.
 **Impact:** no Product deletion, DB write, or media deletion occurred. Production remains unchanged at the preflight counts.
 **Recovery:** preserve the verified backup and exact expected counts; execute only the canonical `phase50-store-reset-v2` contract when a permitted write path is available.
+# ERR-50-OPENROUTER-401 — OpenRouter provider test rejected credential
+
+**Date:** 2026-09-28
+
+**Observed:** The verified v8.9.11 Qt Provider Settings test reached OpenRouter with provider `openrouter` and model `qwen/qwen3.8-27b:free`, then returned HTTP 401 `User not found.`
+
+**Root cause boundary:** This is an authentication rejection, not a model, Catalog, Story/Post, or image-generation failure. The UI test accepts a typed `key_override`; therefore a successful model/profile entry does not prove that the currently tested key is a valid ordinary OpenRouter API key. A Management Key, stale/disabled key, or pasted wrapper can produce this boundary.
+
+**Corrective action:** Provider key input now removes only outer whitespace, a leading `Bearer ` wrapper, and matching surrounding quotes before secure storage/use. Qt diagnostics now explains that HTTP 401 `User not found` means the ordinary OpenRouter API key was rejected and must not be substituted with a Management Key. No secret is logged, printed, or persisted in SQLite.
+
+**Verification:** Two focused tests pass for normalization and actionable 401 diagnostics; isolated compileall with a separate cache and `git diff --check` pass. No Catalog, Host, Production, Instagram, or real image-generation mutation occurred.
+
+**Prevention:** Before discovery/generation, validate the actual ordinary OpenRouter API key in the active v8.9.11 runtime; keep Management Key separate for balance/administration only. Do not claim provider readiness from the cached model profile alone.
+# ERR-50-OPENROUTER-429 — Free model upstream shared-pool rate limit
+
+**Date:** 2026-09-28
+
+**Observed:** The correct v8.9.11 Provider Settings request for `qwen/qwen3.8-27b:free` returned HTTP 429 with `temporarily rate-limited upstream`, `upstream_provider_shared_pool`, and an OpenRouter `user_id`.
+
+**Boundary:** Authentication succeeded; this is not a bad key, Catalog error, model-routing code error, or Story/Post send error. The selected free model's shared upstream pool is temporarily exhausted.
+
+**Response:** Do not add aggressive automatic retries. Show an actionable message, wait and retry manually, or select another verified model/provider route. Real generation and Instagram sending remain gated.
+
+**Verification:** Focused diagnostic/key tests `3/3 PASS`; isolated compileall and diff-check PASS; no Catalog/Host/Production mutation.
+## ERR-50-001 - Independent Image Model/key not visible to exact runtime (2026-09-28)
+
+**Observed**
+- The isolated image adapter and tests are ready, but a read-only query of the canonical settings database returned no `social_image_model` selection. The exact runtime Credential Store read also returned `Not configured`.
+
+**Handling**
+- Real image generation was not attempted. No model was guessed, the Text AI model was not reused, and no secret was printed or copied. The gate remains closed until the active v8.9.11 desktop saves the Image Model and the secure key is readable by that same runtime.
+
+**Prevention**
+- Do not call an image provider without a verified image model, provider identity and secure credential source. Discovery and generation remain separate operations.
+## ERR-50-IMAGE-001 - Selected SQLite revision was blocked by stale local-media resolver (2026-09-28)
+
+**Observed**
+- The first direct Story renderer smoke for Product 609 failed because the stored source URL had no exact Local media match, even though an approved SQLite revision already contained the image bytes.
+
+**Cause and fix**
+- The selected-revision handoff is authoritative and does not need the legacy URL-to-file resolver. The resolver guard now runs only on the legacy renderer path; approved/selected SQLite revisions are materialized from their BLOB and passed to the existing Story/Post preparation boundary.
+
+**Verification / prevention**
+- Focused Social/Video/Media/Product regression passed `119/119`; compileall, Qt VerifyOnly and diff-check passed. Keep the legacy resolver strict for non-AI rendering and do not weaken it to hide stale source URLs.
+
+## ERR-50-IMAGE-002 - Full regression is not an acceptance gate yet (2026-09-28)
+
+**Observed**
+- `python -m unittest discover -s tests -p "test*.py"` ran 971 tests and ended with 14 failures and 15 errors.
+
+**Classification**
+- The visible errors are existing temporary SQLite teardown/resource failures and unrelated stale UI/AI assertions. The changed Social/Video/Media/Product surface is green at 119/119, but the full suite is not claimed accepted until each remaining failure is baseline-proved or repaired.
+
+**Prevention**
+- Do not repeat the unchanged full command as proof; run a changed-condition manifest and baseline comparison, then record each remaining failure before the W5C GitHub gate.

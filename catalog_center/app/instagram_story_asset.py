@@ -217,13 +217,18 @@ def prepare_product_story_asset(
     publish_to_site: bool = True,
     template_id: int = 1,
     discount_percent: int = 0,
+    selected_revision: dict | None = None,
 ) -> dict:
     row_obj = db.product(int(product_id))
     if row_obj is None:
         raise RuntimeError(f"Product {product_id} not found")
     row = dict(row_obj)
     render_payload = dict(payload)
-    if not publish_to_site:
+    # An approved SQLite revision is already the authoritative image source for
+    # this handoff.  Do not require the stale/canonical media URL resolver when
+    # rendering that revision; the resolver is only needed for the legacy local
+    # renderer path.
+    if not publish_to_site and not selected_revision:
         media_urls = [
             str(value or "").strip()
             for value in (payload.get("media_urls") or [])
@@ -236,8 +241,16 @@ def prepare_product_story_asset(
             local_source.as_uri(),
             *media_urls[1:],
         ]
-    png = _render_story(row, render_payload, template_id=template_id, discount_percent=discount_percent)
-    revision = _revision_key(row, template_id, discount_percent)
+    if selected_revision:
+        png = Path(str(selected_revision.get("local_path") or "")).resolve()
+        if not png.is_file() or png.stat().st_size < 64:
+            raise RuntimeError("Selected SQLite Story revision is missing locally.")
+        revision = "ai-" + str(selected_revision.get("sha256") or "")[:16]
+        if len(revision) < 8:
+            raise RuntimeError("Selected SQLite Story revision has no stable identity.")
+    else:
+        png = _render_story(row, render_payload, template_id=template_id, discount_percent=discount_percent)
+        revision = _revision_key(row, template_id, discount_percent)
     public_url = ""
 
     if publish_to_site:
@@ -286,4 +299,6 @@ def prepare_product_story_asset(
         "published_to_site": bool(publish_to_site),
         "template_id": max(1, min(4, int(template_id or 1))),
         "discount_percent": max(0, min(100, int(discount_percent or 0))),
+        "source": "sqlite_social_ai_revision" if selected_revision else "canonical_product_media",
+        "social_ai_revision_id": int(selected_revision["revision_id"]) if selected_revision else 0,
     }

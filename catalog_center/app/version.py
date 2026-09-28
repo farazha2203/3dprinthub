@@ -5,13 +5,21 @@ from pathlib import Path
 
 APP_NAME = "3DPrintHub Catalog Center"
 APP_VERSION = "8.9.11"
-BUILD_ID = "2026.09.27.22"
+BUILD_ID = "2026.09.28.1"
 APP_TITLE = f"{APP_NAME} v{APP_VERSION}"
 SOURCE_ROOT = Path(__file__).resolve().parents[1]
 
 # Operator-visible release notes. Keep this tuple authoritative for the Qt
 # About dialog so the active build explains both completed and pending work.
 RELEASE_HISTORY = (
+    {
+        "date": "2026-09-28",
+        "build": BUILD_ID,
+        "status": "W5 IMAGE AI / LOCAL_TESTED / ISOLATED GENERATION",
+        "done": "OpenRouter image discovery found 59 reference-capable endpoints; Seedream 4.5 was selected at recorded cost 0. One isolated Product generation returned a 1,373,903-byte PNG, stored as a SQLite BLOB, and the same request fingerprint reused the same revision. Approved/selected revision handoff is connected to the existing Story/Post preparation path.",
+        "not_done": "No canonical Catalog write, Instagram send, Host operation or Production deployment occurred. The isolated renderer smoke exposed a stale Product media URL fixture and was not retried unchanged.",
+        "next": "Reconcile canonical-vs-backup SQLite byte provenance, baseline-proof the remaining full-suite failures, run isolated foreground smoke and final backup verification, then decide commit/push. Real sending remains disabled.",
+    },
     {
         "date": "2026-09-27",
         "build": BUILD_ID,

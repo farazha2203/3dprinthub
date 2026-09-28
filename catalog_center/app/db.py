@@ -1,4 +1,5 @@
 from __future__ import annotations
+import json
 import sqlite3
 import time
 from pathlib import Path
@@ -1263,6 +1264,30 @@ class Database:
         query += " ORDER BY id DESC LIMIT ?"
         args.append(int(limit))
         return [dict(row) for row in self.conn.execute(query, args)]
+
+    def social_ai_revision_by_request_fingerprint(self, product_id, kind, request_fingerprint):
+        """Return an existing revision for the same generation inputs, if any."""
+        target = str(request_fingerprint or "").strip()
+        if not target:
+            return None
+        for row in self.social_ai_revisions(product_id, kind, limit=500):
+            try:
+                metadata = json.loads(str(row.get("metadata_json") or "{}"))
+            except (TypeError, ValueError):
+                metadata = {}
+            if str(metadata.get("request_fingerprint") or "") == target:
+                return row
+        return None
+
+    def social_ai_revision_for_publish(self, product_id, kind):
+        """Return the newest explicitly approved revision selected for handoff."""
+        row = self.conn.execute(
+            """SELECT * FROM social_ai_revisions
+               WHERE product_id=? AND kind=? AND approved=1 AND selected_for_publish=1
+               ORDER BY id DESC LIMIT 1""",
+            (int(product_id), str(kind)),
+        ).fetchone()
+        return dict(row) if row else None
 
     def update_social_ai_revision_state(self, revision_id, *, approved=None, selected_for_publish=None):
         changes = []

@@ -22,8 +22,18 @@ def humanize_ai_error(detail: Any) -> str:
         return "مدل پاسخ داد، اما خروجی قرارداد محتوای فارسی 3DPrintHub را پاس نکرد."
     if "response_format" in low or ("structured" in low and "unsupported" in low):
         return "مدل/Endpoint به درخواست ساختاریافته Product پاسخ سازگار نداد."
+    if "http 401" in low and ("user not found" in low or "unauthorized" in low):
+        return (
+            "OpenRouter کلید ارسالی را قبول نکرد: کلید باید API Key معمولی OpenRouter باشد، "
+            "نه Management Key؛ ممکن است اشتباه، منقضی یا غیرفعال باشد."
+        )
     if "http 401" in low or "http 403" in low:
         return "Provider درخواست Product را رد کرد؛ دسترسی Key/Model را بررسی کن."
+    if "http 429" in low and ("upstream" in low or "shared_pool" in low or "temporarily rate-limited" in low):
+        return (
+            "مدل رایگان انتخاب‌شده موقتاً در سهمیه مشترک Provider محدود شده است؛ "
+            "کلید معتبر است. چند دقیقه بعد دوباره امتحان کن، یا مدل/Provider دیگری انتخاب کن."
+        )
     if "http 429" in low or ("rate" in low and "limit" in low):
         return "Provider محدودیت نرخ/اعتبار اعمال کرده است."
     if "timeout" in low or "timed out" in low:

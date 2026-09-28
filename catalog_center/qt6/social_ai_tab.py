@@ -26,6 +26,10 @@ class SocialAICreativeTab(QWidget):
         root.addWidget(QLabel(
             f"AI {('Story' if self.kind == 'story' else 'Post')} — Mock Preview و انتخاب سبک؛ ارسال واقعی قفل است"
         ))
+        self.image_model_status = QLabel(self._image_model_status_text())
+        self.image_model_status.setObjectName("Muted")
+        self.image_model_status.setWordWrap(True)
+        root.addWidget(self.image_model_status)
         self.ai_content = QCheckBox("AI Content فعال — فقط بر اساس داده معتبر Product")
         self.ai_content.setChecked(True)
         self.mention_enabled = QCheckBox("Mention فعال")
@@ -105,6 +109,8 @@ class SocialAICreativeTab(QWidget):
             "mention": handle if self.mention_enabled.isChecked() else "",
             "link_mode": "provider_metadata",
             "published": False,
+            "image_provider": str(self.db.setting("social_image_provider", "openrouter") or "openrouter"),
+            "image_model": str(self.db.setting("social_image_model", "") or ""),
         }
         source_bytes = self._product_image_bytes(product)
         if not source_bytes:
@@ -136,6 +142,13 @@ class SocialAICreativeTab(QWidget):
         self.current_revision = row
         self._show_revision(row)
         self.status.setText("Preview همین‌جا از SQLite نمایش داده شد؛ تولید واقعی AI و ارسال هنوز قفل است.")
+
+    def _image_model_status_text(self) -> str:
+        provider = str(self.db.setting("social_image_provider", "openrouter") or "openrouter")
+        model = str(self.db.setting("social_image_model", "") or "").strip()
+        if model:
+            return f"Image AI مستقل: {provider} / {model} • این انتخاب از Text AI جداست."
+        return "Image AI مستقل هنوز انتخاب نشده؛ فعلاً فقط Preview محلی/Mock فعال است."
 
     def _product_image_bytes(self, product):
         try:

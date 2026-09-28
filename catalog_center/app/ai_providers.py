@@ -148,8 +148,13 @@ def _json_request(
     operation: str = "",
     product_id: int | None = None,
 ) -> dict[str, Any]:
+    normalized_key = str(key or "").strip()
+    if normalized_key.lower().startswith("bearer "):
+        normalized_key = normalized_key[7:].strip()
+    if len(normalized_key) >= 2 and normalized_key[0] == normalized_key[-1] and normalized_key[0] in {"'", '"'}:
+        normalized_key = normalized_key[1:-1].strip()
     headers = {
-        "Authorization": f"Bearer {key.strip()}",
+        "Authorization": f"Bearer {normalized_key}",
         "Content-Type": "application/json",
         "Accept": "application/json",
         "User-Agent": "3DPrintHub-Catalog-Intelligence/8.9.9",

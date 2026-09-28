@@ -140,6 +140,7 @@ def prepare_all_current_product_feed_assets(
     settings: SiteConnection,
     *,
     publish_to_site: bool = True,
+    selected_revision: dict | None = None,
 ) -> dict:
     """Prepare every current canonical Product image for one Instagram Feed post.
 
@@ -174,9 +175,18 @@ def prepare_all_current_product_feed_assets(
 
     local_paths: list[str] = []
     dimensions: list[dict[str, int]] = []
+    if selected_revision:
+        local_source = Path(str(selected_revision.get("local_path") or "")).resolve()
+        if not local_source.is_file() or local_source.stat().st_size < 64:
+            raise RuntimeError("Selected SQLite Post revision is missing locally.")
+        selected_bytes = local_source.read_bytes()
+        current = [{"source_url": source_urls[0] if source_urls else "", "local_path": str(local_source)}]
+        revision = "ai-" + str(selected_revision.get("sha256") or "")[:16]
+        if len(revision) < 8:
+            raise RuntimeError("Selected SQLite Post revision has no stable identity.")
     for index, item in enumerate(current, 1):
         local_source = Path(str(item["local_path"])).resolve()
-        source_bytes = local_source.read_bytes()
+        source_bytes = selected_bytes if selected_revision else local_source.read_bytes()
         if len(source_bytes) > 12 * 1024 * 1024:
             raise RuntimeError(f"Instagram source image {index} is unexpectedly large.")
         with Image.open(BytesIO(source_bytes)) as opened:
@@ -234,6 +244,8 @@ def prepare_all_current_product_feed_assets(
         "revision": revision,
         "published_to_site": bool(publish_to_site),
         "media_authority": "all_current_product_images",
+        "source": "sqlite_social_ai_revision" if selected_revision else "canonical_product_media",
+        "social_ai_revision_id": int(selected_revision["revision_id"]) if selected_revision else 0,
     }
 
 

@@ -3898,6 +3898,7 @@ class InstagramCore:
         settings = self.connection.settings(require_bridge=False)
         if provider == "buffer":
             from app.buffer_publish import publish_product as publish_feed
+            from app.social_ai_design import materialize_selected_revision
             label = "Buffer/Instagram Post"
         else:
             from app.instagram_publish import publish_product as publish_feed
@@ -3922,11 +3923,17 @@ class InstagramCore:
                         self.db.setting("buffer_media_host", "github_raw")
                         or "github_raw"
                     ).strip().lower()
+                    selected_post_revision = (
+                        materialize_selected_revision(self.db, product_id, "post")
+                        if hasattr(self.db, "social_ai_revision_for_publish")
+                        else None
+                    )
                     feed_meta = prepare_all_current_product_feed_assets(
                         self.db,
                         product_id,
                         settings,
                         publish_to_site=media_host == "site",
+                        selected_revision=selected_post_revision,
                     )
                     provider_media = rehost_buffer_assets(
                         self.db,
@@ -3994,6 +4001,7 @@ class InstagramCore:
         from app.buffer_publish import publish_story_for_product
         from app.buffer_media_host import rehost_buffer_assets
         from app.instagram_story_asset import prepare_product_story_asset
+        from app.social_ai_design import materialize_selected_revision
 
         ids = sorted({int(value) for value in product_ids or [] if int(value) > 0})
         results, failures = [], []
@@ -4010,12 +4018,18 @@ class InstagramCore:
                     self.db.setting("buffer_media_host", "github_raw")
                     or "github_raw"
                 ).strip().lower()
+                selected_story_revision = (
+                    materialize_selected_revision(self.db, product_id, "story")
+                    if hasattr(self.db, "social_ai_revision_for_publish")
+                    else None
+                )
                 story_meta = prepare_product_story_asset(
                     self.db,
                     product_id,
                     settings,
                     canonical_payload,
                     publish_to_site=media_host == "site",
+                    selected_revision=selected_story_revision,
                 )
                 empty_feed_meta = {
                     "urls": [],

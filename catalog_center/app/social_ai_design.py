@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import base64
 import hashlib
+import mimetypes
 from pathlib import Path
 import urllib.request
 from dataclasses import dataclass
@@ -54,8 +55,8 @@ def _price(endpoint: dict[str, Any]) -> float:
     return min(values) if values else float("inf")
 
 
-def discover_cheapest_image_endpoint(api_key: str, *, opener=urllib.request.urlopen) -> dict[str, Any]:
-    """Return the cheapest endpoint that accepts image references and outputs images.
+def discover_image_endpoints(api_key: str, *, opener=urllib.request.urlopen) -> list[dict[str, Any]]:
+    """Return image endpoints that accept references, ordered by cost.
 
     No generation occurs. The key is used only for the official discovery call
     and is never returned in the result.
@@ -97,7 +98,12 @@ def discover_cheapest_image_endpoint(api_key: str, *, opener=urllib.request.urlo
             })
     if not candidates:
         raise RuntimeError("No OpenRouter image endpoint supports input references.")
-    return min(candidates, key=lambda item: (item["cost_usd"], item["model"], item["provider"]))
+    return sorted(candidates, key=lambda item: (item["cost_usd"], item["model"], item["provider"]))
+
+
+def discover_cheapest_image_endpoint(api_key: str, *, opener=urllib.request.urlopen) -> dict[str, Any]:
+    """Return the cheapest reference-capable image endpoint without generating."""
+    return discover_image_endpoints(api_key, opener=opener)[0]
 
 
 def build_product_prompt(product: dict[str, Any], style: CreativeStyle, *, language: str = "fa") -> str:
@@ -131,6 +137,113 @@ def decode_image_response(response: dict[str, Any]) -> bytes:
     if len(raw) < 64:
         raise ValueError("Generated image response is unexpectedly small.")
     return raw
+
+
+def generate_image_revision(
+    api_key: str,
+    model: str,
+    prompt: str,
+    reference_bytes: bytes,
+    *,
+    aspect_ratio: str = "1:1",
+    opener=urllib.request.urlopen,
+) -> dict[str, Any]:
+    """Generate one reference-guided image and return bytes plus provider usage.
+
+    This is deliberately a pure provider adapter: it does not write files,
+    SQLite, Product rows, or publish anything. Callers own idempotent
+    persistence and approval state.
+    """
+    key = str(api_key or "").strip()
+    model_id = str(model or "").strip()
+    if not key:
+        raise ValueError("OpenRouter API key is required for image generation.")
+    if not model_id:
+        raise ValueError("Image Model is required for image generation.")
+    if not isinstance(reference_bytes, (bytes, bytearray)) or len(reference_bytes) < 64:
+        raise ValueError("A valid Product reference image is required.")
+    mime = mimetypes.guess_type("product.png")[0] or "image/png"
+    reference = f"data:{mime};base64,{base64.b64encode(bytes(reference_bytes)).decode('ascii')}"
+    payload = {
+        "model": model_id,
+        "prompt": str(prompt or "").strip(),
+        "input_references": [{"type": "image_url", "image_url": {"url": reference}}],
+        "aspect_ratio": str(aspect_ratio or "1:1"),
+        "n": 1,
+        "output_format": "png",
+    }
+    request = urllib.request.Request(
+        "https://openrouter.ai/api/v1/images",
+        data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {key}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+        method="POST",
+    )
+    with opener(request, timeout=180) as response:
+        raw = response.read().decode("utf-8", errors="replace")
+        status = int(getattr(response, "status", 200) or 200)
+    if status >= 400:
+        raise RuntimeError(f"OpenRouter image HTTP {status}: {raw[:800]}")
+    result = json.loads(raw or "{}")
+    image_bytes = decode_image_response(result)
+    usage = result.get("usage") if isinstance(result.get("usage"), dict) else {}
+    return {
+        "bytes": image_bytes,
+        "model": str(result.get("model") or model_id),
+        "usage": usage,
+        "cost_usd": usage.get("cost"),
+        "payload_contract": "openrouter_images_input_reference_v1",
+    }
+
+
+def generation_request_fingerprint(
+    product_id: int,
+    kind: str,
+    style: CreativeStyle,
+    model: str,
+    prompt: str,
+    reference_bytes: bytes,
+) -> str:
+    """Stable identity used to avoid paying twice for the same generation request."""
+    digest = hashlib.sha256()
+    for value in (
+        str(int(product_id)), str(kind), style.key, str(model).strip(),
+        str(prompt), hashlib.sha256(bytes(reference_bytes)).hexdigest(),
+    ):
+        digest.update(value.encode("utf-8"))
+        digest.update(b"\x00")
+    return digest.hexdigest()
+
+
+def materialize_selected_revision(db, product_id: int, kind: str) -> dict[str, Any] | None:
+    """Expose an approved SQLite BLOB as a guarded send-path derivative.
+
+    SQLite remains the authority. The materialized PNG exists only because the
+    existing Buffer/Site adapters consume local paths; it is never a second
+    revision store and is created only after explicit operator selection.
+    """
+    row = db.social_ai_revision_for_publish(int(product_id), str(kind))
+    if not row:
+        return None
+    blob = bytes(row.get("image_blob") or b"")
+    if len(blob) < 64:
+        raise ValueError("Selected Social AI revision has no valid image BLOB.")
+    digest = str(row.get("sha256") or hashlib.sha256(blob).hexdigest()).strip()
+    root = data_root() / "social" / "ai_handoff" / str(int(product_id)) / str(kind)
+    root.mkdir(parents=True, exist_ok=True)
+    path = root / f"{digest}.png"
+    if not path.is_file() or path.stat().st_size != len(blob):
+        path.write_bytes(blob)
+    return {
+        "revision_id": int(row["id"]),
+        "sha256": digest,
+        "local_path": str(path),
+        "mime_type": str(row.get("mime_type") or "image/png"),
+        "metadata_json": str(row.get("metadata_json") or "{}"),
+    }
 
 
 def persist_revision(product_id: int, kind: str, style: CreativeStyle, raw: bytes, metadata: dict[str, Any]) -> dict[str, Any]:

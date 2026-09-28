@@ -22,7 +22,14 @@ from PySide6.QtWidgets import (
 
 from app.buffer_publish import BufferConfig, test_connection as test_buffer_connection
 from app.instagram_publish import InstagramConfig, test_connection as test_instagram_connection
-from app.secure_secrets import get_secret, secret_source, set_secret
+from app.secure_secrets import (
+    get_provider_key,
+    get_secret,
+    provider_key_source,
+    secret_source,
+    set_secret,
+)
+from app.social_ai_design import discover_image_endpoints
 
 from app.ai_model_catalog import (
     enrich_model_info,
@@ -63,6 +70,7 @@ class SettingsPage(QWidget):
         host = QWidget()
         host_layout = QVBoxLayout(host)
         host_layout.addWidget(self._build_ai_box())
+        host_layout.addWidget(self._build_image_ai_box())
         host_layout.addWidget(self._build_connection_box())
         host_layout.addWidget(self._build_instagram_box())
         host_layout.addStretch(1)
@@ -152,6 +160,48 @@ class SettingsPage(QWidget):
         actions.addStretch(1)
         layout.addLayout(actions)
         layout.addWidget(self.ai_status)
+        return box
+
+    def _build_image_ai_box(self) -> QGroupBox:
+        box = QGroupBox("هوش تصویری مستقل / Story و Post")
+        layout = QVBoxLayout(box)
+        form = QFormLayout()
+
+        self.image_provider = QComboBox()
+        self.image_provider.addItem("OpenRouter Image API", "openrouter")
+        self.image_provider.setEnabled(False)
+
+        self.image_model = QComboBox()
+        self.image_model.setEditable(True)
+        self.image_model.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+        self.image_model.setMinimumContentsLength(44)
+
+        self.image_endpoint_detail = QLabel("هنوز discovery مدل تصویری انجام نشده است.")
+        self.image_endpoint_detail.setObjectName("Muted")
+        self.image_endpoint_detail.setWordWrap(True)
+        self.image_key_source = QLabel("")
+        self.image_key_source.setObjectName("Muted")
+
+        form.addRow("Image Provider", self.image_provider)
+        form.addRow("Image Model", self.image_model)
+        form.addRow("Endpoint / هزینه", self.image_endpoint_detail)
+        form.addRow("منبع کلید تصویری", self.image_key_source)
+        layout.addLayout(form)
+
+        actions = QHBoxLayout()
+        self.discover_image_btn = QPushButton("🔎 کشف مدل‌های تصویری — فقط Discovery")
+        self.save_image_btn = QPushButton("ذخیره انتخاب Image Model")
+        self.discover_image_btn.clicked.connect(self._discover_image_models)
+        self.save_image_btn.clicked.connect(self._save_image_model)
+        actions.addWidget(self.discover_image_btn)
+        actions.addWidget(self.save_image_btn)
+        actions.addStretch(1)
+        layout.addLayout(actions)
+        self.image_ai_status = QLabel("تولید تصویر هنوز فعال نشده است.")
+        self.image_ai_status.setObjectName("Muted")
+        self.image_ai_status.setWordWrap(True)
+        layout.addWidget(self.image_ai_status)
+        self._image_endpoints: list[dict[str, Any]] = []
         return box
 
     def _build_connection_box(self) -> QGroupBox:
@@ -309,6 +359,13 @@ class SettingsPage(QWidget):
             str(self.db.setting("ai_usd_to_toman", "") or "")
         )
         self._refresh_provider_status()
+        saved_image_model = str(self.db.setting("social_image_model", "") or "").strip()
+        if saved_image_model:
+            self.image_model.setEditText(saved_image_model)
+            self.image_endpoint_detail.setText(
+                f"ذخیره‌شده: {saved_image_model} • هزینه/Endpoint بعد از Discovery نمایش داده می‌شود."
+            )
+        self.image_key_source.setText(provider_key_source("openrouter"))
 
         values = self.kernel.connection.values()
         self.ftp_host.setText(str(values.get("ftp_host") or ""))
@@ -521,6 +578,75 @@ class SettingsPage(QWidget):
         self.model.clear()
         self.model.setEditText(saved)
         self._refresh_provider_status()
+
+    def _selected_image_model_id(self) -> str:
+        data = self.image_model.currentData()
+        if data:
+            return str(data).strip()
+        return self.image_model.currentText().strip()
+
+    def _render_image_endpoints(self) -> None:
+        current = str(self.db.setting("social_image_model", "") or "").strip()
+        self.image_model.blockSignals(True)
+        self.image_model.clear()
+        for item in self._image_endpoints:
+            model_id = str(item.get("model") or "").strip()
+            if model_id:
+                cost = item.get("cost_usd")
+                cost_text = "رایگان" if cost == 0 else (f"${cost:g}/image" if isinstance(cost, (int, float)) and cost != float("inf") else "هزینه نامشخص")
+                self.image_model.addItem(f"{model_id} — {cost_text}", model_id)
+        selected = current or (self._image_endpoints[0].get("model") if self._image_endpoints else "")
+        if selected:
+            index = self.image_model.findData(selected)
+            if index >= 0:
+                self.image_model.setCurrentIndex(index)
+            else:
+                self.image_model.setEditText(selected)
+        self.image_model.blockSignals(False)
+        self._image_model_changed()
+
+    def _image_model_changed(self) -> None:
+        model_id = self._selected_image_model_id()
+        item = next((candidate for candidate in self._image_endpoints if candidate.get("model") == model_id), None)
+        if item is None:
+            return
+        cost = item.get("cost_usd")
+        cost_text = "رایگان" if cost == 0 else (f"${cost:g}/image" if isinstance(cost, (int, float)) and cost != float("inf") else "هزینه نامشخص")
+        params = ", ".join(sorted(str(key) for key in (item.get("supported_parameters") or {}) if key in {"input_references", "aspect_ratio", "size", "output_format", "quality"}))
+        self.image_endpoint_detail.setText(f"{item.get('provider') or 'OpenRouter'} • {cost_text} • پارامترها: {params or 'تأیید نشده'}")
+
+    def _discover_image_models(self) -> None:
+        key = get_provider_key("openrouter")
+        if not key:
+            self.image_ai_status.setText("کلید OpenRouter در Credential Store قابل‌خواندن نیست.")
+            return
+
+        def done(result) -> None:
+            self._image_endpoints = list(result or [])
+            self._render_image_endpoints()
+            self.image_ai_status.setText(
+                f"✅ {len(self._image_endpoints)} endpoint تصویری پیدا شد؛ هیچ تصویری تولید یا ذخیره نشد."
+            )
+
+        self._start_worker(
+            lambda: discover_image_endpoints(key),
+            status_label=self.image_ai_status,
+            start_text="در حال Discovery مدل‌های تصویری…",
+            done=done,
+        )
+
+    def _save_image_model(self) -> None:
+        model = self._selected_image_model_id()
+        if not model:
+            self.image_ai_status.setText("ابتدا یک Image Model انتخاب کن.")
+            return
+        self.db.set_setting("social_image_provider", "openrouter")
+        self.db.set_setting("social_image_model", model)
+        item = next((candidate for candidate in self._image_endpoints if candidate.get("model") == model), None)
+        if item is not None:
+            self.db.set_setting("social_image_provider_slug", str(item.get("provider") or ""))
+            self.db.set_setting("social_image_cost_usd", str(item.get("cost_usd") or 0))
+        self.image_ai_status.setText(f"✅ Image Model مستقل ذخیره شد: {model} • هنوز تولید/ارسال فعال نیست.")
 
     def _refresh_provider_status(self) -> None:
         code = str(self.provider.currentData() or "")

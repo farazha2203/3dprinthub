@@ -19,6 +19,7 @@ from app.phase49_diagnostics import (
     recent_ai_requests,
     recent_app_events,
 )
+from qt6.diagnostics import humanize_ai_error
 
 
 class Phase493BAIProviderTests(unittest.TestCase):
@@ -59,6 +60,28 @@ class Phase493BAIProviderTests(unittest.TestCase):
         ):
             self.assertEqual(secure_secrets.get_provider_key("openai"), "openai-key")
             self.assertEqual(secure_secrets.get_provider_key("openrouter"), "openrouter-key")
+
+    def test_provider_key_normalizes_only_paste_wrappers(self):
+        self.assertEqual(
+            secure_secrets.normalize_provider_key('  Bearer "sk-or-v1-test"  '),
+            "sk-or-v1-test",
+        )
+
+    def test_openrouter_401_user_not_found_is_actionable(self):
+        message = humanize_ai_error(
+            'AI HTTP 401: {"error":{"message":"User not found.","code":401}}'
+        )
+        self.assertIn("کلید", message)
+        self.assertIn("Management Key", message)
+
+    def test_openrouter_upstream_429_is_not_reported_as_bad_key(self):
+        message = humanize_ai_error(
+            'AI HTTP 429: {"error":{"message":"Provider returned error",'
+            '"metadata":{"raw":"temporarily rate-limited upstream",'
+            '"limit_source":"upstream_provider_shared_pool"}}}'
+        )
+        self.assertIn("کلید معتبر است", message)
+        self.assertIn("مدل رایگان", message)
 
     def test_avalai_structured_400_retries_without_response_format(self):
         client = AIProviderClient("avalai", "test-key", "model-x")

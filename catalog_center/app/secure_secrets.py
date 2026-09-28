@@ -36,6 +36,16 @@ LEGACY_FILES = {
 }
 
 
+def normalize_provider_key(value: str) -> str:
+    """Normalize pasted provider keys without changing their secret material."""
+    normalized = str(value or "").strip()
+    if normalized.lower().startswith("bearer "):
+        normalized = normalized[7:].strip()
+    if len(normalized) >= 2 and normalized[0] == normalized[-1] and normalized[0] in {"'", '"'}:
+        normalized = normalized[1:-1].strip()
+    return normalized
+
+
 def _keyring():
     try:
         import keyring
@@ -215,7 +225,7 @@ def get_provider_key(provider: str, project_root: str | Path | None = None) -> s
 def set_provider_key(provider: str, value: str) -> None:
     provider = (provider or "openai").lower().strip()
     env_name = USERS.get(provider, "OPENAI_API_KEY")
-    value = (value or "").strip()
+    value = normalize_provider_key(value)
     if not value:
         raise ValueError("API key is empty")
     kr = _keyring()

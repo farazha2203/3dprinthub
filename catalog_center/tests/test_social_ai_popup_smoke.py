@@ -57,6 +57,8 @@ class SocialAIPopupSmokeTests(unittest.TestCase):
             })
             kernel = _Kernel(image_path)
             selected = lambda: [product_id]
+            db.set_setting("social_image_provider", "openrouter")
+            db.set_setting("social_image_model", "vendor/cheap")
 
             dialog = QDialog()
             tabs = QTabWidget(dialog)
@@ -66,6 +68,7 @@ class SocialAIPopupSmokeTests(unittest.TestCase):
             tabs.addTab(post, "Post")
             self.assertEqual(len(story.styles), 6)
             self.assertEqual(len(post.styles), 6)
+            self.assertIn("vendor/cheap", story.image_model_status.text())
 
             story.generate_mock()
             self.assertIsNotNone(story.preview.pixmap())

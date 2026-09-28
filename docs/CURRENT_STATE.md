@@ -1,3 +1,21 @@
+## 2026-09-28 - Independent Image AI generation - LOCAL_TESTED / handoff connected / GitHub gate pending
+
+Build `2026.09.28.1` on `v8.9.11` completed one real isolated OpenRouter generation with `bytedance-seed/seedream-4.5` (provider `seed`, recorded cost `0`). Product 609’s local reference produced a 1,373,903-byte PNG. The output was stored as a SQLite BLOB in the isolated Catalog clone; no canonical Catalog write occurred. The request fingerprint reused the same revision on repeat, and the factual no-invention prompt assertion passed.
+
+Approved + selected SQLite revisions now hand off to the existing Story/Post preparation path through a guarded materialized derivative; unapproved revisions do not enter that path. The handoff also preserves legacy mock-DB compatibility when no revision contract exists. Focused Social/Video/Media/Product regression is `119/119 PASS`; compileall, Qt VerifyOnly (`QT6_FOUNDATION_VERIFY=OK`, `QT6_42B2_FULL_PARITY_VERIFY=OK`) and diff-check passed. The direct renderer smoke was initially stopped by a stale local-media URL fixture and the boundary was corrected so selected SQLite revisions bypass that obsolete resolver. The full 971-test suite remains non-green with 14 failures and 15 errors from existing SQLite temporary-directory teardown/resource issues and stale unrelated UI/AI assertions; Phase acceptance is therefore not claimed. Canonical Catalog `quick_check=ok` and `integrity_check=ok`; its current file SHA differs from the pre-generation backup, but read-only comparison of all 23 user tables found no logical row/count/hash difference, with identical page count and freelist. This is recorded as SQLite physical-byte/checkpoint variance, not a proven data delta. No Instagram, Host or Production operation occurred.
+
+Exact next: run the changed-condition full regression or baseline-proof each remaining failure, then perform isolated UI smoke and final backup verification before deciding commit/push for Build `2026.09.28.1`. The immediately following phase is W5C/GitHub Gate; real send and deploy remain disabled.
+
+## 2026-09-28 - Independent Image AI adapter - LOCAL_TESTED / real generation gate blocked
+
+Verified checkout remains `D:\projects\3DPrintHub-a2z-a2r-converge`, branch `wip/phase50-a2z-w5-manual-product-20260927`, with existing W5 dirty work preserved. Independent OpenRouter Image selection is now separate from Text AI. Discovery supports reference-capable image endpoints, and the pure image adapter sends the Product image as an input reference and decodes the returned PNG without writing files or publishing.
+
+`social_ai_revisions` now stores the generated image as a SQLite BLOB. A stable request fingerprint covers Product, kind, style, model, prompt and source-image hash; an existing fingerprint is reused, preventing duplicate generation. The no-invention prompt contract remains factual and forbids invented dimensions, weight, material, price, availability or license claims.
+
+Verification: Social AI design and popup smoke `9/9 PASS`; compileall and `git diff --check` PASS. No real OpenRouter generation, canonical Catalog write, Instagram send, Host or Production change occurred. Read-only canonical settings check found `social_image_model` empty and the exact current runtime Credential Store read reported the provider key as not configured, so the real generation gate is correctly closed.
+
+Exact next action: in the correct v8.9.11 desktop, open Settings → Independent Image AI, run discovery-only, select and save a compatible Image Model. Then run one isolated generation, save its returned BLOB in isolated SQLite, prove no-invention/idempotency, connect only an approved revision to the existing Story/Post route, and commit/push. No real send or deploy before those gates.
+
 ## 2026-09-28 - Social AI in-app revision gallery - LOCAL_TESTED / provider credential pending
 
 Verified checkout remains `D:\projects\3DPrintHub-a2z-a2r-converge`, branch `wip/phase50-a2z-w5-manual-product-20260927`; the existing W5 dirty work was preserved. AI Story/Post revisions now have a SQLite `social_ai_revisions` BLOB table, product-scoped history, immutable SHA-256 identity, approval state, and selected-for-publish state. The popup reloads saved bytes into the same style card and shows the image inline; selecting another style reloads that style's saved revision. The six Story and six Post radio styles, AI Content and Mention metadata remain. New mock previews deliberately use the real Product image as an honest local preview (`ai_generated=false`); no real OpenRouter request, Instagram send, Host, or Production change occurred.
@@ -2676,3 +2694,22 @@ Status: `LOCAL_TESTED`; commit pending. The Story popup now contains three tabs:
 Mock generation saves Product History metadata including style, format, English fact-bound prompt, Mention and provider-metadata link mode. It makes no OpenRouter request and no Instagram/Buffer send. Focused regression `35/35 PASS`; compile and diff-check PASS.
 
 Remaining: add a real mocked image-response adapter and persist image bytes/revision paths, then UI smoke on isolated writable Catalog. Only after no-invention and metadata tests pass may selected revisions be connected to the existing send path.
+## 2026-09-28 - OpenRouter 401 boundary / credential hardening - LOCAL TESTED / commit pending
+
+Verified the owner-reported error on the correct forward checkout `D:\projects\3DPrintHub-a2z-a2r-converge`, v8.9.11 Build `2026.09.27.22`, branch `wip/phase50-a2z-w5-manual-product-20260927`. Provider and cached model are `openrouter` / `qwen/qwen3.8-27b:free`; the request reached OpenRouter and was rejected with HTTP 401 `User not found`. This is an authentication boundary, not a model or Catalog failure.
+
+The provider boundary now normalizes only pasted `Bearer `/matching-quote wrappers, and Qt diagnostics identifies this 401 as an invalid/expired/disabled ordinary OpenRouter API key or accidental Management Key. Focused normalization/diagnostic tests `2/2 PASS`; isolated compileall and diff-check PASS. No secret was printed, no Catalog/Host/Production/Instagram mutation occurred, and real generation remains disabled.
+
+Current next gate: save/verify an ordinary OpenRouter API key in the active v8.9.11 Settings runtime, then run discovery-only. The cached model profile is not sufficient evidence of credential readiness.
+## 2026-09-28 - OpenRouter authentication passed / free-model upstream 429 - LOCAL TESTED
+
+The next Provider Settings test reached OpenRouter successfully with the correct v8.9.11 runtime and returned an OpenRouter `user_id`; the ordinary API key is therefore accepted. The selected free model `qwen/qwen3.8-27b:free` returned HTTP 429 because its upstream shared pool was temporarily rate-limited. This is not a credential or Catalog failure.
+
+Qt diagnostics now distinguishes this state from HTTP 401 and recommends manual retry or another verified model without adding aggressive automatic retries. Focused tests `3/3 PASS`; isolated compileall and diff-check PASS. No model setting, send path, Catalog, Host, Production, Story or Post data was changed.
+
+Next gate remains discovery-only/model-cost recording, after the upstream rate-limit window clears or an alternate verified endpoint is selected. Real generation and sending remain disabled.
+## 2026-09-28 - Independent Image AI selection - LOCAL_TESTED / generation pending
+
+Added a separate Image AI contract for Story/Post instead of reusing the text Provider/Model. Settings now exposes an independent OpenRouter Image API selection, discovery-only endpoint list ordered by reported image cost, and SQLite settings for `social_image_provider`, `social_image_model`, provider slug and cost. The Story/Post popup displays the selected Image Provider/Model and stores that identity in revision metadata. No image generation, Catalog media write, Instagram send, Host or Production change occurred.
+
+Verification: image discovery contract, six-style popup persistence and settings UI smoke passed `7/7` focused tests; isolated compileall and diff-check PASS. OpenRouter image discovery follows the official `/api/v1/images/models` plus endpoint-capability contract and requires `input_references` before an endpoint is selectable. Exact next: run one separately gated isolated generation with the selected Image Model and save returned bytes in SQLite.
