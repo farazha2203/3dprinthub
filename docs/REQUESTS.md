@@ -1353,3 +1353,6 @@ Extracted the Local Store quote contract and recorded fallback/snapshot rules. D
 ## 2026-09-28 - Story popup and Post prerequisite
 - Owner requires Story only for Products that have also been Posted, a separate full-size vertical Popup, four selectable/savable revisions, and no silent empty Preview when the Product URL is relative in a verified receipt.
 - Implemented Local: Popup, Post receipt gate, relative URL fallback and 1080x1920 preview sizing. Provider send with the selected revision remains the next acceptance task.
+## 2026-09-28 - Owner AI creative request
+- Owner requested AI-assisted subject-aware Story/Post generation through OpenRouter, six style options, Persian local overlays, SEO-safe copy, selected revision storage and official link/mention handoff.
+- The Local-only discovery/prompt foundation is added. Popup integration, mock generation, revision persistence and selected provider handoff remain next.

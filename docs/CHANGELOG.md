@@ -1799,3 +1799,8 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - Story Preview fails closed unless the Product has an Instagram Post receipt (`instagram_published` or `instagram_submitted`).
 - Relative public Product paths from verified publish receipts are now resolved against the documented site URL fallback.
 - Preview/Provider send using the selected template remains unaccepted until isolated provider-contract tests pass; no real send was performed.
+## 2026-09-28 - AI creative contract foundation (Local only)
+- Added six Story and six Post creative style contracts with English fact-bound prompts and Persian local overlay policy.
+- Added OpenRouter image endpoint discovery that selects the cheapest endpoint supporting image input references and image output at runtime; no generation or provider send was performed.
+- Variation is limited to approved creative composition; no automation-evasion or fake human behavior is implemented.
+- Contract smoke: `SOCIAL_AI_DESIGN_CONTRACT=OK`.

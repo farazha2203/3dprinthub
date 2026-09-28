@@ -2656,3 +2656,10 @@ Status: `LOCAL_TESTED`; commit pending. The manual Story action now opens a sepa
 - Focused Story/Social suite: `18/18 PASS`; compileall and diff-check PASS.
 - No real Instagram send, Host, Production or canonical destructive media operation occurred.
 - Remaining: connect the selected popup template/revision to the provider send path, then isolated 20-image exact-identity display/delete/reopen regression.
+## 2026-09-28 - AI creative foundation checkpoint
+
+Status: `LOCAL_TESTED`; uncommitted foundation. Added `app/social_ai_design.py` with six Story and six Post style contracts, English fact-bound prompts, local Persian overlay rule, and runtime OpenRouter endpoint discovery. Discovery requires an image-capable endpoint with `input_references` and chooses the lowest reported image cost; it performs no generation.
+
+Contract smoke passed: `SOCIAL_AI_DESIGN_CONTRACT=OK`; py_compile and diff-check passed. No secret was printed, no real OpenRouter call, no Catalog/Provider/Instagram/Host/Production mutation.
+
+Exact next operation: wire this contract into the Popup's Story/Post tabs, mock the OpenRouter image response and persist generated revisions on Product history. Then add selected-revision provider handoff with Link Sticker/Mention states. No real generation or send before mock/UI gates pass.
