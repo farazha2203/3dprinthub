@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
     QPushButton, QRadioButton, QVBoxLayout, QWidget,
 )
 
-from app.social_ai_design import POST_STYLES, STORY_STYLES, build_product_prompt
+from app.social_ai_design import POST_STYLES, STORY_STYLES, build_product_prompt, persist_revision
 
 
 class SocialAICreativeTab(QWidget):
@@ -74,7 +74,9 @@ class SocialAICreativeTab(QWidget):
             "link_mode": "provider_metadata",
             "published": False,
         }
+        mock_bytes = (f"MOCK-OPENROUTER-IMAGE|{self.kind}|{self.selected_style.key}|{product_id}".encode("utf-8") * 32)
+        revision = persist_revision(product_id, self.kind, self.selected_style, mock_bytes, metadata)
         self.db.save_history(product_id, f"{self.kind}_ai_revision_mock", None, metadata, "Mock AI creative; no network/publish")
-        self.preview.setText(f"Mock Revision\n{self.selected_style.label}\n{self.selected_style.format}\nبدون API و بدون ارسال")
-        self.status.setText(f"Revision ذخیره شد. Prompt انگلیسی ساخته شد؛ متن فارسی/URL/Mention در لایه انتشار مدیریت می‌شود.")
-
+        self.db.save_history(product_id, f"{self.kind}_ai_revision_saved", None, revision, "Mock revision persisted; no network/publish")
+        self.preview.setText(f"Mock Revision\n{self.selected_style.label}\n{self.selected_style.format}\nذخیره شد — بدون API و بدون ارسال")
+        self.status.setText(f"Revision ذخیره شد: {revision['path']}\nPrompt انگلیسی ساخته شد؛ متن فارسی/URL/Mention در لایه انتشار مدیریت می‌شود.")

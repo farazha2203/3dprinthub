@@ -7,9 +7,14 @@ evade platform detection.
 from __future__ import annotations
 
 import json
+import base64
+import hashlib
+from pathlib import Path
 import urllib.request
 from dataclasses import dataclass
 from typing import Any
+
+from .runtime_paths import data_root
 
 
 @dataclass(frozen=True)
@@ -110,3 +115,41 @@ def build_product_prompt(product: dict[str, Any], style: CreativeStyle, *, langu
         "Natural commercial photography, believable lighting, clean composition, no watermark."
     )
 
+
+def decode_image_response(response: dict[str, Any]) -> bytes:
+    """Decode one OpenRouter image response without accepting remote URLs."""
+    items = response.get("data") if isinstance(response, dict) else None
+    if not isinstance(items, list) or not items:
+        raise ValueError("Mock/OpenRouter image response has no data item.")
+    encoded = str((items[0] or {}).get("b64_json") or "").strip()
+    if not encoded:
+        raise ValueError("Image response is missing b64_json.")
+    try:
+        raw = base64.b64decode(encoded, validate=True)
+    except Exception as exc:
+        raise ValueError("Image response contains invalid base64.") from exc
+    if len(raw) < 64:
+        raise ValueError("Generated image response is unexpectedly small.")
+    return raw
+
+
+def persist_revision(product_id: int, kind: str, style: CreativeStyle, raw: bytes, metadata: dict[str, Any]) -> dict[str, Any]:
+    """Persist an immutable local revision for later operator reuse."""
+    digest = hashlib.sha256(raw).hexdigest()[:16]
+    root = data_root() / "social" / "ai_revisions" / str(int(product_id)) / str(kind) / style.key
+    root.mkdir(parents=True, exist_ok=True)
+    path = root / f"{digest}.png"
+    if not path.is_file():
+        path.write_bytes(raw)
+    record = {
+        **dict(metadata or {}),
+        "product_id": int(product_id),
+        "kind": str(kind),
+        "style": style.key,
+        "path": str(path),
+        "sha256": hashlib.sha256(raw).hexdigest(),
+        "bytes": len(raw),
+        "immutable_revision": True,
+        "published": False,
+    }
+    return record
