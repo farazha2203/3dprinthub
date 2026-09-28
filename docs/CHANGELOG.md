@@ -2,7 +2,7 @@
 - Added validated base64 response decoding and immutable SHA-256 keyed revision persistence under the configured Catalog data root.
 - AI Story/Post mock generation now records revision metadata and Product History with `published=false`; repeated identical bytes reuse the same revision path.
 - Focused Social AI/Instagram/Buffer verification: `38/38 PASS`; no real provider request or send was made.
-- A writable isolated Qt VerifyOnly/UI smoke remains the next gate; compileall was attempted but Windows denied writes to existing `__pycache__` targets.
+- Full compileall passed with a clean writable temporary bytecode root; a writable isolated Qt VerifyOnly/UI smoke remains the next gate.
 
 ## 2026-09-26 - O7A MakerWorld Single/Search acquisition UX
 - Continued on the verified latest Windows lineage v8.9.11, preserving O1-O6 Product filters/categories and independent Instagram Post/Story behavior.
