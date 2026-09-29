@@ -1,3 +1,12 @@
+## 2026-09-29 - Owner: preserve exact 3DPrintHub Host route and continuity method
+Status: `METHOD_RECORDED / HOST_BRIDGE_UNAVAILABLE`.
+
+Verified source of truth is repository `AGENTS.md`, `docs/operations/REVERSE_TUNNEL_REMOTE_MANAGEMENT.md`, GitHub branch `wip/phase50-a2z-w5-manual-product-20260927`, and gateway registry. Required route is this project's Host-origin SSH/443 to Windows `PrintHubTunnel`, remote-forwarding only loopback 22024 to Host loopback 22224; the Host cPanel watchdog runs the repository bootstrap each minute under `flock`. The protected token/private key are never to be copied, printed, or stored in chat/memory.
+
+Current Windows observation: inbound SSH session exists and `sshd` is running, but no 22024 listener and no authenticated bridge health, including after 60 seconds. No Host logs can be read through the missing forward. No tunnel/service/firewall/Host/Production changes were made. Host actions stay blocked until that exact route recovers; no project tunnel fallback.
+
+---
+
 ## 2026-09-29 - Owner: finish actual Popup smoke, then W5C/Desktop acceptance
 Status: `POPUP_SMOKE_PASS / W5C_BLOCKED`.
 

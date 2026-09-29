@@ -1,3 +1,9 @@
+## 2026-09-29 - Reverse tunnel route reverified (documentation only)
+- Stored the documented Host access method: dedicated reverse loopback 22024 to Host bridge 22224; project gateway `project-host.ps1 -Project 3dprinthub`; Host cron watchdog + repository bootstrap; no fallback routes or secret exposure.
+- Current read-only liveness shows Host-origin SSH reaches Windows `sshd`, but 22024 reverse-forward and authenticated bridge health are unavailable even after 60 seconds. Cause is unclassified; Host operations are blocked. No system/service/Host/Production changes.
+
+---
+
 ## 2026-09-29 - Popup smoke and W5C evidence (documentation checkpoint; no software build change)
 - Native Popup close/reopen smoke on isolated writable Catalog passed; saved SQLite Revision #4 and its image reload in-app.
 - Verified six AI Story and six AI Post styles via UI Automation; delivery actions were not invoked.

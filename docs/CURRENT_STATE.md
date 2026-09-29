@@ -1,3 +1,13 @@
+## 2026-09-29 - Host reverse tunnel liveness - BRIDGE UNAVAILABLE / HOST OPS BLOCKED
+
+Forward checkout verified: `D:\projects\3DPrintHub-a2z-a2r-converge`, branch `wip/phase50-a2z-w5-manual-product-20260927`, Local/GitHub baseline before this note `71529cc7fd0e9809af4e60a71f8e50c03ba78d5d`, clean. GitHub confirms current branch and project reverse-tunnel runbook/bootstrap files.
+
+Read-only liveness evidence: Windows `sshd` is Running/Automatic, and an inbound SSH TCP session from the project's Host source is ESTABLISHED. However, Windows loopback `127.0.0.1:22024` has no listener; authenticated `project-host.ps1 -Project 3dprinthub -Health` cannot connect. Rechecked after 60 seconds with the same result. Thus SSH transport exists but the required reverse-forward/bridge endpoint is unavailable. Host watchdog/bootstrap state cannot be inspected across the unavailable bridge; root cause remains undetermined.
+
+No service, firewall, Host, Production, Catalog, deployment or secret state was changed. No alternate tunnel/path was used. Host actions are BLOCKED until this exact project's watchdog/bootstrap restores 22024 and authenticated health + Host identity pass. Method recorded in local Codex memory note `2026-09-29-3dprinthub-reverse-tunnel.md`.
+
+---
+
 ## 2026-09-29 - Popup smoke and W5C checkpoint - POPUP LOCAL_TESTED / W5C BLOCKED
 
 Verified forward checkout: `D:\projects\3DPrintHub-a2z-a2r-converge`, branch `wip/phase50-a2z-w5-manual-product-20260927`, HEAD/local/upstream/GitHub branch all `7dbecbf63b81ed711994c1cdf0869449a35438ab`; worktree clean before documentation. Desktop version remains v8.9.11 Build `2026.09.28.1`.

@@ -1,3 +1,11 @@
+## 2026-09-29 current operator and Host transport status
+- Forward checkout: `D:\projects\3DPrintHub-a2z-a2r-converge`, branch `wip/phase50-a2z-w5-manual-product-20260927`; exact live HEAD is maintained in Git and must be reverified.
+- Host transport remains only `Windows 127.0.0.1:22024 -> Host bridge 127.0.0.1:22224`, through `D:\projects\.chatgpt-gateway\project-host.ps1 -Project 3dprinthub`.
+- Current observation: inbound Host SSH session reaches Windows `sshd`, but no 22024 reverse-forward listener exists and gateway health fails. This path is currently unusable; no Host identity is claimed. Do not use FTPS, browser, direct SSH or another project's tunnel as fallback.
+- Persistence owner: Host cPanel one-minute watchdog invokes `scripts/host/phase50_reverse_tunnel_bootstrap.sh` under `flock`; inspect its live state only after the authorized forward is restored (or by approved owner break-glass).
+
+---
+
 ## 2026-09-26 O7A current Windows operator path
 - Current forward Windows source worktree: `D:\projects\3DPrintHub-a2z-a2r-converge`.
 - Current O7A branch: `wip/phase50-a2z-o7a-acquisition-ui-20260926`.

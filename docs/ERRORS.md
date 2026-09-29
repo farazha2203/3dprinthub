@@ -1,3 +1,25 @@
+## ERR-50-REVERSE-TUNNEL-001 - Host SSH session exists but dedicated reverse-forward is unavailable (2026-09-29)
+
+**Observed**
+- Windows `sshd` service is Running/Automatic and netstat shows a Host-origin SSH session established to Windows.
+- No listener exists on `127.0.0.1:22024`; the dedicated gateway authenticated `/health` call cannot connect. A second check after 60 seconds was unchanged.
+
+**Cause / scope**
+- The SSH transport session is not sufficient proof that reverse-forward `22024 -> Host 22224` is active. Host-side watchdog/bootstrap state is not readable while this listener is absent; exact cause remains unclassified.
+- Older project history contains both watchdog recovery and prior watchdog outages. Do not treat historical PASS as current liveness.
+
+**Failed attempts / handling**
+- Two read-only calls to the same authenticated `-Health` operation failed because the listener remained absent; no unchanged retries beyond the one bounded post-watchdog interval.
+- No service restart, firewall/routing/key change, direct SSH, FTPS command, or cross-project tunnel was attempted.
+
+**Correct next action**
+- Wait only for the existing one-minute project cPanel watchdog and recheck this exact listener plus authenticated `/health`. If still absent, Host operation is BLOCKED until the same route recovers or the owner uses the documented break-glass procedure. After recovery, verify Host `whoami`, hostname, root, branch, HEAD and dirty status before any operation; never deploy as part of tunnel recovery.
+
+**Prevention**
+- Require both the exact `127.0.0.1:22024` listener and authenticated bridge health; an established SSH socket or Running `sshd` alone is not a pass.
+
+---
+
 ## ERR-50-IMAGE-004 - Popup foreground smoke was reported unverified before native Qt targeting (2026-09-29)
 
 **Observed**

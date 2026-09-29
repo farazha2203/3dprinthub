@@ -1,3 +1,8 @@
+## 2026-09-29 — Current reverse tunnel state: SSH session present, bridge forward unavailable
+Read-only check from `Emad-NewCom`: Windows `sshd` is `Running`/`Automatic`, and Host-origin SSH TCP is `ESTABLISHED`; nevertheless the dedicated remote-forward loopback `127.0.0.1:22024` has no listener and authenticated gateway `/health` cannot connect. The same result held after 60 seconds. Host watchdog/bootstrap logs cannot be verified through the unavailable forward; cause is unclassified. Do not change `sshd`, firewall, routing, keys or use another project tunnel. Host/Production operations remain BLOCKED until the existing project watchdog/bootstrap restores 22024 and authenticated bridge health plus Host identity is verified.
+
+---
+
 ## 2026-09-18 — Owner reconfirmation: reverse tunnel is the only assistant Host channel
 All assistant Production/Host operations for 3DPrintHub must use only the dedicated reverse path `Windows 127.0.0.1:22024 -> Host bridge 127.0.0.1:22224`. Do not use a Windows browser, saved Chrome session, cPanel web Terminal, File Manager, or another project's tunnel as a fallback. If `22024` / authenticated bridge health is unavailable, Host deployment is BLOCKED/fail-closed until the same dedicated reverse tunnel recovers. Permanent source remains GitHub-first.
 
