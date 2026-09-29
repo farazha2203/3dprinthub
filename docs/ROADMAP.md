@@ -1,17 +1,17 @@
-## 2026-09-29 - W5C Popup/GitHub gate
+## Current — 2026-09-29 W5C baseline classification and provider-wrapper hotfix
 
-Status: `POPUP LOCAL_TESTED / W5C BLOCKED`.
+Status: `LOCAL_TESTED / GITHUB_GATE_PENDING` (not accepted).
 
-- [x] Native Qt Story Popup open, saved SQLite image revision display, close, reopen and revision reload on writable isolated Catalog clone.
-- [x] Six Story and six Post style RadioButtons verified in their respective tabs.
-- [x] Focused Social AI/Story/Feed/Buffer tests: 26/26 PASS.
-- [x] Pre-generation backup, isolated Catalog and Popup smoke clone: SQLite integrity and quick checks PASS.
-- [x] GitHub branch tip matches local SHA `7dbecbf63b81ed711994c1cdf0869449a35438ab`; source worktree was clean before docs update.
-- [ ] Explain remaining 2 current full-suite errors not classified by parent baseline proof; do not declare full W5C/Desktop acceptance until resolved or formally dispositioned by evidence.
-- [ ] Commit/push the documentation checkpoint only after compileall/diff-check and exact-SHA/Local=Remote verification.
-- [ ] No Instagram send, Host/Production change, or deploy before acceptance and explicit release gate.
+- [x] Capture complete pre-fix 971-test manifest: 12 failures / 15 errors; 12 failures + 14 error events reproduced on exact parent; the current-only v84 wrapper regression was fixed.
+- [x] Ordered provider/Avalai/Story/Post regression: 37/37 PASS; compileall PASS.
+- [x] Backup integrity and isolated Qt VerifyOnly PASS on a disposable clone; canonical Catalog untouched.
+- [x] Native Qt Popup saved-revision open/close/reopen smoke and six Story + six Post styles were previously verified on isolated Catalog.
+- [x] Classify the complete captured manifest: 12 baseline failures and 14 baseline error events; fix the sole current-only wrapper regression.
+- [x] Final diff/safety review; repeat ordered 37-test gate, compileall and diff-check.
+- [ ] Commit/push Build `2026.09.29.1` and verify exact Local=GitHub SHA.
+- [ ] Final Desktop acceptance only after the GitHub gate. Do not claim full-suite green; the captured baseline failures/errors remain. No Instagram send or Host/Production/deploy operation.
 
-Immediately next: classify the two unresolved regression errors and rerun only probes whose preconditions/inputs materially differ. After W5C: final Desktop acceptance. Later social publishing remains separately gated.
+Immediately next: commit/push and exact-SHA GitHub verification. Following phase: final Desktop acceptance; Instagram send remains separately gated.
 
 ---
 
@@ -1517,3 +1517,19 @@ Status: `LOCAL_TESTED / GITHUB PROMOTION NEXT`. The existing managed Django Hero
 ## 2026-09-17 runtime gate
 - Windows Publisher exact-SHA runtime: PASS and foreground UI launched.
 - Production test-product reset: still pending solely because the automation safety layer blocked the destructive write; verified rollback backup already exists.
+## 2026-09-29 - W5C error classification and provider wrapper regression
+
+Status: `LOCAL_TESTED / GITHUB GATE PENDING / W5C NOT ACCEPTED`.
+
+- [x] Recover a complete current regression manifest without relying on truncated Codex output: 971 tests, 12 failures, 15 errors; sanitized manifest in `docs/phases/PHASE50_A2Z_W5C_REGRESSION_EVIDENCE_20260929.md`.
+- [x] Run only the 14 current legacy error-event cases against exact parent `00fd4d9600b4fddbfcbee1439c2e45ab02589e3b`; all 14 error events reproduce there.
+- [x] Identify the extra current v84 provider error as an interaction with the global Phase49.3I.29 model-selection wrapper; fix explicit `model_info` forwarding while preserving saved Product model/no-hidden-listing behavior.
+- [x] Run ordered Provider/Avalai/Story/Post focused regression: 37/37 PASS; Python compile and diff-check PASS.
+- [x] Run isolated Qt VerifyOnly against disposable backup clone; backup integrity, compileall and focused ordered tests pass.
+- [ ] Final diff/safety review, repeat focused regression + diff-check, then commit/push the exact candidate and prove Local=GitHub SHA equality.
+- [ ] Do not claim full-suite green: 12 failures + 14 errors remain baseline-proven; the older reported 16-error count is not reproduced and its extra event is not inferred.
+- [ ] W5C/Desktop acceptance remains pending. No real Instagram send, Host/Production operation or deploy.
+
+Immediately next: final source/docs review and exact-SHA GitHub gate. Following phase: final Desktop acceptance.
+
+---

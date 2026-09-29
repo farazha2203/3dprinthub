@@ -4,11 +4,11 @@
 
 ---
 
-## 2026-09-29 - Popup smoke and W5C evidence (documentation checkpoint; no software build change)
-- Native Popup close/reopen smoke on isolated writable Catalog passed; saved SQLite Revision #4 and its image reload in-app.
-- Verified six AI Story and six AI Post styles via UI Automation; delivery actions were not invoked.
-- Focused Social AI/Story asset/Feed asset/Buffer companion suites: 26/26 PASS; backup/isolation SQLite integrity and quick checks PASS.
-- Local and GitHub branch tip were exact at `7dbecbf63b81ed711994c1cdf0869449a35438ab` before this documentation checkpoint. Full suite remains unaccepted with 2 errors not individually classified against baseline; W5C/Desktop acceptance remain open. No Instagram/Host/Production/deploy operation.
+## 2026-09-29 - Build 2026.09.29.1 W5C provider-wrapper hotfix (GitHub gate pending)
+- Preserved exact saved Product model execution while forwarding explicit model metadata for non-Product provider discovery/connection checks.
+- Added the import-order regression test; ordered provider/Avalai/Story/Post gate 37/37 PASS; compileall PASS.
+- Full pre-fix run: 971 tests, 12 failures, 15 errors; parent comparison proves 12 failures + 14 error events baseline. The one current-only error is fixed; no post-fix full-suite rerun, so full suite is not called green.
+- Isolated Qt VerifyOnly and checked-backup SQLite integrity PASS; the disposable clone was removed and canonical Catalog remained untouched. W5C still needs final diff review, repeat focused test/diff-check, commit/push and exact SHA verification. No Instagram send or Host/Production/deploy operation.
 
 ---
 
@@ -1867,3 +1867,12 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - No-invention and request-fingerprint idempotency passed; repeated generation reused revision `#5` in the isolated Catalog.
 - Approved/selected revisions now hand off to the existing Story/Post preparation path; unapproved revisions remain blocked.
 - No canonical Catalog, Instagram, Host or Production mutation. Full regression and GitHub gate remain pending.
+## 2026-09-29 - Build 2026.09.29.1 - W5C provider model-selection regression fix
+- Recovered a complete 971-test pre-fix manifest outside the repository and compared the error cases to exact parent `00fd4d96`; 14 legacy error events reproduce unchanged.
+- Fixed the Phase49.3I.29 `choose_model` wrapper to forward explicit `model_info` during ordinary provider connection/discovery. Product jobs still use their explicitly saved model without hidden model listing.
+- Added regression coverage for the wrapper contract. Ordered Provider/Avalai/Story/Post tests: 37/37 PASS; Python compile and diff-check PASS.
+- Captured pre-fix full suite: 12 failures / 15 errors. The 12 failures and 14 error events are baseline-proven; the extra v84 error was the fixed regression. The older 16-error count was not reproduced by this complete captured run.
+- Isolated Qt VerifyOnly and checked-backup integrity pass; compileall and repeated focused tests/diff-check pass. W5C still awaits commit/push and exact GitHub SHA verification.
+- Local source only; no Catalog/Host/Production/Instagram mutation or deployment.
+
+---

@@ -1,3 +1,13 @@
+## Current verified state — 2026-09-29 (W5C)
+
+- Active source: `D:\projects\3DPrintHub-a2z-a2r-converge`, branch `wip/phase50-a2z-w5-manual-product-20260927`, base HEAD `5963cf52c0888a8a77e61091c5e4296a59ffb7d3`; local implementation/docs are modified and not yet committed. Upstream matched that base before edits.
+- Desktop candidate: v8.9.11 / Build `2026.09.29.1`; the About release history now distinguishes exact known builds and does not relabel older entries as current.
+- W5C code correction is LOCAL_TESTED: the only current-only full-suite error was fixed; ordered provider/Avalai/Story/Post tests pass 37/37. Compileall, isolated Qt VerifyOnly, checked-backup integrity, and disposable-clone checks pass. Full captured suite remains 12 parent-proven failures + 14 parent-proven error events; it was not rerun after the surgical patch and is not green.
+- Final source/docs delta review, ordered 37-test gate, compileall, and diff-check have passed. Next exact gate: commit/push this branch and verify Local SHA equals GitHub SHA. W5C is not yet ACCEPTED; following phase is final Desktop acceptance.
+- Host reverse bridge 22024 is unavailable per the current read-only observation. This is Windows-only with no Server delta; no deploy/Host/Production/Catalog/Instagram action is authorized or needed in this step.
+
+---
+
 ## 2026-09-29 - Host reverse tunnel liveness - BRIDGE UNAVAILABLE / HOST OPS BLOCKED
 
 Forward checkout verified: `D:\projects\3DPrintHub-a2z-a2r-converge`, branch `wip/phase50-a2z-w5-manual-product-20260927`, Local/GitHub baseline before this note `71529cc7fd0e9809af4e60a71f8e50c03ba78d5d`, clean. GitHub confirms current branch and project reverse-tunnel runbook/bootstrap files.
@@ -8,7 +18,7 @@ No service, firewall, Host, Production, Catalog, deployment or secret state was 
 
 ---
 
-## 2026-09-29 - Popup smoke and W5C checkpoint - POPUP LOCAL_TESTED / W5C BLOCKED
+## 2026-09-29 - Popup smoke and W5C checkpoint (superseded intermediate status)
 
 Verified forward checkout: `D:\projects\3DPrintHub-a2z-a2r-converge`, branch `wip/phase50-a2z-w5-manual-product-20260927`, HEAD/local/upstream/GitHub branch all `7dbecbf63b81ed711994c1cdf0869449a35438ab`; worktree clean before documentation. Desktop version remains v8.9.11 Build `2026.09.28.1`.
 
@@ -2739,3 +2749,18 @@ Next gate remains discovery-only/model-cost recording, after the upstream rate-l
 Added a separate Image AI contract for Story/Post instead of reusing the text Provider/Model. Settings now exposes an independent OpenRouter Image API selection, discovery-only endpoint list ordered by reported image cost, and SQLite settings for `social_image_provider`, `social_image_model`, provider slug and cost. The Story/Post popup displays the selected Image Provider/Model and stores that identity in revision metadata. No image generation, Catalog media write, Instagram send, Host or Production change occurred.
 
 Verification: image discovery contract, six-style popup persistence and settings UI smoke passed `7/7` focused tests; isolated compileall and diff-check PASS. OpenRouter image discovery follows the official `/api/v1/images/models` plus endpoint-capability contract and requires `input_references` before an endpoint is selectable. Exact next: run one separately gated isolated generation with the selected Image Model and save returned bytes in SQLite.
+## 2026-09-29 - W5C regression manifest recovered; one provider-wrapper regression fixed - LOCAL_TESTED / GITHUB GATE PENDING
+
+Verified checkout: `D:\projects\3DPrintHub-a2z-a2r-converge`, branch `wip/phase50-a2z-w5-manual-product-20260927`, HEAD `5963cf52c0888a8a77e61091c5e4296a59ffb7d3`; upstream SHA matched before this change. The pre-fix full regression was rerun once with complete output captured outside the repository at `C:\Users\Emad-PC\AppData\Local\Temp\3dprinthub-w5c-full-regression-20260929.log` (SHA256 `68EB2C764744B7F0741A65CB08BCFA492A5EF301A64E99C5D43BD0EBF5C33EE3`): 971 tests, 12 failures, 15 errors.
+
+Exact parent `00fd4d9600b4fddbfcbee1439c2e45ab02589e3b` targeted comparison reproduced all 14 baseline error events. Current manifest had one additional `test_avalai_connection_falls_back_to_chat_completions` error due the Phase49.3I.29 global `choose_model` wrapper rejecting the newer explicit `model_info` keyword. The wrapper was patched to forward that metadata only on non-Product discovery; saved Product model behavior and no-hidden-listing guard remain unchanged. The old 16-error count did not recur in the captured manifest; the current exact manifest is documented separately and the missing historical event is not guessed.
+
+Post-fix ordered provider/Avalai/Story/Post regression: 37/37 PASS; Python compile and `git diff --check` PASS. The full suite was not rerun after the surgical fix. No Catalog/DB/media, Host, Production, Instagram, service, or tunnel state changed. Build candidate: v8.9.11 / `2026.09.29.1`; source changes remain uncommitted and unpushed at this checkpoint.
+
+Local gates now PASS: ordered focused regression `37/37`; repository compileall; isolated Qt VerifyOnly (`QT6_FOUNDATION_VERIFY=OK`, `QT6_42B2_FULL_PARITY_VERIFY=OK`) on a disposable clone of the integrity-checked backup; clone integrity checks before/after; and exact source diff review in progress. Backup `D:\projects\3dprinthub-backups\phase50-social-ai-sqlite-20260928-01\catalog-before-social-ai.sqlite3` passed both SQLite checks (979,947,520 bytes). Temp VerifyOnly clone and generated WAL/SHM/runtime artifacts were removed after confirming their exact isolated root; canonical Catalog was untouched.
+
+The captured full suite remains non-green at baseline: 12 failures plus 14 baseline error events; the sole current-only error was fixed. No post-fix full-suite rerun was done. W5C is `LOCAL_TESTED / GITHUB_GATE_PENDING`, not ACCEPTED; Desktop acceptance remains next. Host tunnel is currently unavailable on the dedicated route, but this Windows-only change has no Host delta, so no deploy is in scope. No Instagram send, Host/Production/Catalog mutation occurred.
+
+Exact next: commit and push this reviewed branch, then verify GitHub branch SHA exactly equals Local. Immediately following phase: final Desktop acceptance on the GitHub-exact Build `2026.09.29.1`; Instagram send remains a separate later gate.
+
+---

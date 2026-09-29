@@ -84,6 +84,14 @@ class Phase49I29WindowsPerformanceAITests(unittest.TestCase):
         with mock.patch.object(client, "list_model_info", side_effect=AssertionError("hidden /models request")):
             self.assertEqual(client.choose_model("qwen/qwen3-32b"), "qwen/qwen3-32b")
 
+    def test_model_info_is_forwarded_for_explicit_model_discovery(self):
+        _install_exact_saved_model_execution()
+        client = AIProviderClient("avalai", "test-key")
+        self.assertEqual(
+            client.choose_model(model_info=[{"id": "available-model"}]),
+            "available-model",
+        )
+
     def test_enrich_product_serializes_only_two_business_fields(self):
         _install_exact_saved_model_execution()
         _install_minimal_product_ai_payload()

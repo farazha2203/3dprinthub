@@ -50,7 +50,12 @@ def _install_exact_saved_model_execution() -> None:
         return
     original_choose = AIProviderClient.choose_model
 
-    def choose_model(self, preferred: str = "") -> str:
+    def choose_model(
+        self,
+        preferred: str = "",
+        *,
+        model_info: list[dict[str, Any]] | None = None,
+    ) -> str:
         exact = _clean_model(preferred or getattr(self, "model", ""))
         if getattr(self, "product_id", None) is not None:
             if not exact:
@@ -62,7 +67,7 @@ def _install_exact_saved_model_execution() -> None:
             # operator-saved model is the execution contract. Settings > model
             # discovery/test keeps the original live listing behavior.
             return exact
-        return original_choose(self, preferred)
+        return original_choose(self, preferred, model_info=model_info)
 
     AIProviderClient.choose_model = choose_model
     AIProviderClient._phase49_3i29_exact_saved_model = True

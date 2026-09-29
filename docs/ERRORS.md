@@ -3268,6 +3268,8 @@ Resolved and Production verified; do not treat as open without fresh evidence.
 
 **Prevention**
 - Do not repeat the unchanged full command as proof; run a changed-condition manifest and baseline comparison, then record each remaining failure before the W5C GitHub gate.
+
+**Superseding W5C disposition (2026-09-29):** a complete verbose manifest was captured at 971 tests / 12 failures / 15 errors. All 12 failures and 14 error events reproduce on the exact parent; the only current-only v84 wrapper error was fixed. The historical 16-error/two-unclassified wording above describes the earlier incomplete checkpoint only. See `PHASE50_A2Z_W5C_REGRESSION_EVIDENCE_20260929.md` for the exact disposition. The full suite was not rerun after the hotfix.
 ## ERR-50-IMAGE-003 - Full-suite failures baseline-proven; foreground native UI surface unavailable (2026-09-28)
 
 **Observed**
@@ -3280,3 +3282,16 @@ Resolved and Production verified; do not treat as open without fresh evidence.
 
 **Next**
 - Re-run the foreground Popup smoke from a session with a targetable native Qt window, then perform W5C/GitHub Gate and final Desktop acceptance. Real sending and deploy remain disabled.
+## ERR-50-AI-CHOOSER-001 - Exact-model wrapper rejected explicit discovery metadata
+
+**Observed (2026-09-29):** In the ordered full unittest discovery, `test_avalai_connection_falls_back_to_chat_completions` errored with `TypeError: choose_model() got an unexpected keyword argument 'model_info'`. The same test passed when run alone because the Phase49.3I.29 installer had not yet patched the class method in that isolated process.
+
+**Root cause:** `phase49_3i29_windows_performance_ai._install_exact_saved_model_execution()` replaced `AIProviderClient.choose_model` with a wrapper that accepted only `preferred`, while the newer `AIProviderClient.test_connection()` supplies explicit `model_info=` after model discovery. This is an import/test-order interaction; it is not an OpenRouter credential or HTTP issue.
+
+**Correction:** The wrapper now accepts keyword-only `model_info` and forwards it to the original chooser for non-Product provider discovery. Product-scoped work still requires its exact saved model and does not issue hidden model-list requests.
+
+**Verification:** The captured pre-fix manifest had 971 tests / 12 failures / 15 errors. The extra v84 error was the only current-only event; 14 baseline error events reproduce against parent `00fd4d9600b4fddbfcbee1439c2e45ab02589e3b`. After the fix, ordered provider/Avalai/Story/Post regression passed `37/37`; isolated Qt VerifyOnly and Catalog-clone integrity checks passed; compileall and diff-check passed.
+
+**Prevention:** Wrappers around evolving shared APIs must preserve the full keyword contract, and regression coverage must execute the patch installer before calling APIs that use newly added keyword arguments.
+
+---

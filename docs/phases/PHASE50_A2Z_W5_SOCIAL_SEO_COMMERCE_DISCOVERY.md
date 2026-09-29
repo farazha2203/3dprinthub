@@ -1,8 +1,20 @@
 # Phase50.A.2Z-W5 — Social SEO + Commerce Discovery
 
-Status: IN_PROGRESS / LOCAL_TESTED (isolated real generation + SQLite BLOB + guarded Story/Post handoff; full gate pending)
+Status: IN_PROGRESS / LOCAL_TESTED (isolated real generation + SQLite BLOB + guarded Story/Post handoff; W5C GitHub gate pending)
 Date: 2026-09-27
 Branch: `wip/phase50-a2z-w5-manual-product-20260927`
+
+## W5C regression classification — 2026-09-29
+
+- One complete pre-fix full-suite manifest is retained outside the repository; sanitized event/test inventory and SHA256 are recorded in `PHASE50_A2Z_W5C_REGRESSION_EVIDENCE_20260929.md`.
+- Captured result: 971 tests, 12 failures, 15 error events. All 12 failures are already parent-proven; the exact 14 legacy error events also reproduced on parent `00fd4d9600b4fddbfcbee1439c2e45ab02589e3b`.
+- The remaining current-only event was `test_avalai_connection_falls_back_to_chat_completions`: the installed Phase49.3I.29 `choose_model` wrapper rejected explicit `model_info`. The wrapper now forwards explicit model info for non-Product discovery; Product-scoped saved-model and no-hidden-listing behavior remains intact.
+- Ordered provider/Avalai/Story/Post regression after the patch: 37/37 PASS; Python compile and diff-check PASS. No full-suite rerun after the surgical change.
+- The earlier recorded 16-error count is not reproduced in the full captured run; its unobserved extra event is not guessed. All events in the captured manifest are classified.
+- Isolated Qt VerifyOnly passed on a disposable clone of the integrity-checked existing backup: `QT6_FOUNDATION_VERIFY=OK`, `QT6_42B2_FULL_PARITY_VERIFY=OK`; clone SQLite checks passed before/after and the clone/artifacts were removed. Canonical Catalog was untouched.
+- Final diff/source review, ordered 37-test regression, compileall, diff-check, isolated Qt VerifyOnly and backup-integrity review all pass. W5C remains NOT ACCEPTED pending commit/push and exact-SHA Local=GitHub verification. Desktop acceptance follows W5C. Instagram send, Host/Production and deploy remain disabled.
+
+Exact next: commit/push and exact-SHA GitHub verification; following phase is final Desktop acceptance.
 
 ## S1 implementation checkpoint — Build 2026.09.27.12
 

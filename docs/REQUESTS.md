@@ -1395,3 +1395,11 @@ Story/Post now has a separate Image Provider/Model selection from Text AI. The f
 - Completed one real isolated generation with the selected Image Model, stored the output BLOB in isolated SQLite, and verified no-invention/idempotency.
 - Connected explicitly approved/selected revisions to the existing Story/Post preparation boundary without enabling real publication.
 - Remaining owner gate: full regression, Qt VerifyOnly, isolated UI smoke, backup evidence, then commit/push Build `2026.09.28.1`.
+## 2026-09-29 - Owner: continue W5C until the regression errors are resolved
+Status: `PROVIDER WRAPPER REGRESSION FIXED / FOCUSED TESTS PASS / W5C GATE PENDING`.
+
+The requested full-suite error investigation is recorded in `docs/phases/PHASE50_A2Z_W5C_REGRESSION_EVIDENCE_20260929.md`. The reproducible current-only v84 error came from `phase49_3i29_windows_performance_ai._install_exact_saved_model_execution()` replacing `AIProviderClient.choose_model` with a wrapper that rejected `model_info`. The wrapper now forwards explicit model metadata when not executing Product-scoped AI. The Product saved-model/no-hidden-listing contract is preserved.
+
+The prior current suite count of 16 errors was not recovered. A new fully captured pre-fix run produced 971 tests / 12 failures / 15 errors; 14 error events reproduce on parent and the remaining event was fixed. Do not claim full-suite green: remaining failures/errors are baseline-proven. Ordered focused regression is 37/37 PASS; compileall, isolated Qt VerifyOnly and backup integrity checks PASS. Next: final diff review, repeat focused tests/diff-check, then commit/push and exact-SHA Local=GitHub gate. No Instagram send or deploy.
+
+---
