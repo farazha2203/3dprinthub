@@ -2,7 +2,7 @@
 
 این فایل مرجع نسخه‌ی Desktop است. هر تغییر اجرایی Desktop باید با Build جدید، commit دقیق، تست‌های همان Build و وضعیت انتشار ثبت شود.
 
-## آخرین Build محلی (GitHub Gate در انتظار)
+## آخرین Build همگام با GitHub (پذیرش نهایی Desktop در انتظار)
 
 - Version: `v8.9.11`
 - Build: `2026.09.29.1`
@@ -11,6 +11,7 @@
 - Launcher: `D:\projects\3DPrintHub-a2z-a2r-converge\catalog_center\RUN_QT.ps1`
 - Desktop shortcut: `C:\Users\Emad-PC\Desktop\3DPrintHub Catalog Center.lnk`
 - Previous Build: `2026.09.28.1` (local candidate before this hotfix)
+- Implementation commit: `83945715bbe50fb2588fc01abb68be363f308fe5` (Local=GitHub exact SHA PASS)
 
 ## Changes in Build 2026.09.29.1
 
@@ -20,7 +21,7 @@
 - The full suite was captured before this fix at 971 tests / 12 failures / 15 errors; 12 failures and 14 error events reproduce on the exact parent. One extra v84 interaction error was fixed and passed in the ordered focused run.
 - Historical About entries retain exact Build IDs only where verified; Sep 27 records explicitly say the exact ID was not recorded rather than displaying the current Build ID.
 - Isolated Qt VerifyOnly passed (`QT6_FOUNDATION_VERIFY=OK`, `QT6_42B2_FULL_PARITY_VERIFY=OK`) on a disposable backup clone; backup `quick_check` and `integrity_check` passed. No canonical Catalog mutation.
-- Build is a local verification candidate only; no Instagram send, canonical Catalog mutation, Host or Production operation occurred.
+- GitHub source gate passed; final foreground Desktop acceptance remains pending because the available Remote Desktop Commander exposes no screenshot/window-control API. No Instagram send, canonical Catalog mutation, Host or Production operation occurred.
 
 ## Changes in Build 2026.09.28.1 (previous build)
 

@@ -1,6 +1,6 @@
 # Phase50.A.2Z-W5 — Social SEO + Commerce Discovery
 
-Status: IN_PROGRESS / LOCAL_TESTED (isolated real generation + SQLite BLOB + guarded Story/Post handoff; W5C GitHub gate pending)
+Status: IN_PROGRESS / GITHUB_UPDATED (isolated real generation + SQLite BLOB + guarded Story/Post handoff; foreground Desktop acceptance pending)
 Date: 2026-09-27
 Branch: `wip/phase50-a2z-w5-manual-product-20260927`
 
@@ -12,9 +12,9 @@ Branch: `wip/phase50-a2z-w5-manual-product-20260927`
 - Ordered provider/Avalai/Story/Post regression after the patch: 37/37 PASS; Python compile and diff-check PASS. No full-suite rerun after the surgical change.
 - The earlier recorded 16-error count is not reproduced in the full captured run; its unobserved extra event is not guessed. All events in the captured manifest are classified.
 - Isolated Qt VerifyOnly passed on a disposable clone of the integrity-checked existing backup: `QT6_FOUNDATION_VERIFY=OK`, `QT6_42B2_FULL_PARITY_VERIFY=OK`; clone SQLite checks passed before/after and the clone/artifacts were removed. Canonical Catalog was untouched.
-- Final diff/source review, ordered 37-test regression, compileall, diff-check, isolated Qt VerifyOnly and backup-integrity review all pass. W5C remains NOT ACCEPTED pending commit/push and exact-SHA Local=GitHub verification. Desktop acceptance follows W5C. Instagram send, Host/Production and deploy remain disabled.
+- Final diff/source review, ordered 37-test regression, compileall, diff-check, isolated Qt VerifyOnly and backup-integrity review all pass. W5C source commit `83945715bbe50fb2588fc01abb68be363f308fe5` is pushed and exact Local=GitHub verified. W5C/Desktop is not ACCEPTED: full-suite baseline debt remains and final foreground acceptance is pending a targetable native Qt screenshot/window-control session. Earlier Popup smoke passed on isolated Catalog. Instagram send, Host/Production and deploy remain disabled.
 
-Exact next: commit/push and exact-SHA GitHub verification; following phase is final Desktop acceptance.
+Exact next: foreground Desktop acceptance on the exact GitHub SHA using isolated Catalog; available Remote Desktop Commander exposes process/file operations only. Following phase: close W5C/Desktop acceptance; real Instagram send remains separately gated.
 
 ## S1 implementation checkpoint — Build 2026.09.27.12
 

@@ -8,9 +8,9 @@ Current Windows observation: inbound SSH session exists and `sshd` is running, b
 ---
 
 ## 2026-09-29 - Owner: finish actual Popup smoke, then W5C/Desktop acceptance
-Status: `POPUP_SMOKE_PASS / W5C_BLOCKED`.
+Status: `POPUP_SMOKE_PASS / W5C_GITHUB_UPDATED / DESKTOP_ACCEPTANCE_PENDING`.
 
-Popup was opened on the verified v8.9.11 Build 2026.09.28.1 runtime with a writable isolated Catalog clone, a stored revision image was displayed in-app, Popup was closed and reopened, and the same revision/image reloaded. Both Story and Post AI tabs expose six selectable styles. Focused regressions pass 26/26 and backup/isolation integrity checks pass. Full regression gate is not accepted because two errors remain individually unclassified; no actual Instagram publication or deploy occurred. Next: classify those errors, finish W5C exact-SHA gates, then Desktop acceptance.
+Popup was opened on the verified v8.9.11 Build 2026.09.28.1 runtime with a writable isolated Catalog clone, a stored revision image was displayed in-app, Popup was closed and reopened, and the same revision/image reloaded. Both Story and Post AI tabs expose six selectable styles. Focused regressions pass 26/26 and backup/isolation integrity checks pass. Later captured full-suite evidence classified baseline failures/errors and the current-only regression was fixed; commit `83945715bbe50fb2588fc01abb68be363f308fe5` is now exact Local=GitHub. No actual Instagram publication or deploy occurred. Next: final foreground Desktop acceptance on isolated Catalog.
 
 ---
 
@@ -1400,6 +1400,6 @@ Status: `PROVIDER WRAPPER REGRESSION FIXED / FOCUSED TESTS PASS / W5C GATE PENDI
 
 The requested full-suite error investigation is recorded in `docs/phases/PHASE50_A2Z_W5C_REGRESSION_EVIDENCE_20260929.md`. The reproducible current-only v84 error came from `phase49_3i29_windows_performance_ai._install_exact_saved_model_execution()` replacing `AIProviderClient.choose_model` with a wrapper that rejected `model_info`. The wrapper now forwards explicit model metadata when not executing Product-scoped AI. The Product saved-model/no-hidden-listing contract is preserved.
 
-The prior current suite count of 16 errors was not recovered. A new fully captured pre-fix run produced 971 tests / 12 failures / 15 errors; 14 error events reproduce on parent and the remaining event was fixed. Do not claim full-suite green: remaining failures/errors are baseline-proven. Ordered focused regression is 37/37 PASS; compileall, isolated Qt VerifyOnly and backup integrity checks PASS. Next: final diff review, repeat focused tests/diff-check, then commit/push and exact-SHA Local=GitHub gate. No Instagram send or deploy.
+The prior current suite count of 16 errors was not recovered. A new fully captured pre-fix run produced 971 tests / 12 failures / 15 errors; 14 error events reproduce on parent and the remaining event was fixed. Do not claim full-suite green: remaining failures/errors are baseline-proven. Ordered focused regression is 37/37 PASS; compileall, isolated Qt VerifyOnly and backup integrity checks PASS. Commit `83945715bbe50fb2588fc01abb68be363f308fe5` is exact Local=GitHub. Next: final foreground Desktop acceptance on isolated Catalog. No Instagram send or deploy.
 
 ---

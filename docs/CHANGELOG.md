@@ -4,11 +4,11 @@
 
 ---
 
-## 2026-09-29 - Build 2026.09.29.1 W5C provider-wrapper hotfix (GitHub gate pending)
+## 2026-09-29 - Build 2026.09.29.1 W5C provider-wrapper hotfix (GitHub updated; Desktop acceptance pending)
 - Preserved exact saved Product model execution while forwarding explicit model metadata for non-Product provider discovery/connection checks.
 - Added the import-order regression test; ordered provider/Avalai/Story/Post gate 37/37 PASS; compileall PASS.
 - Full pre-fix run: 971 tests, 12 failures, 15 errors; parent comparison proves 12 failures + 14 error events baseline. The one current-only error is fixed; no post-fix full-suite rerun, so full suite is not called green.
-- Isolated Qt VerifyOnly and checked-backup SQLite integrity PASS; the disposable clone was removed and canonical Catalog remained untouched. W5C still needs final diff review, repeat focused test/diff-check, commit/push and exact SHA verification. No Instagram send or Host/Production/deploy operation.
+- Isolated Qt VerifyOnly and checked-backup SQLite integrity PASS; the disposable clone was removed and canonical Catalog remained untouched. Commit `83945715bbe50fb2588fc01abb68be363f308fe5` is pushed and exact Local=GitHub verified. Final foreground Desktop acceptance remains pending. No Instagram send or Host/Production/deploy operation.
 
 ---
 
@@ -1872,7 +1872,7 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - Fixed the Phase49.3I.29 `choose_model` wrapper to forward explicit `model_info` during ordinary provider connection/discovery. Product jobs still use their explicitly saved model without hidden model listing.
 - Added regression coverage for the wrapper contract. Ordered Provider/Avalai/Story/Post tests: 37/37 PASS; Python compile and diff-check PASS.
 - Captured pre-fix full suite: 12 failures / 15 errors. The 12 failures and 14 error events are baseline-proven; the extra v84 error was the fixed regression. The older 16-error count was not reproduced by this complete captured run.
-- Isolated Qt VerifyOnly and checked-backup integrity pass; compileall and repeated focused tests/diff-check pass. W5C still awaits commit/push and exact GitHub SHA verification.
+- Isolated Qt VerifyOnly and checked-backup integrity pass; compileall and repeated focused tests/diff-check pass. Commit `83945715bbe50fb2588fc01abb68be363f308fe5` is pushed and exact GitHub SHA verified; foreground Desktop acceptance remains.
 - Local source only; no Catalog/Host/Production/Instagram mutation or deployment.
 
 ---

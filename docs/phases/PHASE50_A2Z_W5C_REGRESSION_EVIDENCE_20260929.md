@@ -64,5 +64,6 @@ The earlier document count `12 failures / 16 errors` is not reproduced by this c
 - Isolated Qt VerifyOnly passed: `QT6_FOUNDATION_VERIFY=OK`, `QT6_42B2_FULL_PARITY_VERIFY=OK` on a disposable clone of the checked backup; clone `quick_check` and `integrity_check` passed before and after. The exact temporary clone/artifacts were removed; canonical Catalog was untouched.
 - Backup integrity passed for `D:\projects\3dprinthub-backups\phase50-social-ai-sqlite-20260928-01\catalog-before-social-ai.sqlite3`: 979,947,520 bytes; `quick_check=ok`, `integrity_check=ok`.
 - Final source/docs review, ordered 37-test gate, compileall and diff-check passed after documentation closure.
-- Next: W5C exact-SHA GitHub gate. Do not mark W5C/Desktop ACCEPTED before Local=GitHub exact-SHA verification.
+- GitHub gate passed: commit `83945715bbe50fb2588fc01abb68be363f308fe5`, Local=GitHub exact SHA.
+- Next: final foreground Desktop acceptance on this SHA with isolated Catalog. Do not mark W5C/Desktop ACCEPTED before that gate.
 - Following phase: final Desktop acceptance. Real Instagram send and deploy remain disabled.

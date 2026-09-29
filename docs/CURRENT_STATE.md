@@ -1,9 +1,10 @@
 ## Current verified state — 2026-09-29 (W5C)
 
-- Active source: `D:\projects\3DPrintHub-a2z-a2r-converge`, branch `wip/phase50-a2z-w5-manual-product-20260927`, base HEAD `5963cf52c0888a8a77e61091c5e4296a59ffb7d3`; local implementation/docs are modified and not yet committed. Upstream matched that base before edits.
+- Active source: `D:\projects\3DPrintHub-a2z-a2r-converge`, branch `wip/phase50-a2z-w5-manual-product-20260927`; provider-wrapper hotfix commit `83945715bbe50fb2588fc01abb68be363f308fe5` is pushed and exact Local=GitHub verified. A docs-only gate-closure update is being prepared.
 - Desktop candidate: v8.9.11 / Build `2026.09.29.1`; the About release history now distinguishes exact known builds and does not relabel older entries as current.
 - W5C code correction is LOCAL_TESTED: the only current-only full-suite error was fixed; ordered provider/Avalai/Story/Post tests pass 37/37. Compileall, isolated Qt VerifyOnly, checked-backup integrity, and disposable-clone checks pass. Full captured suite remains 12 parent-proven failures + 14 parent-proven error events; it was not rerun after the surgical patch and is not green.
-- Final source/docs delta review, ordered 37-test gate, compileall, and diff-check have passed. Next exact gate: commit/push this branch and verify Local SHA equals GitHub SHA. W5C is not yet ACCEPTED; following phase is final Desktop acceptance.
+- Final source/docs delta review, ordered 37-test gate, compileall, diff-check, isolated Qt VerifyOnly and checked-backup integrity have passed. W5C source is GITHUB_UPDATED; overall W5C/Desktop acceptance remains pending because the full baseline suite is non-green and foreground acceptance is not observable through the available process-only Remote Desktop Commander. Earlier isolated native Popup close/reopen + six/six-style smoke passed.
+- Next exact gate: foreground acceptance on GitHub SHA `83945715bbe50fb2588fc01abb68be363f308fe5` using a targetable native Qt screenshot/window-control session and isolated Catalog. Following phase: final Desktop acceptance; real Instagram send remains separately gated.
 - Host reverse bridge 22024 is unavailable per the current read-only observation. This is Windows-only with no Server delta; no deploy/Host/Production/Catalog/Instagram action is authorized or needed in this step.
 
 ---

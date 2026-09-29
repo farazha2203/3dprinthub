@@ -1,6 +1,6 @@
 ## Current — 2026-09-29 W5C baseline classification and provider-wrapper hotfix
 
-Status: `LOCAL_TESTED / GITHUB_GATE_PENDING` (not accepted).
+Status: `GITHUB_UPDATED / DESKTOP_ACCEPTANCE_PENDING` (not accepted).
 
 - [x] Capture complete pre-fix 971-test manifest: 12 failures / 15 errors; 12 failures + 14 error events reproduced on exact parent; the current-only v84 wrapper regression was fixed.
 - [x] Ordered provider/Avalai/Story/Post regression: 37/37 PASS; compileall PASS.
@@ -8,10 +8,10 @@ Status: `LOCAL_TESTED / GITHUB_GATE_PENDING` (not accepted).
 - [x] Native Qt Popup saved-revision open/close/reopen smoke and six Story + six Post styles were previously verified on isolated Catalog.
 - [x] Classify the complete captured manifest: 12 baseline failures and 14 baseline error events; fix the sole current-only wrapper regression.
 - [x] Final diff/safety review; repeat ordered 37-test gate, compileall and diff-check.
-- [ ] Commit/push Build `2026.09.29.1` and verify exact Local=GitHub SHA.
-- [ ] Final Desktop acceptance only after the GitHub gate. Do not claim full-suite green; the captured baseline failures/errors remain. No Instagram send or Host/Production/deploy operation.
+- [x] Commit/push `83945715bbe50fb2588fc01abb68be363f308fe5`; fetch and verify exact Local=GitHub SHA.
+- [ ] Final foreground Desktop acceptance on the exact GitHub SHA with isolated Catalog. Current Remote Desktop Commander exposes process/file operations only, not screenshot/window controls. Do not claim full-suite green; the captured baseline failures/errors remain. No Instagram send or Host/Production/deploy operation.
 
-Immediately next: commit/push and exact-SHA GitHub verification. Following phase: final Desktop acceptance; Instagram send remains separately gated.
+Immediately next: final foreground Desktop acceptance on exact GitHub SHA and isolated Catalog. Following phase: close W5C/Desktop acceptance; Instagram send remains separately gated.
 
 ---
 
@@ -1519,17 +1519,18 @@ Status: `LOCAL_TESTED / GITHUB PROMOTION NEXT`. The existing managed Django Hero
 - Production test-product reset: still pending solely because the automation safety layer blocked the destructive write; verified rollback backup already exists.
 ## 2026-09-29 - W5C error classification and provider wrapper regression
 
-Status: `LOCAL_TESTED / GITHUB GATE PENDING / W5C NOT ACCEPTED`.
+Status: `GITHUB_UPDATED / DESKTOP ACCEPTANCE PENDING / W5C NOT ACCEPTED`.
 
 - [x] Recover a complete current regression manifest without relying on truncated Codex output: 971 tests, 12 failures, 15 errors; sanitized manifest in `docs/phases/PHASE50_A2Z_W5C_REGRESSION_EVIDENCE_20260929.md`.
 - [x] Run only the 14 current legacy error-event cases against exact parent `00fd4d9600b4fddbfcbee1439c2e45ab02589e3b`; all 14 error events reproduce there.
 - [x] Identify the extra current v84 provider error as an interaction with the global Phase49.3I.29 model-selection wrapper; fix explicit `model_info` forwarding while preserving saved Product model/no-hidden-listing behavior.
 - [x] Run ordered Provider/Avalai/Story/Post focused regression: 37/37 PASS; Python compile and diff-check PASS.
 - [x] Run isolated Qt VerifyOnly against disposable backup clone; backup integrity, compileall and focused ordered tests pass.
-- [ ] Final diff/safety review, repeat focused regression + diff-check, then commit/push the exact candidate and prove Local=GitHub SHA equality.
+- [x] Final diff/safety review, repeated focused regression + diff-check, commit/push exact candidate, and prove Local=GitHub SHA `83945715bbe50fb2588fc01abb68be363f308fe5`.
+- [ ] Foreground Desktop acceptance on pushed SHA using isolated Catalog and a targetable native Qt window.
 - [ ] Do not claim full-suite green: 12 failures + 14 errors remain baseline-proven; the older reported 16-error count is not reproduced and its extra event is not inferred.
 - [ ] W5C/Desktop acceptance remains pending. No real Instagram send, Host/Production operation or deploy.
 
-Immediately next: final source/docs review and exact-SHA GitHub gate. Following phase: final Desktop acceptance.
+Immediately next: final foreground Desktop acceptance on the exact GitHub SHA. Following phase: close W5C/Desktop acceptance; no send/deploy without separate gates.
 
 ---
