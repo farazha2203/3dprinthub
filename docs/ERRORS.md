@@ -1,3 +1,20 @@
+## ERR-50-IMAGE-004 - Popup foreground smoke was reported unverified before native Qt targeting (2026-09-29)
+
+**Observed**
+- Earlier status stated that Popup open/close/reopen foreground acceptance was unverified because the Computer Use surface could not target native Qt.
+- The verified Windows Remote Desktop Commander could target the actual Qt process and UI Automation window in the isolated writable clone.
+
+**Resolution / verification**
+- Opened the manual Story Popup, loaded saved SQLite Revision #4 and rendered its image inline; closed the exact Popup and reopened it; the same Revision #4 and image reloaded.
+- Confirmed six style RadioButtons on the AI Story tab and six on AI Post. No publish action was invoked.
+- Isolated clone, pre-generation backup and isolated generation Catalog all returned SQLite `integrity_check=ok` and `quick_check=ok`.
+- Relevant focused suites: 26/26 PASS. This closes only the Popup smoke gate, not W5C/full Desktop acceptance; two suite errors still lack individual classification.
+
+**Prevention**
+- For native Qt smoke on this workstation, use the project-authorized Remote Desktop Commander with the exact forward-checkout process and isolated `CATALOG_DATA_ROOT`; do not infer unavailability from Computer Use alone, and never target canonical Catalog for acceptance smoke.
+
+---
+
 ## ERR-49-264 - O7A category/professional-commerce combined probe exposed unrelated baseline profile-identity assertion (2026-09-26)
 
 **Observed**

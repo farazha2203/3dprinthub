@@ -1,3 +1,11 @@
+## 2026-09-29 - Popup smoke and W5C evidence (documentation checkpoint; no software build change)
+- Native Popup close/reopen smoke on isolated writable Catalog passed; saved SQLite Revision #4 and its image reload in-app.
+- Verified six AI Story and six AI Post styles via UI Automation; delivery actions were not invoked.
+- Focused Social AI/Story asset/Feed asset/Buffer companion suites: 26/26 PASS; backup/isolation SQLite integrity and quick checks PASS.
+- Local and GitHub branch tip were exact at `7dbecbf63b81ed711994c1cdf0869449a35438ab` before this documentation checkpoint. Full suite remains unaccepted with 2 errors not individually classified against baseline; W5C/Desktop acceptance remain open. No Instagram/Host/Production/deploy operation.
+
+---
+
 ## 2026-09-28 - Build 2026.09.28.1 - OpenRouter Image AI isolated generation and guarded handoff
 - v8.9.11 now records Build `2026.09.28.1` in the About/version history and `docs/DESKTOP_VERSION.md`.
 - OpenRouter discovery found 59 reference-capable image endpoints; `bytedance-seed/seedream-4.5` / provider `seed` was selected at recorded cost `0`.

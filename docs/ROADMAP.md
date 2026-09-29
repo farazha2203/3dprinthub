@@ -1,3 +1,20 @@
+## 2026-09-29 - W5C Popup/GitHub gate
+
+Status: `POPUP LOCAL_TESTED / W5C BLOCKED`.
+
+- [x] Native Qt Story Popup open, saved SQLite image revision display, close, reopen and revision reload on writable isolated Catalog clone.
+- [x] Six Story and six Post style RadioButtons verified in their respective tabs.
+- [x] Focused Social AI/Story/Feed/Buffer tests: 26/26 PASS.
+- [x] Pre-generation backup, isolated Catalog and Popup smoke clone: SQLite integrity and quick checks PASS.
+- [x] GitHub branch tip matches local SHA `7dbecbf63b81ed711994c1cdf0869449a35438ab`; source worktree was clean before docs update.
+- [ ] Explain remaining 2 current full-suite errors not classified by parent baseline proof; do not declare full W5C/Desktop acceptance until resolved or formally dispositioned by evidence.
+- [ ] Commit/push the documentation checkpoint only after compileall/diff-check and exact-SHA/Local=Remote verification.
+- [ ] No Instagram send, Host/Production change, or deploy before acceptance and explicit release gate.
+
+Immediately next: classify the two unresolved regression errors and rerun only probes whose preconditions/inputs materially differ. After W5C: final Desktop acceptance. Later social publishing remains separately gated.
+
+---
+
 ## 2026-09-26 - Phase50.A.2Z-O7A Acquisition UI
 - [x] Verify latest Windows lineage is v8.9.11 / A2U→A2X→A2Y→A2Z→O6, not the obsolete v8.9.10 worktree.
 - [x] Split Add Product/Crawl into top-level Inventory, Single Product, Search/Search-Link and History workspaces.

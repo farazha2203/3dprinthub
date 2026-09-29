@@ -1,3 +1,10 @@
+## 2026-09-29 - Owner: finish actual Popup smoke, then W5C/Desktop acceptance
+Status: `POPUP_SMOKE_PASS / W5C_BLOCKED`.
+
+Popup was opened on the verified v8.9.11 Build 2026.09.28.1 runtime with a writable isolated Catalog clone, a stored revision image was displayed in-app, Popup was closed and reopened, and the same revision/image reloaded. Both Story and Post AI tabs expose six selectable styles. Focused regressions pass 26/26 and backup/isolation integrity checks pass. Full regression gate is not accepted because two errors remain individually unclassified; no actual Instagram publication or deploy occurred. Next: classify those errors, finish W5C exact-SHA gates, then Desktop acceptance.
+
+---
+
 ## 2026-09-28 - Owner: AI Story/Post creative revisions
 Status: `IN_APP_SQLITE_LOCAL_TESTED / REAL_GENERATION_PENDING`.
 

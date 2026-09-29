@@ -1,3 +1,17 @@
+## 2026-09-29 - Popup smoke and W5C checkpoint - POPUP LOCAL_TESTED / W5C BLOCKED
+
+Verified forward checkout: `D:\projects\3DPrintHub-a2z-a2r-converge`, branch `wip/phase50-a2z-w5-manual-product-20260927`, HEAD/local/upstream/GitHub branch all `7dbecbf63b81ed711994c1cdf0869449a35438ab`; worktree clean before documentation. Desktop version remains v8.9.11 Build `2026.09.28.1`.
+
+Real native Qt Popup smoke passed against writable isolated clone `D:\projects\3dprinthub-backups\phase50-popup-smoke-20260929-01\catalog.sqlite3`: open manual Story Popup, load saved SQLite Revision #4 and render its image inline, close, reopen and reload the same revision. Both AI Story and AI Post tabs expose six RadioButton styles. Existing Story/Post delivery methods were not invoked. Popup image/reopen gate: PASS.
+
+Focused W5 regression: Social AI 10/10, Story asset 4/4, Feed asset 5/5, Buffer companion 7/7 (26/26 total). Three relevant backup/isolation DBs all `integrity_check=ok` and `quick_check=ok`: pre-generation backup, isolated generation Catalog, and Popup smoke clone. `QT6_FOUNDATION_VERIFY=OK` and `QT6_42B2_FULL_PARITY_VERIFY=OK` were already observed on this isolated clone. GitHub exact tip currently equals local HEAD; source tree has no changes before this docs update.
+
+Full 971-test suite is NOT accepted: current discovery manifest showed 12 failures/16 errors; 12 failures and a selected legacy DB/fixture error group reproduce at parent `00fd4d96...`, while the remaining two errors have not been individually classified in this checkpoint. Do not label W5C or overall Desktop acceptance complete until the remaining errors are explained and required full gate is satisfied. No canonical Catalog mutation, Instagram send, Host operation, Production mutation, or deploy occurred. Real send remains disabled.
+
+Exact next: classify the two unexplained suite errors against the exact current/parent manifest without repeating the unchanged full command; run any changed-condition baseline probes, compileall/diff-check if docs are committed, revalidate exact-SHA VerifyOnly and GitHub Local=Remote, then close W5C only if all acceptance criteria pass. Following phase: final Desktop acceptance; Instagram send still requires its separate authorization/gate.
+
+---
+
 ## 2026-09-28 - Independent Image AI generation - LOCAL_TESTED / handoff connected / GitHub gate pending
 
 Baseline proof update: the 12 full-suite failures were rerun on parent `00fd4d9600b4fddbfcbee1439c2e45ab02589e3b` and reproduced unchanged. The legacy DB/fixture error group also reproduced on that parent (`14` errors in the grouped modules). The focused Popup/Design smoke remains `10/10 PASS` on the current source. An isolated writable Qt clone passed VerifyOnly and the application startup path, but the available Computer Use surface returned no native window, so foreground Popup click/reopen acceptance remains unverified rather than claimed.
