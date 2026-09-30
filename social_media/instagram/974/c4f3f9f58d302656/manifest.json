@@ -1,0 +1,16 @@
+{
+  "asset_revision": "c4f3f9f58d302656",
+  "feed_sha256": [
+    "06c4b55b5c04d102f8d850ba6dd826a769a796aa9bafa7266c5ddcfe2ebae3cc",
+    "619602901fabbfad8838acb1fa7c425a183ac43224633c76e49c397d5ab48a27"
+  ],
+  "product_id": 974,
+  "purpose": "Buffer public media compatibility",
+  "site_product_id": 63,
+  "site_revision": 1,
+  "source_media_urls": [
+    "https://makerworld.bblmw.com/makerworld/model/USfb2c020e039a97/design/06be8ee43f7c83ad.png",
+    "local://gnome-mushroom-cozy-autumn-decoration-3d-print-03.webp"
+  ],
+  "story_sha256": ""
+}
