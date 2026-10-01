@@ -1,0 +1,16 @@
+{
+  "asset_revision": "6e962bbeb39f0ba9",
+  "feed_sha256": [
+    "1efece1d1436492efa26d9a2c361b306cb8f1d448c020f3d76d962456bd39d58",
+    "2174fc0f47e4cd7fb084826afb773b86797d4d8491374160f6b43ca7276b0972"
+  ],
+  "product_id": 199,
+  "purpose": "Buffer public media compatibility",
+  "site_product_id": 64,
+  "site_revision": 1,
+  "source_media_urls": [
+    "https://makerworld.bblmw.com/makerworld/model/US7de15b5f8c0798/design/2025-08-22_ddb8504fa3043.png?x-oss-process=image%2Fresize%2Cw_400%2Fformat%2Cwebp",
+    "local://synapse-table-desk-lamp-3d-print-02.webp"
+  ],
+  "story_sha256": ""
+}
