@@ -1,0 +1,16 @@
+{
+  "asset_revision": "226f87a1e2c8a16d",
+  "feed_sha256": [
+    "844d7ccbdf44cecf4161ab9563b988c3da7a2bd9dccd5388b71b1d72eff442fa",
+    "a8f5908ddf05ef9eca8a6fb3971420d916ee7bbedebfe8b5be5ad0f5c957d11a"
+  ],
+  "product_id": 967,
+  "purpose": "Buffer public media compatibility",
+  "site_product_id": 67,
+  "site_revision": 1,
+  "source_media_urls": [
+    "https://makerworld.bblmw.com/makerworld/model/USec679a56692e6c/design/3284c49e62232cf4.png?x-oss-process=image/resize,w_1200/ignore-error,1",
+    "local://handbag-purse-organizer-editable-text-3d-print-02.webp"
+  ],
+  "story_sha256": ""
+}
