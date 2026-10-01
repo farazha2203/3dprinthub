@@ -1,0 +1,16 @@
+{
+  "asset_revision": "12fc3e064038837f",
+  "feed_sha256": [
+    "285356581a737b9cacd460224f64355808de84f1857c419c28d0313c36c42827",
+    "fd845aba74b6d7d4f0a2b9824408178f8b9aeb2bdcde65bd2cb068c3059838b5"
+  ],
+  "product_id": 966,
+  "purpose": "Buffer public media compatibility",
+  "site_product_id": 66,
+  "site_revision": 1,
+  "source_media_urls": [
+    "https://makerworld.bblmw.com/makerworld/model/USa7232d60302dc0/design/2025-11-26_2add153837971.png?x-oss-process=image/resize,w_1200/ignore-error,1",
+    "local://gnomi-nordici-no-ams-home-decoration-3d-print-03.webp"
+  ],
+  "story_sha256": ""
+}
