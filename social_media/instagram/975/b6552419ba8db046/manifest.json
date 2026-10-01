@@ -1,0 +1,16 @@
+{
+  "asset_revision": "b6552419ba8db046",
+  "feed_sha256": [
+    "b888e7fe786cc66b5cf65eb17c50ca1170b45bb7cd485eda770e82b75302eb7a",
+    "700e8545cf27915eae0b21b62b39df55788a926f634a62498611a9a735a22799"
+  ],
+  "product_id": 975,
+  "purpose": "Buffer public media compatibility",
+  "site_product_id": 70,
+  "site_revision": 1,
+  "source_media_urls": [
+    "https://makerworld.bblmw.com/makerworld/model/USb8666c90c4f9cd/design/2e57da20b0da854b.jpeg?x-oss-process=image/resize,w_1200/ignore-error,1",
+    "local://detailed-fantasmacoppia-3d-print-02.webp"
+  ],
+  "story_sha256": ""
+}
