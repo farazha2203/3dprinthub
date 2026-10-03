@@ -1,0 +1,20 @@
+{
+  "asset_revision": "62353ce4e25ee106",
+  "feed_sha256": [
+    "d49cffa5ab8d3f9978c084c6882ad9f31c5293178c7b6f8c55bfc9518813f288",
+    "596dc4ad0fce47342fc2da23f5c7438aa34c7cf1123444e9ef4bd1f0e4451384",
+    "ad0c83525faa4ebfa79f5d72bdf4f2f9085d1c2645fb6f1117a9f2c30a0657e8",
+    "cac9aec015c8cc53692ce93a95e9af8eaacb4ef58aa163ee5f421a8552780872"
+  ],
+  "product_id": 187,
+  "purpose": "Buffer public media compatibility",
+  "site_product_id": 71,
+  "site_revision": 1,
+  "source_media_urls": [
+    "https://makerworld.bblmw.com/makerworld/model/US290adfe664e380/design/2026-01-20_3eeb49dfba4f4.png?x-oss-process=image/resize,w_1000/format,webp",
+    "https://makerworld.bblmw.com/makerworld/model/US290adfe664e380/design/2026-01-20_aa6d795563038.png?x-oss-process=image/resize,w_1000/format,webp",
+    "https://makerworld.bblmw.com/makerworld/model/US290adfe664e380/design/2026-01-20_002bb1a78f51a8.png?x-oss-process=image/resize,w_1000/format,webp",
+    "local://spiral-lamp-3d-print-04.webp"
+  ],
+  "story_sha256": ""
+}
