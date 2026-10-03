@@ -1,0 +1,16 @@
+{
+  "asset_revision": "4c0f3658449b1ff0",
+  "feed_sha256": [
+    "ba7b98a064e45df4d81358c7554743d742d1fcd6fc43243130f595c7eddcc09d",
+    "b901e272966b90a1b2394d403cc570f46d285594dc048dc40ad8fc7f33185787"
+  ],
+  "product_id": 583,
+  "purpose": "Buffer public media compatibility",
+  "site_product_id": 74,
+  "site_revision": 1,
+  "source_media_urls": [
+    "https://makerworld.bblmw.com/makerworld/model/DSM00000003186647/design/e1faf0a46fbc3db9.jpg?x-oss-process=image/resize,w_1200/ignore-error,1",
+    "local://retractable-sliding-capybara-fidget-toy-3d-print-02.webp"
+  ],
+  "story_sha256": ""
+}
