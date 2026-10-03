@@ -1,0 +1,16 @@
+{
+  "asset_revision": "3d2fe76b581c95be",
+  "feed_sha256": [
+    "7aa03acb88ddc92bb49b0bf12b35bb636d16cafe61423871e762a10bd8430176",
+    "39cba56b8a1828704b89e0d8a82c62dee6351fd3640e0289c6ca04b1c185ee6b"
+  ],
+  "product_id": 533,
+  "purpose": "Buffer public media compatibility",
+  "site_product_id": 73,
+  "site_revision": 1,
+  "source_media_urls": [
+    "https://makerworld.bblmw.com/makerworld/model/US43c4782dbc1dad/design/ca7a37dc6b2a3fdb.png?x-oss-process=image/resize,w_1200/ignore-error,1",
+    "local://barioth-monster-hunter-diorama-028-3d-print-02.webp"
+  ],
+  "story_sha256": ""
+}
