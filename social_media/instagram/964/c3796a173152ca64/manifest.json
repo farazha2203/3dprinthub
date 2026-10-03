@@ -1,0 +1,16 @@
+{
+  "asset_revision": "c3796a173152ca64",
+  "feed_sha256": [
+    "2b04ea2cecfefa097f0e7ec47ab9d358a664ec3f4a05d58f6f4032aedf899fc0",
+    "7ed39090889f3ae5b45165b53cbc97b35cc47dc43f725d8b3f063365baaa5395"
+  ],
+  "product_id": 964,
+  "purpose": "Buffer public media compatibility",
+  "site_product_id": 77,
+  "site_revision": 2,
+  "source_media_urls": [
+    "https://makerworld.bblmw.com/makerworld/model/US2363dcc1057549/design/03605509c745473e.jpeg?x-oss-process=image/resize,w_1200/ignore-error,1",
+    "local://bird-feeder-hexagonal-garden-manor-3d-print-02.webp"
+  ],
+  "story_sha256": ""
+}
