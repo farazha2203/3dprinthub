@@ -1,0 +1,16 @@
+{
+  "asset_revision": "19999c8e16101ee9",
+  "feed_sha256": [
+    "06fba5d1aa40b894552e5595c14768332f4c2c3c7bf3f289d87604b1ebd1243a",
+    "a1ebc51ff6fa293bc91ad3dd9905859a05d07b2ca96e9449952a54df0582d2dd"
+  ],
+  "product_id": 1044,
+  "purpose": "Buffer public media compatibility",
+  "site_product_id": 82,
+  "site_revision": 1,
+  "source_media_urls": [
+    "https://makerworld.bblmw.com/makerworld/model/US63f76137b944b6/design/2025-10-31_69b74a2272d6a8.png?x-oss-process=image/resize,w_1200/ignore-error,1",
+    "local://coralight-modern-lamp-3d-print-02.webp"
+  ],
+  "story_sha256": ""
+}
