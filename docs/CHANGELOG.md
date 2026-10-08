@@ -1253,3 +1253,5 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - Reuse one live Variant price calculation for HTML selector and Google ProductGroup Product/Offer JSON-LD; ignore stale cached price when quoting public pricing. Prices in JSON-LD are actual Toman x10 in IRR.
 - Preserve fixed-price products, unknown-price/no-review markup and genuine customer reviews; no new migrations.
 - Deployment is gated on test results, GitHub exact SHA, verified Host current state and cPanel quota/backup safety.
+
+REQ-50-040 RELEASED 2026-10-09: GitHub-first guarded rollout to verified Production SHA 2b567c9485ec5b2950d2c2644eb8d19ab425fdea. Exact source/DB rollback checksums PASS, MySQL gzip PASS, Passenger restart, public Google Default Offer parity 6/6 PASS, Host clean. ERR-50-046 quota-parser failed closed on first bootstrap; corrected with offline regression before released SHA. cPanel quota 99%; no cleanup of retained data.

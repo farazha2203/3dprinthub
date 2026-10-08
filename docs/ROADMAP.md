@@ -904,3 +904,5 @@ Status: LOCAL_IMPLEMENTED / RELEASE_GATE_PENDING.
 - Base Product page price and ProductGroup Variant Offer share the same amount, correct Toman/IRR units; user selected variants override the default.
 - Relevant local regressions, exact GitHub release, rollback + Production SEO verification required before PRODUCTION_VERIFIED.
 - cPanel storage quota requires read-only available-space and integrity-checked backup gate before source promotion; do not delete retained backup/customer data.
+
+REQ-50-040 CLOSEOUT 2026-10-09: PRODUCTION_VERIFIED at runtime SHA 2b567c9485ec5b2950d2c2644eb8d19ab425fdea, 41/41 regression PASS and six/six independent public Offer parity smoke PASS. Only Search Console external revalidation pending; ongoing Host quota risk ~99%.

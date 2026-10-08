@@ -1071,3 +1071,5 @@ Production public validation: all six URLs HTTP 200, positive variant IRR Offers
 
 ### REQ-50-040 — Owner-defined default product price / Google parity (2026-10-09)
 The owner requires the default advertised price to come from the first *orderable* filament/material, first print/sales profile, then first color, using the existing persisted sort orders. The price seen in the default Product page and Google ProductGroup hasVariant Offer must be computed from the same real Variant price breakdown, Toman for the customer and IRR (x10) for Google. Preserve explicitly chosen ?variant, inventory/orderability, all other active variants, fixed-price mode, real reviews and checkout authority. No fabricated price/rating, DB rewrite, media or Windows publisher mutation.
+
+REQ-50-040 PRODUCTION_VERIFIED 2026-10-09: first real orderable filament/material, print profile, color drives canonical page default price and first Google variant Offer, 41/41 regression PASS, six/six public price parity PASS, deployed exact approved SHA 2b567c9485ec5b2950d2c2644eb8d19ab425fdea with integrity-verified rollback. Owner external Google Search Console Validate Fix still pending.
