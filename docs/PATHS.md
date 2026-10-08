@@ -277,3 +277,19 @@ This cPanel environment did not provide a reliable `/dev/fd` path for Bash proce
 - Dirty Local/Host worktree: STOP/INSPECT; no reset/delete shortcut.
 - Before Production migration verify exact project root, branch, commit, Python venv, DB vendor/name, backup target and rollback.
 - JSON/API smoke payloads are data, not executable source; use `python - <args>` and explicit `json.load` when verifying endpoint responses.
+
+## 2026-10-08 — Canonical Windows paths after worktree cleanup
+
+Current Windows runtime/source: `D:\projects\3DPrintHub-a2z-a2r-converge` (Catalog Center v8.9.11 / Build 2026.10.04.2).
+
+Canonical Git anchor/shared venv: `D:\projects\3DPrintHub`; do not remove while the current runtime remains a linked Git worktree and `RUN_QT.ps1` uses its `.venv`.
+
+Persistent Catalog/data root: `D:\projects\3dprinthub-catalog-manager`.
+
+Current Buffer/social provider asset worktree: `D:\projects\3DPrintHub-a2z-a2r-converge-social-assets`.
+
+Rollback/backups root: `D:\projects\3dprinthub-backups`; cleanup rollback evidence: `worktree-cleanup-20261008-193657`.
+
+Desktop shortcut: `C:\Users\Emad-PC\Desktop\3DPrintHub Catalog Center.lnk` -> PowerShell -> `D:\projects\3DPrintHub-a2z-a2r-converge\catalog_center\RUN_QT.ps1`.
+
+Historical runtime/release/Slicebox/Social worktree folders removed on 2026-10-08 are no longer valid execution paths. Recreate from Git branches/rollback evidence only if explicitly needed.

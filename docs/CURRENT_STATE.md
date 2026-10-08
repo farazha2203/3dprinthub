@@ -2765,3 +2765,20 @@ The captured full suite remains non-green at baseline: 12 failures plus 14 basel
 Exact next: commit and push this reviewed branch, then verify GitHub branch SHA exactly equals Local. Immediately following phase: final Desktop acceptance on the GitHub-exact Build `2026.09.29.1`; Instagram send remains a separate later gate.
 
 ---
+
+## 2026-10-08 — Windows workspace cleanup / Catalog Center v8.9.11 preserved
+
+Owner designated the currently visible `3DPrintHub Catalog Center v8.9.11 — Qt 6`, Build `2026.10.04.2`, as the accepted current Windows runtime for cleanup purposes. Read-only verification resolved its source to `D:\projects\3DPrintHub-a2z-a2r-converge\catalog_center\qt_launch.py`, its launcher to `RUN_QT.ps1`, its persistent Catalog root to `D:\projects\3dprinthub-catalog-manager`, and the Desktop shortcut to that exact launcher.
+
+Before deletion, dirty stale worktrees were preserved as compact rollback evidence at `D:\projects\3dprinthub-backups\worktree-cleanup-20261008-193657` with branch/HEAD/status metadata, tracked/staged binary diffs, copied untracked files and SHA256 manifest. The first backup-redirection attempt failed before deletion because of Windows command quoting; the corrected .NET UTF-8 writer path produced and verified the rollback set before cleanup continued.
+
+Removed obsolete local worktrees/folders: `3DPrintHub-runtime-3c6d295`, `3DPrintHub-baseline-a2t-verify`, `3DPrintHub-release-a2t-20261008`, the five historical `.worktrees\3dprinthub\...` Hero/Slicebox/Social checkouts, and the empty `3dprinthub-uat` directory. Git worktree metadata was pruned.
+
+Registered Windows worktrees are now only:
+- `D:\projects\3DPrintHub` — canonical Git anchor + shared project venv; intentional unrelated dirty WIP preserved.
+- `D:\projects\3DPrintHub-a2z-a2r-converge` — current v8.9.11 source; intentional current WIP preserved.
+- `D:\projects\3DPrintHub-a2z-a2r-converge-social-assets` — Buffer/social provider asset worktree; retained because the current Social path may depend on it.
+
+Persistent non-worktree roots retained: `D:\projects\3dprinthub-catalog-manager` for the live Catalog/media state and `D:\projects\3dprinthub-backups` for rollback evidence.
+
+Post-cleanup gates PASS: current v8.9.11 window remained running; Qt VerifyOnly reports `QT_OPERATOR_LAUNCHER_VERIFY=PASS`; Catalog read-only `PRAGMA quick_check=ok` with 1076 Product rows; Desktop shortcut still resolves to the current launcher. No Host/Production/DB mutation occurred. D: free space increased from 116.60 GB to 117.29 GB (~0.69 GB reclaimed).

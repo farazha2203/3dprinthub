@@ -1876,3 +1876,10 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - Local source only; no Catalog/Host/Production/Instagram mutation or deployment.
 
 ---
+
+## 2026-10-08 — Windows 3DPrintHub workspace consolidation
+- Kept the owner-accepted Catalog Center v8.9.11 / Build 2026.10.04.2 runtime and its live Catalog data.
+- Archived dirty stale-worktree deltas with SHA256 rollback evidence before deletion.
+- Removed obsolete runtime/baseline/A2T release and historical Hero/Slicebox/Social worktrees plus the empty UAT directory.
+- Reduced registered worktrees to the canonical Git anchor, current v8.9.11 source and required social-assets worktree.
+- Post-cleanup Qt VerifyOnly and Catalog quick_check PASS; app remained running; no Production mutation.

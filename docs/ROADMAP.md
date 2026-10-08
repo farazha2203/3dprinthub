@@ -1534,3 +1534,11 @@ Status: `GITHUB_UPDATED / DESKTOP ACCEPTANCE PENDING / W5C NOT ACCEPTED`.
 Immediately next: final foreground Desktop acceptance on the exact GitHub SHA. Following phase: close W5C/Desktop acceptance; no send/deploy without separate gates.
 
 ---
+
+## 2026-10-08 — Windows workspace consolidation
+- [x] Verify the actually running Catalog Center as v8.9.11 / Build 2026.10.04.2 and resolve source/launcher/data/shortcut paths.
+- [x] Preserve dirty stale-worktree deltas and untracked files with SHA256 rollback evidence before deletion.
+- [x] Remove obsolete runtime/baseline/A2T release and historical Hero/Slicebox/Social worktrees plus empty UAT.
+- [x] Prune Git worktree metadata and retain only canonical Git anchor, current runtime source and social-assets worktree.
+- [x] Re-run Qt VerifyOnly and read-only Catalog quick_check after cleanup.
+- [ ] Do not collapse the remaining Git anchor/current-runtime pair until the current v8.9.11 WIP is reconciled/committed; the current worktree depends on the anchor Git metadata and launcher venv.

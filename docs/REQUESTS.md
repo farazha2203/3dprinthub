@@ -1403,3 +1403,11 @@ The requested full-suite error investigation is recorded in `docs/phases/PHASE50
 The prior current suite count of 16 errors was not recovered. A new fully captured pre-fix run produced 971 tests / 12 failures / 15 errors; 14 error events reproduce on parent and the remaining event was fixed. Do not claim full-suite green: remaining failures/errors are baseline-proven. Ordered focused regression is 37/37 PASS; compileall, isolated Qt VerifyOnly and backup integrity checks PASS. Commit `83945715bbe50fb2588fc01abb68be363f308fe5` is exact Local=GitHub. Next: final foreground Desktop acceptance on isolated Catalog. No Instagram send or deploy.
 
 ---
+
+## REQ-50-039 — Consolidate Windows Catalog Center folders
+Date: 2026-10-08
+Status: `COMPLETED / RUNTIME PRESERVED / PRODUCTION UNTOUCHED`.
+
+Owner identified the visible Catalog Center v8.9.11 / Build 2026.10.04.2 as the current working version and requested removal of obsolete duplicate version folders while preserving every folder actually needed by that runtime.
+
+Completed with reversible cleanup: current runtime/source, canonical Git anchor/shared venv, live Catalog data, social provider assets and backups were retained; stale registered worktrees and empty UAT were removed only after dirty-delta rollback evidence was created and hashed. Qt VerifyOnly and Catalog integrity passed after cleanup.
