@@ -118,3 +118,52 @@ class ProductSchemaTests(TestCase):
             'rel="canonical" href="http://testserver/store/"',
             body,
         )
+
+    def test_variant_family_uses_individual_offers_not_aggregate_offer(self):
+        request = RequestFactory().get("/store/product/gear/", HTTP_HOST="testserver")
+        data = json.loads(str(product_schema_json(self.product, [self.variant], request, self.seo)))
+        family = data["@graph"][0]
+        self.assertEqual(family["@type"], "ProductGroup")
+        self.assertNotIn("offers", family)
+        variant = family["hasVariant"][0]
+        self.assertEqual(variant["@type"], "Product")
+        self.assertEqual(variant["offers"]["@type"], "Offer")
+        self.assertEqual(variant["offers"]["price"], self.variant.cached_unit_price * 10)
+
+    def test_direct_fixed_price_exposes_real_single_product_offer(self):
+        self.product.order_mode = "fixed"
+        self.product.fixed_price = 123456
+        self.product.save(update_fields=["order_mode", "fixed_price"])
+        request = RequestFactory().get("/store/product/gear/", HTTP_HOST="testserver")
+        data = json.loads(str(product_schema_json(self.product, [self.variant], request, self.seo)))
+        product = data["@graph"][0]
+        self.assertEqual(product["@type"], "Product")
+        self.assertNotIn("hasVariant", product)
+        self.assertNotIn("productGroupID", product)
+        self.assertEqual(product["offers"]["@type"], "Offer")
+        self.assertEqual(product["offers"]["price"], 1234560)
+        self.assertEqual(product["offers"]["priceCurrency"], "IRR")
+
+    def test_unknown_price_never_creates_incomplete_product_or_fake_offer(self):
+        self.variant.cached_unit_price = 0
+        request = RequestFactory().get("/store/product/gear/", HTTP_HOST="testserver")
+        data = json.loads(str(product_schema_json(self.product, [self.variant], request, self.seo)))
+        self.assertEqual([item["@type"] for item in data["@graph"]], ["BreadcrumbList"])
+
+    def test_approved_genuine_review_allows_review_only_product(self):
+        self.variant.cached_unit_price = 0
+        user = User.objects.create_user(username="real_customer", password="test-pass")
+        ProductReview.objects.create(
+            product=self.product,
+            user=user,
+            rating=4,
+            body="Real customer review",
+            is_approved=True,
+        )
+        request = RequestFactory().get("/store/product/gear/", HTTP_HOST="testserver")
+        data = json.loads(str(product_schema_json(self.product, [self.variant], request, self.seo)))
+        product = data["@graph"][0]
+        self.assertEqual(product["@type"], "Product")
+        self.assertNotIn("offers", product)
+        self.assertEqual(product["aggregateRating"]["reviewCount"], 1)
+        self.assertEqual(product["review"][0]["reviewRating"]["ratingValue"], 4)

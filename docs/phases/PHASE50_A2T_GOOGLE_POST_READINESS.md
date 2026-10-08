@@ -128,3 +128,9 @@ Exact next external gate: connect an authenticated Google Search Console propert
 The external gate was rechecked rather than blindly retried. Production does contain configured `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET`, but repository settings prove these credentials belong to the existing Django-allauth sign-in flow and request only `profile` + `email` scopes. They are not evidence of Search Console authorization and must not be reused or treated as Search Console access without a separate Google consent/scoping flow.
 
 No repository credential/file for Search Console was found, and no authenticated Search Console connector/session is currently available to this execution context. Therefore the predecessor gate is still genuinely unfinished; automatic successor-phase start is not permitted by the continuation rule. No Production/source/DB mutation was performed.
+
+## 2026-10-08 — Owner reported Product snippet errors: REQ-50-039
+Six public Product URLs were flagged by Google Search Console with missing offers/review/aggregateRating. All six current public pages were fetched read-only with HTTP 200 and 48–64 priced Variant Offers; Google-rendered crawl HTML for the reported timestamp was not available for direct comparison.
+Implemented local ProductGroup/hasVariant cleanup and explicit fixed-price/unknown-price/review-only rich-result gates, without modifying Store business pricing, inventory, Product data or Google Auth.
+Validation: 41 relevant Django tests PASS; Python compile, Django check (known warnings), no migration drift and diff-check PASS. Rollback/Production deploy pending exact GitHub release proof.
+Search Console external access remains unconnected to this execution environment; the owner may have authenticated UI access as proven by the supplied Search Console report. Request Google Validate Fix only after the live six-URL smoke gate passes.

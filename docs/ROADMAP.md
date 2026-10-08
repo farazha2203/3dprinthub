@@ -878,3 +878,12 @@ Status: `PRODUCTION VERIFIED / CRAWL ENABLED / SEARCH CONSOLE SUBMISSION NEXT`.
 - [x] Confirm no Search Console-specific credential/session is available in the verified project execution context.
 - [ ] Obtain authenticated Search Console property access/ownership.
 - [ ] Only then submit sitemap and run URL Inspection; do not start a successor phase while this predecessor gate remains unfinished.
+
+### 2026-10-08 — REQ-50-039 Product rich-result follow-up
+- [x] Reproduce owner-reported six Product snippets errors from Search Console evidence.
+- [x] Read-only verify all six current ProductGroup, Variant Offer price and canonical URL representations.
+- [x] Align variant-family Schema with Google's documented ProductGroup/hasVariant model and avoid fabricated values.
+- [x] Local focused + storefront/Search Console regression 41/41 PASS; no migration drift.
+- [ ] Promote exact reviewed SHA to GitHub release and deploy with rollback from dedicated 3DPrintHub tunnel.
+- [ ] Verify public JSON-LD for all six URL paths and cache/bot-visible behavior.
+- [ ] Request re-crawl/Validate Fix in owner's authenticated Google Search Console; only Google can close the external enhancement status.

@@ -2414,3 +2414,12 @@ Resolved and Production verified; do not treat as open without fresh evidence.
 **Resolution:** rerun bundle verification from `/home/sfkilvrs/3dprinthub` while passing the absolute bundle path; it returned `SOURCE_CURRENT_BUNDLE=PASS`. Do not repeat the broken Django shell quoting form; public Home verification was used instead to confirm no `google-site-verification` meta is currently rendered, while the already-successful Host probe confirmed `allow_search_indexing=True`.
 
 **Prevention:** Host verification commands that require repository context must `cd` to the repository explicitly. Avoid deeply nested quoted one-liners through the PowerShell→router→Bash chain; prefer repository scripts, simple single-purpose probes, or public read-only HTTP evidence.
+
+## ERR-50-042 — Product snippets warning with variant-family AggregateOffer
+Date: 2026-10-08
+Environment: Search Console screenshot + read-only public pages + verified release code.
+Symptoms: six Store Product names flagged with the critical Product-snippet warning "Either offers, review, or aggregateRating should be specified".
+Read-only diagnosis: all six public Product URLs return 200 and currently contain a ProductGroup with 48–64 priced Product variants and positive IRR Offer prices. However ProductGroup also carried an AggregateOffer derived from catalog-profile min/max, using AggregateOffer for variants contrary to Google's current Product-variant guidance. Search Console's earlier Google-rendered document is not independently available; exact attribution of its warning to that redundant node remains unverified.
+Corrective local change: leave actual Variant Product/Offer prices intact; remove AggregateOffer from the variant family; produce a standalone Product + direct Offer only for the explicitly fixed-price order mode with positive real price; produce review-only Product exclusively from approved real customer reviews; emit only BreadcrumbList for unknown-price/no-review products. Added fixed/variant/unknown/review tests.
+Verification: 41/41 related Django tests PASS, py_compile, Django check, no migration drift, git diff --check PASS; known pre-existing warnings only. Production not yet mutated.
+Prevention: never synthesize Google prices, discounts, shipping fees or rating values; do not use AggregateOffer to summarize product variants; verify raw Google-facing ProductGroup, priced hasVariant offers and fixed-mode schema before publication.

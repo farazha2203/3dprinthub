@@ -1232,3 +1232,9 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 ## 2026-10-08 — A2T Search Console auth boundary clarified
 - Verified that Production Google OAuth credentials are limited to the existing Django-allauth `profile`/`email` login flow and do not establish Search Console authorization.
 - No Search Console-specific credential/session was found; the external ownership/access gate remains the exact blocker with no Production mutation.
+
+## 2026-10-08 — Product snippets Google compliance follow-up (local)
+- Corrected Store ProductGroup JSON-LD: variant-family Offers remain on each real Product variant, while misleading AggregateOffer derived from profile-price ranges is removed.
+- Standalone fixed-price Product emits a direct Offer in IRR only if the actual fixed selling price is positive; unknown-price items never emit fabricated offers or fake reviews.
+- Added exact regression coverage for variant/fixed/unknown-price/approved-review contracts (41 selected tests PASS).
+- No pricing, product records, SQL migration, image pipeline or checkout behavior changed. GitHub/Production promotion pending.

@@ -85,10 +85,12 @@ def product_schema_json(product, variants, request, seo):
     url=_absolute(request, product.get_absolute_url())
     group_id=f"{url}#product"
     group={"@type":"ProductGroup", "@id":group_id, "name":product.title, "description":product.short_description, "url":url, "image":images, "productGroupID":product.sku, "brand":{"@type":"Brand", "name":product.brand_name or "3DprintHub"}, "category":product.category.name, "variesBy":["https://schema.org/material", "https://schema.org/color"]}
+    # Fixed-price products use their own direct offer, never stale variant prices.
     sellable_variants = [
         variant
         for variant in variants
-        if int(getattr(variant, "cached_unit_price", 0) or 0) > 0
+        if product.order_mode != "fixed"
+        and int(getattr(variant, "cached_unit_price", 0) or 0) > 0
     ]
 
     profile = _catalog_profile(product)
@@ -96,20 +98,9 @@ def product_schema_json(product, variants, request, seo):
         keywords = [str(item).strip() for item in (profile.keywords or []) if str(item).strip()]
         if keywords:
             group["keywords"] = ", ".join(keywords[:30])
-        if profile.price_min or profile.price_max:
-            low = int(profile.price_min or profile.price_max or 0) * 10
-            high = int(profile.price_max or profile.price_min or 0) * 10
-            if low and high:
-                if high < low:
-                    low, high = high, low
-                group["offers"] = {
-                    "@type": "AggregateOffer",
-                    "url": url,
-                    "priceCurrency": "IRR",
-                    "lowPrice": low,
-                    "highPrice": high,
-                    "offerCount": max(1, len(sellable_variants) or len(variants)),
-                }
+        # Google's ProductGroup variant contract uses Offer per Product variant.
+        # A catalog-profile min/max is not an AggregateOffer from other sellers;
+        # publishing it here misrepresents variants and can trigger rich-result errors.
         product_type_label = str(getattr(profile, "product_type_label", "") or profile.product_type or "").strip()
         availability_label = str(getattr(profile, "availability_status_label", "") or profile.availability_status or "").strip()
         additional = [
@@ -162,7 +153,39 @@ def product_schema_json(product, variants, request, seo):
         average=sum(item.rating for item in reviews)/len(reviews)
         group["aggregateRating"]={"@type":"AggregateRating", "ratingValue":round(average,2), "reviewCount":product.reviews.filter(is_approved=True).count(), "bestRating":5, "worstRating":1}
         group["review"]=[{"@type":"Review", "author":{"@type":"Person", "name":r.user.get_full_name() or r.user.username}, "reviewRating":{"@type":"Rating", "ratingValue":r.rating, "bestRating":5}, "name":r.title or "نظر خریدار", "reviewBody":r.body} for r in reviews]
-    graph=[group, _breadcrumb(request, [("خانه", "/"), ("فروشگاه", "/store/"), (product.category.name, product.category.get_absolute_url()), (product.title, "")])]
+    if has_variant:
+        # Single-page product families: Google reads actual individual Offers.
+        structured_product = group
+    else:
+        # A ProductGroup without variants is not a purchasable product.
+        # Only expose a standalone Product when a real fixed offer or
+        # authentic approved reviews substantiate the rich-result data.
+        fixed_price = int(getattr(product, "fixed_price", 0) or 0)
+        has_fixed_offer = product.order_mode == "fixed" and fixed_price > 0
+        if has_fixed_offer or reviews:
+            structured_product = {
+                key: value
+                for key, value in group.items()
+                if key not in ("productGroupID", "variesBy")
+            }
+            structured_product["@type"] = "Product"
+            if has_fixed_offer:
+                structured_product["offers"] = {
+                    "@type": "Offer",
+                    "url": url,
+                    "price": fixed_price * 10,
+                    "priceCurrency": "IRR",
+                    "availability": "https://schema.org/PreOrder",
+                    "itemCondition": "https://schema.org/NewCondition",
+                    "seller": {
+                        "@id": (seo.site_url.rstrip("/") + "/#organization")
+                        if seo else url + "#seller"
+                    },
+                }
+        else:
+            structured_product = None
+    breadcrumb = _breadcrumb(request, [("خانه", "/"), ("فروشگاه", "/store/"), (product.category.name, product.category.get_absolute_url()), (product.title, "")])
+    graph = ([structured_product] if structured_product else []) + [breadcrumb]
     return _json({"@context":"https://schema.org", "@graph":graph})
 
 

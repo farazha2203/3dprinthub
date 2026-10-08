@@ -1057,3 +1057,9 @@ Date: 2026-10-08
 Status: `PUBLICATION READY / AUTHENTICATED SEARCH CONSOLE ACCESS REQUIRED`.
 
 The Google-facing site implementation is live and crawl-enabled. Ownership preflight found no public meta/DNS/root-file ownership evidence for `3dprinthub.ir`; therefore sitemap submission and URL Inspection remain intentionally unclaimed until authenticated Search Console property access is connected and verified.
+
+### REQ-50-039 — Google Product snippets: six live Product errors
+Date: 2026-10-08
+Owner supplied Search Console Product snippets evidence for #152, #301, #670, #967, #971 and #973: "Either offers, review, or aggregateRating should be specified". Owner explicitly requested correction.
+Scope: shared store Product JSON-LD, no Product price/data edits and no invented reviews/ratings/offers. Use exact verified values and Google ProductGroup/hasVariant conventions; preserve existing site publishing and transactions.
+Status: LOCAL_TESTED (41 related Django tests PASS); Production deploy and Google's re-crawl/Validate Fix not yet confirmed.
