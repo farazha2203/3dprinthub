@@ -1565,3 +1565,14 @@ Production after enable:
 Current external blocker: Search Console property access has not yet been connected/verified. The project setting for `google-site-verification` is empty, so no Search Console ownership or sitemap submission is claimed. Exact next step is Search Console property verification/access → submit root sitemap → URL Inspection on Home/Store/Product/direct variant → record coverage/enhancement results.
 
 Canonical phase: `docs/phases/PHASE50_A2T_GOOGLE_POST_READINESS.md`.
+
+
+## 2026-10-08 — A2T Search Console ownership preflight BLOCKED_EXTERNAL
+
+Phase50.A2T runtime remains Production-verified. Local release/docs HEAD is `1974f064e0cfa15fb000f927f729d6e8c5edcd12`; Production runtime remains clean at `2b85a9c0d5d4a79219182bc9b986a5a81e70ed50`. The newer GitHub commit is documentation-only, so no Production source update is required.
+
+Search Console ownership was checked read-only before any Google-side mutation. Current public evidence has no Search Console HTML meta token, both authoritative apex TXT answers contain only SPF and no `google-site-verification`, and the verified document root has no `google*.html` ownership file. Connected-mail search also found no Search Console notification for this domain, but email absence is only supporting evidence.
+
+Status: `PRODUCTION_VERIFIED / CRAWL_ENABLED / SEARCH_CONSOLE_ACCESS_REQUIRED`.
+
+No sitemap submission, URL Inspection, request-indexing, DNS change, source change or Production DB change was performed in this continuation. Exact next task is authenticated Search Console property access/ownership; after that, submit `/sitemap.xml`, inspect Home/Store/Product/direct-variant, and record Google indexing/enhancement evidence.

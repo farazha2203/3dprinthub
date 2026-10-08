@@ -858,3 +858,15 @@ Status: `PRODUCTION VERIFIED / CRAWL ENABLED / SEARCH CONSOLE SUBMISSION NEXT`.
 - [ ] Submit `/sitemap.xml` and optionally `/sitemap-images.xml` in Search Console.
 - [ ] URL Inspection: Home, Store, representative Product and direct variant.
 - [ ] Record indexing/merchant enhancement findings; fix only evidence-backed issues.
+
+
+### 2026-10-08 — A2T external Google ownership gate
+- [x] Reverify clean release checkout, GitHub equality and healthy dedicated Host tunnel.
+- [x] Reverify Production runtime HEAD/worktree after crawl enable.
+- [x] Check public HTML meta verification evidence.
+- [x] Query both authoritative DNS servers for Search Console TXT ownership evidence.
+- [x] Check verified public document root for Google HTML ownership file.
+- [ ] Connect/verify authenticated Search Console property for `3dprinthub.ir` or its approved URL-prefix property.
+- [ ] Submit `/sitemap.xml`; submit image sitemap separately only if useful after property access.
+- [ ] URL Inspection for Home, Store, representative Product and direct Variant URL.
+- [ ] Record Page Indexing / Product enhancement findings and create only evidence-backed fixes.

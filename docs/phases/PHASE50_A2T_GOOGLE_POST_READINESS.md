@@ -105,3 +105,19 @@ Official implementation references reviewed for this release:
 - Google canonicalization guidance.
 - Google Product / Product variant structured-data documentation.
 - Google robots meta / X-Robots-Tag documentation.
+
+
+## 2026-10-08 — Search Console ownership preflight
+
+Read-only ownership evidence was rechecked before attempting any Google-side action:
+- Local release checkout is clean at `1974f064e0cfa15fb000f927f729d6e8c5edcd12` and exact with its GitHub release branch.
+- Production remains clean at runtime Source `2b85a9c0d5d4a79219182bc9b986a5a81e70ed50`; the later GitHub commit is documentation-only and does not require runtime deployment.
+- The dedicated 3DPrintHub reverse-tunnel health check passes.
+- Public Home currently renders no `google-site-verification` meta tag.
+- Both authoritative DNS servers (`ns869.mihanwebhost.com` and `ns870.mihanwebhost.com`) return only the existing SPF TXT record for the apex domain; no `google-site-verification` TXT record is present.
+- No root-level `google*.html` ownership file exists under the verified public document root.
+- A read-only search of the connected Google mailbox found no Search Console notification for `3dprinthub.ir`; this is supporting evidence only and is not treated as authoritative proof of property absence.
+
+Conclusion: the Site is technically crawlable/indexable, but Search Console ownership/access still cannot be truthfully asserted from available authenticated tools. No Search Console property was created, no sitemap was submitted through Search Console, and no URL Inspection/request-indexing action was claimed.
+
+Exact next external gate: connect an authenticated Google Search Console property for the domain/URL-prefix, then verify ownership, submit the root sitemap, inspect representative canonical URLs, and record coverage/enhancement results. No source or Production mutation is justified until that external evidence exists.

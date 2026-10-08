@@ -1050,3 +1050,10 @@ Acceptance achieved on Production:
 - public crawl switch enabled only after two verified rollback boundaries and exact GitHub-first deployment.
 
 Remaining acceptance is external: connect/verify the Google Search Console property, submit the sitemap and inspect representative URLs. Search Console access is not inferred from an empty meta-verification setting.
+
+
+### REQ-50-038 continuation — Search Console external gate
+Date: 2026-10-08
+Status: `PUBLICATION READY / AUTHENTICATED SEARCH CONSOLE ACCESS REQUIRED`.
+
+The Google-facing site implementation is live and crawl-enabled. Ownership preflight found no public meta/DNS/root-file ownership evidence for `3dprinthub.ir`; therefore sitemap submission and URL Inspection remain intentionally unclaimed until authenticated Search Console property access is connected and verified.

@@ -1221,3 +1221,9 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - A second verified rollback was taken immediately before the Production indexing switch. `allow_search_indexing` was then changed from false to true.
 - Production verification: robots 200 and open, root sitemap 89 URLs with no private leak, image sitemap 47 Product URLs/96 images, Home/Store/Product indexable, filters noindex+canonical, sample Product/variant structured-data checks PASS.
 - Search Console ownership/submission remains external and unverified; no indexing guarantee is claimed.
+
+
+## 2026-10-08 — Search Console ownership preflight
+- Reverified A2T release/GitHub/Host state without changing Production.
+- Confirmed no public HTML meta ownership token, no apex `google-site-verification` TXT record on either authoritative DNS server, and no root Google ownership HTML file.
+- Search Console submission remains blocked only on authenticated property access/ownership; no Google-side submission or inspection is claimed.
