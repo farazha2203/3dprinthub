@@ -46,12 +46,19 @@ def _product_queryset():
 def product_list_view(request, slug=None):
     products = _product_queryset()
     current_category = None
+    category_has_indexable_products = True
 
     if slug:
         current_category = get_object_or_404(Category, slug=slug, is_active=True)
         category_ids = [current_category.id]
         category_ids.extend(current_category.children.filter(is_active=True).values_list("id", flat=True))
         products = products.filter(category_id__in=category_ids)
+        # Google recommends noindex on empty ecommerce categories. Only
+        # public/indexable products count; search/filter queries are separate.
+        category_has_indexable_products = Product.objects.filter(
+            is_active=True, robots_index=True, category__is_active=True,
+            category_id__in=category_ids,
+        ).exists()
 
     query = request.GET.get("q", "").strip()
     section = request.GET.get("section", "").strip()
@@ -85,6 +92,7 @@ def product_list_view(request, slug=None):
         "materials": Material.objects.filter(is_active=True),
         "qualities": PrintQuality.objects.filter(is_active=True),
         "current_category": current_category,
+        "category_has_indexable_products": category_has_indexable_products,
         "current_sort": sort,
         "query": query,
         "section": section,
