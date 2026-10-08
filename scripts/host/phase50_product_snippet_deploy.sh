@@ -36,7 +36,7 @@ printf '===== PRODUCT SNIPPET RELEASE DELTA =====\n'
 cat "$TMP_DELTA"
 while IFS= read -r changed; do
   case "$changed" in
-    store/templatetags/store_seo.py|store/test_phase5.py|scripts/host/phase50_product_snippet_deploy.sh|docs/CURRENT_STATE.md|docs/ROADMAP.md|docs/CHANGELOG.md|docs/ERRORS.md|docs/REQUESTS.md|docs/phases/PHASE50_A2T_GOOGLE_POST_READINESS.md) ;;
+    store/templatetags/store_seo.py|store/test_phase5.py|scripts/host/phase50_product_snippet_deploy.sh|docs/CURRENT_STATE.md|docs/ROADMAP.md|docs/CHANGELOG.md|docs/ERRORS.md|docs/REQUESTS.md|docs/phases/PHASE50_A2T_GOOGLE_POST_READINESS.md|docs/DEPLOYMENT.md|docs/PATHS.md|docs/HOST_CONSTRAINTS.md) ;;
     *) fail "unexpected_delta:$changed" ;;
   esac
 done < "$TMP_DELTA"

@@ -2423,3 +2423,18 @@ Read-only diagnosis: all six public Product URLs return 200 and currently contai
 Corrective local change: leave actual Variant Product/Offer prices intact; remove AggregateOffer from the variant family; produce a standalone Product + direct Offer only for the explicitly fixed-price order mode with positive real price; produce review-only Product exclusively from approved real customer reviews; emit only BreadcrumbList for unknown-price/no-review products. Added fixed/variant/unknown/review tests.
 Verification: 41/41 related Django tests PASS, py_compile, Django check, no migration drift, git diff --check PASS; known pre-existing warnings only. Production not yet mutated.
 Prevention: never synthesize Google prices, discounts, shipping fees or rating values; do not use AggregateOffer to summarize product variants; verify raw Google-facing ProductGroup, priced hasVariant offers and fixed-mode schema before publication.
+
+## ERR-50-043 — cPanel account quota blocked exact-SHA git fetch
+Date: 2026-10-08
+Environment: 3DPrintHub Production, dedicated authenticated project reverse tunnel.
+Observed: `git fetch --no-tags origin refs/heads/release/phase50-a2t-google-indexing-20261008` aborted with `fatal: unable to write loose object file: Disk quota exceeded`, although underlying filesystem reported 509GB free, inode use 15%.
+Root cause: cPanel account hard quota 2000MB; official `uapi StatsBar get_stats display=diskusage` reported 2040MB/2000MB (100%, maxed); `quota` command unavailable. Verified `pip cache info` documented 82.2MB regenerable cache.
+Corrective condition: only `/home/sfkilvrs/virtualenv/3dprinthub/3.12/bin/python -m pip cache purge` executed; removed 442 HTTP/wheel cache files (82.2MB). cPanel recheck: 1961/2000MB (98%, not maxed). Product/source/media/DB/rollback backups were not deleted. Exact GitHub SHA fetch then succeeded.
+Prevention: cPanel account quota is authoritative for source promotion, not filesystem `df`. Check `uapi StatsBar get_stats display=diskusage` before future deploy, reserve enough space for Git transfer and verified source+MySQL backup. Preserve owner data; request plan upgrade or approved retention cleanup if headroom is insufficient.
+
+## ERR-50-044 — Deploy allowlist omitted historical documentation-only release commits
+Date: 2026-10-08
+Observed: Product snippet Host runner pre-mutation rejected `unexpected_delta:docs/DEPLOYMENT.md`.
+Root cause: new runner compared actual Production HEAD `2b85a9c0` to newer release head, whose already approved docs-only commits also added `docs/DEPLOYMENT.md`, `docs/PATHS.md`, `docs/HOST_CONSTRAINTS.md` (42 added lines total). The first allowlist omitted these three inert documentation paths.
+Resolution: reviewed exact target-vs-Production `git diff`; extended allowlist only for these three documented historical paths. No runtime file, migration, dependency, settings, environment or data permissions expanded.
+Prevention: define allowlists from verified actual baseline-to-target delta, including any intervening docs-only commits; never loosen runtime surface acceptance generically. Do not retry failed runner until corrected code is committed/pushed.

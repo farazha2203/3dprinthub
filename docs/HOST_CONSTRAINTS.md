@@ -270,3 +270,8 @@ Current verified Production Source is `2b85a9c0d5d4a79219182bc9b986a5a81e70ed50`
 The visible Host branch label remains `release/phase50-a2j-hero-20260915` even though its historical remote branch head is not the live source lineage. This reinforces existing ERR-50-007: never derive Production target truth from the Host branch label or stale remote-tracking refs. Always use exact Host HEAD + `git ls-remote` target + explicit `FETCH_HEAD` + ancestry + ff-only promotion.
 
 No new Host limitation was introduced by A2T. Existing CKEditor4, in-memory realtime and MySQL conditional-constraint warnings remain separate known debt.
+
+## 2026-10-08 — cPanel account-level 2GB disk quota, independent of host filesystem
+Source: authenticated Production `uapi --output=json StatsBar get_stats display=diskusage`.
+Account cap 2000 MB. During Product schema release, account used 2040 MB, exceeding quota; Git loose-object creation failed despite 509GB filesystem free and 15% inode use. Only verified disposable pip cache (82.2MB) was purged via installed venv pip; quota then measured 1961/2000MB (~98%). Original Product media/DB/source backups/.trash remain preserved.
+For all future deploys, require cPanel account quota headroom for fetch + verified source/env/MySQL backups, not just `df`; `quota` binary isn't available and `uapi DiskUsage get_disk_usage` module is missing; use `StatsBar get_stats display=diskusage`. Current headroom is narrow; pursue quota expansion or explicitly approved retention strategy rather than blind backup deletion.
