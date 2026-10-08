@@ -3,7 +3,7 @@ from django.urls import reverse
 from .models import Category, Product, ServicePage
 class StaticViewSitemap(Sitemap):
     priority=0.8; changefreq="weekly"
-    def items(self): return ["store:product_list"]
+    def items(self): return ["website:home", "store:product_list"]
     def location(self,item): return reverse(item)
 class ProductSitemap(Sitemap):
     priority=0.9; changefreq="weekly"

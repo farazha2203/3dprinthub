@@ -1,3 +1,5 @@
+from xml.sax.saxutils import escape as xml_escape
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
@@ -7,7 +9,7 @@ from django.views.decorators.http import require_GET, require_POST
 from .forms_phase4 import AppearancePreferenceForm, THEME_CHOICES
 from .iran_locations import IRAN_LOCATIONS
 from .models import CustomerProfile, SEOSettings, SiteSetting
-from store.sitemaps import StaticViewSitemap, ProductSitemap, CategorySitemap, ServicePageSitemap, ExternalCatalogSitemap
+from store.sitemaps import StaticViewSitemap, ProductSitemap, CategorySitemap, ServicePageSitemap
 
 VALID_THEMES = {key for key, _ in THEME_CHOICES}
 
@@ -59,7 +61,7 @@ def robots_txt_response(request):
             "Disallow: /admin/", "Disallow: /customer/", "Disallow: /store/cart/",
             "Disallow: /store/checkout/", "Disallow: /store/account/", "Disallow: /store/order/",
             f"Sitemap: {domain}/sitemap.xml",
-            f"Sitemap: {domain}/store/ready-models-sitemap.xml",
+            f"Sitemap: {domain}/sitemap-images.xml",
         ])
         if seo and seo.robots_extra:
             lines.append(seo.robots_extra.strip())
@@ -71,5 +73,72 @@ def sitemap_xml_response(request):
         "products": ProductSitemap,
         "categories": CategorySitemap,
         "services": ServicePageSitemap,
-        "ready_models": ExternalCatalogSitemap,
     })
+
+@require_GET
+def product_image_sitemap_xml_response(request):
+    """Google image sitemap for public, indexable Store Products only."""
+    from store.models import Product
+
+    products = (
+        Product.objects.filter(is_active=True, robots_index=True)
+        .prefetch_related("images")
+        .order_by("pk")[:50000]
+    )
+    rows = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
+        'xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">',
+    ]
+    for product in products:
+        page_url = request.build_absolute_uri(product.get_absolute_url())
+        media = []
+        try:
+            if product.main_image:
+                media.append((product.main_image.url, product.title))
+        except Exception:
+            pass
+        for item in product.images.all()[:20]:
+            try:
+                if item.image:
+                    media.append(
+                        (
+                            item.image.url,
+                            str(getattr(item, "alt_text", "") or product.title),
+                        )
+                    )
+            except Exception:
+                continue
+
+        seen = set()
+        image_rows = []
+        for raw_url, title in media:
+            absolute = request.build_absolute_uri(raw_url)
+            if absolute in seen:
+                continue
+            seen.add(absolute)
+            image_rows.extend(
+                [
+                    "<image:image>",
+                    f"<image:loc>{xml_escape(absolute)}</image:loc>",
+                    "</image:image>",
+                ]
+            )
+        if not image_rows:
+            continue
+        rows.append("<url>")
+        rows.append(f"<loc>{xml_escape(page_url)}</loc>")
+        if product.updated_at:
+            rows.append(
+                f"<lastmod>{product.updated_at.isoformat()}</lastmod>"
+            )
+        rows.extend(image_rows)
+        rows.append("</url>")
+    rows.append("</urlset>")
+    response = HttpResponse(
+        "\n".join(rows),
+        content_type="application/xml; charset=utf-8",
+    )
+    response["Cache-Control"] = "public, max-age=900"
+    response["X-Robots-Tag"] = "noindex"
+    return response

@@ -113,7 +113,7 @@
                 <select id="variant-select" class="form-input">
                     <option value="">انتخاب کنید</option>
                     {% for variant in variants %}{% with price=variant.price_breakdown %}
-                    <option value="{{ variant.id }}"
+                    <option value="{{ variant.id }}" {% if variant.id == selected_variant_id %}selected{% endif %}
                         data-pricing-strategy="{{ price.pricing_strategy|default:'legacy' }}"
                         data-material="{{ variant.material.name }}"
                         data-quality="{{ variant.quality.name }}"
