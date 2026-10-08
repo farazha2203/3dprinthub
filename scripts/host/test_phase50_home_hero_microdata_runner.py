@@ -17,7 +17,7 @@ fixture = """---
 result:
   data:
     -
-      _count: '1991'
+      _count: '1994'
       _max: '2000'
       units: MB
 """
@@ -28,16 +28,16 @@ def exercise_quota(text, needed):
          contextlib.redirect_stdout(io.StringIO()):
         exec(compile(blocks[0], "quota", "exec"), {"__name__": "__main__"})
 
-exercise_quota(fixture, 8)
+exercise_quota(fixture, 6)
 try:
-    exercise_quota(fixture, 10)
+    exercise_quota(fixture, 7)
 except SystemExit as e:
     assert str(e) == "HOST_QUOTA_BELOW_SCOPED_BACKUP_RESERVE"
 else:
     raise AssertionError("must reject low quota")
 
 try:
-    exercise_quota("bad quota", 8)
+    exercise_quota("bad quota", 6)
 except SystemExit as e:
     assert str(e) == "HOST_ACCOUNT_QUOTA_UNVERIFIED"
 else:

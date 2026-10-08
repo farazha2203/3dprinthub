@@ -47,7 +47,7 @@ if free < int(sys.argv[1]):
     raise SystemExit("HOST_QUOTA_BELOW_SCOPED_BACKUP_RESERVE")
 PY
 }
-check_quota 8
+check_quota 6
 
 REMOTE_SHA="$(git ls-remote origin "refs/heads/$TARGET_BRANCH" | awk '{print $1}')"
 [ "$REMOTE_SHA" = "$TARGET_SHA" ] || fail "github_sha_mismatch"
@@ -82,7 +82,7 @@ PY
 
 # Previous full source bundle is verified and the pre-change source SHA stays in Git.
 # Limit fresh rollback to the actual one HTML file, .env and a FULL MySQL dump.
-check_quota 7
+check_quota 5
 mkdir -p "$BACKUP_ROOT"
 chmod 700 "$BACKUP_ROOT"
 printf '%s\n' "$EXPECTED_BASELINE" > "$BACKUP_ROOT/prechange-sha.txt"

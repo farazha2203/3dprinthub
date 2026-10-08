@@ -171,3 +171,5 @@ Action: remove Product microdata from homepage Slicebox teaser markup but keep v
 Status LOCAL_IMPLEMENTED / LOCAL_REGRESSION_PENDING. Search Console external validation pending.
 
 REQ-50-041 Local verification: 53/53 Django regressions PASS; Django check/compile/no-migration/diff PASS, original Hero 3D CSS/JS untouched; guarded scoped-backup runner Bash -n + embedded Python quota/mock regression PASS. Production is not changed until quota safety and exact GitHub-based Host gate succeed.
+
+REQ-50-041 quota-safe runner revision: official cPanel 1994/2000 MB, previous fresh streamed FULL MySQL gzip 3,755,624 bytes and 1,215-byte protected env. Used ERR-49-213's scoped changed-file+env+full-DB rollback policy, requiring >=6 MB official free before fetch, >=5 MB before backup, and aborting without source promotion if backup/checksum fails. Only verified empty pip HTTP-cache directories were cleared; no protected backup or customer file touched. Embedded quota-gate regression PASS and script Bash parse PASS. Await exact GitHub revision and guarded deployment result.
