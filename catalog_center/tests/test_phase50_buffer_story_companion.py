@@ -9,7 +9,12 @@ from unittest.mock import patch
 
 from PIL import Image
 
-from app.buffer_publish import BufferConfig, publish_product
+from app.buffer_publish import (
+    BufferConfig,
+    canonical_site_payload,
+    publish_product,
+    publish_story_for_product,
+)
 
 
 class _DB:
@@ -290,6 +295,141 @@ class BufferStoryCompanionTests(unittest.TestCase):
 
     @patch("app.buffer_publish.get_secret", return_value="secret")
     @patch("app.buffer_publish._request_graphql")
+    def test_new_ai_story_asset_is_not_suppressed_by_older_product_story(
+        self, request, _secret
+    ):
+        request.return_value = {
+            "createPost": {
+                "post": {
+                    "id": "story-ai-revision-11",
+                    "status": "sent",
+                    "externalLink": "https://instagram.com/stories/demo/new",
+                }
+            }
+        }
+        db = _DB()
+        db.receipts.append({
+            "status": "instagram_story_published",
+            "server_id": "story-older",
+            "payload_json": json.dumps({
+                "site_ack_fingerprint": db.row["server_ack_json"],
+                "provider_post_id": "story-older",
+                "story_asset_url": "https://cdn.example/older-story.png",
+                "story_link_strategy": "automatic_product_link",
+                "tracking_url": canonical_site_payload(
+                    db.row, site_url="https://3dprinthub.ir"
+                )["tracking_url"],
+                "instagram_live_confirmed": True,
+            }),
+        })
+
+        result = publish_story_for_product(
+            db,
+            11,
+            BufferConfig(channel_id="chan-1"),
+            site_url="https://3dprinthub.ir",
+            story_url_override="https://cdn.example/ai-revision-11.png",
+            story_meta={"revision": "ai-c3d525eaf9a610f6", "social_ai_revision_id": 11},
+            link_notification=False,
+        )
+
+        self.assertEqual(request.call_count, 1)
+        create_input = request.call_args.kwargs["variables"]["input"]
+        self.assertEqual(
+            create_input["assets"][0]["image"]["url"],
+            "https://cdn.example/ai-revision-11.png",
+        )
+        self.assertEqual(
+            create_input["metadata"]["instagram"]["link"],
+            result["tracking_url"],
+        )
+        self.assertEqual(result["provider_post_id"], "story-ai-revision-11")
+
+    @patch("app.buffer_publish.get_secret", return_value="secret")
+    @patch("app.buffer_publish._request_graphql")
+    def test_explicit_resend_of_same_story_asset_creates_a_new_publication(
+        self, request, _secret
+    ):
+        request.return_value = {
+            "createPost": {
+                "post": {
+                    "id": "story-resend-2",
+                    "status": "sent",
+                    "externalLink": "https://instagram.com/stories/demo/resend-2",
+                }
+            }
+        }
+        db = _DB()
+        asset_url = "https://cdn.example/already-posted.png"
+        db.receipts.append({
+            "status": "instagram_story_published",
+            "server_id": "story-existing",
+            "payload_json": json.dumps({
+                "site_ack_fingerprint": db.row["server_ack_json"],
+                "provider_post_id": "story-existing",
+                "story_asset_url": asset_url,
+                "story_link_strategy": "automatic_product_link",
+                "tracking_url": canonical_site_payload(
+                    db.row, site_url="https://3dprinthub.ir"
+                )["tracking_url"],
+                "instagram_live_confirmed": True,
+                "external_link": "https://instagram.com/stories/demo/old",
+            }),
+        })
+
+        result = publish_story_for_product(
+            db,
+            11,
+            BufferConfig(channel_id="chan-1"),
+            site_url="https://3dprinthub.ir",
+            story_url_override=asset_url,
+            link_notification=False,
+        )
+
+        request.assert_called_once()
+        self.assertEqual(result["provider_post_id"], "story-resend-2")
+        self.assertEqual(db.receipts[-1]["status"], "instagram_story_published")
+        self.assertTrue(result["instagram_live_confirmed"])
+        self.assertEqual(db.receipts[-1]["server_id"], "story-resend-2")
+
+    @patch("app.buffer_publish.get_secret", return_value="secret")
+    @patch("app.buffer_publish._request_graphql")
+    def test_link_sticker_notification_is_handoff_not_live_publication(
+        self, request, _secret
+    ):
+        request.return_value = {
+            "createPost": {
+                "post": {
+                    "id": "story-notified",
+                    "status": "sent",
+                    "externalLink": "",
+                    "notificationStatus": "notified",
+                }
+            }
+        }
+        db = _DB()
+        result = publish_story_for_product(
+            db,
+            11,
+            BufferConfig(channel_id="chan-1"),
+            site_url="https://3dprinthub.ir",
+            story_url_override="https://cdn.example/ai-revision.png",
+            link_notification=True,
+        )
+
+        instagram = request.call_args.kwargs["variables"]["input"]["metadata"]["instagram"]
+        self.assertEqual(
+            request.call_args.kwargs["variables"]["input"]["schedulingType"],
+            "notification",
+        )
+        self.assertEqual(instagram["stickerFields"]["other"].split("لینک دقیق محصول:")[-1].strip(), result["tracking_url"])
+        self.assertNotIn("products", instagram["stickerFields"])
+        self.assertFalse(result["instagram_live_confirmed"])
+        self.assertEqual(result["notification_status"], "notified")
+        self.assertEqual(db.receipts[-1]["status"], "instagram_story_notification_ready")
+
+    @patch("app.buffer_publish.get_secret", return_value="secret")
+    @patch("app.buffer_publish._request_graphql")
     def test_provider_error_story_is_failure_and_retry_does_not_duplicate_feed(
         self, request, _secret
     ):
@@ -367,9 +507,9 @@ class BufferStoryCompanionTests(unittest.TestCase):
         self.assertEqual(story_input["schedulingType"], "notification")
         self.assertTrue(story_input["aiAssisted"])
         self.assertTrue(instagram["isAiGenerated"])
-        self.assertIn("utm_source=instagram", instagram["stickerFields"]["products"])
-        self.assertIn("makerworld.com/en/models/11001", instagram["stickerFields"]["products"])
-        self.assertIn("Link Sticker URL:", instagram["stickerFields"]["other"])
+        self.assertIn("utm_source=instagram", instagram["stickerFields"]["other"])
+        self.assertIn("/store/product/story-demo/", instagram["stickerFields"]["other"])
+        self.assertIn("Sticker → Link", instagram["stickerFields"]["other"])
 
     @patch("app.buffer_publish.get_secret", return_value="secret")
     @patch("app.buffer_publish._request_graphql")

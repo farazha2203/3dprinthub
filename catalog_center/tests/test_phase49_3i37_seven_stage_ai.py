@@ -462,7 +462,7 @@ class Phase493I37SevenStageAITests(unittest.TestCase):
                 })
                 image_dir = product_dir / "images"
                 image_dir.mkdir(parents=True, exist_ok=True)
-                target = image_dir / "source-page-screenshot-test.png"
+                target = image_dir / "source-page-screenshot-20261004-123456.png"
                 Image.new("RGB", (640, 480), "white").save(target)
 
                 app = SimpleNamespace(db=db)
@@ -473,7 +473,7 @@ class Phase493I37SevenStageAITests(unittest.TestCase):
                     result = capture_screenshot_for_site(app, product_id)
 
                 row = db.product(product_id)
-                pseudo = "local://source-page-screenshot-test.png"
+                pseudo = "local://source-page-screenshot-20261004-123456.png"
                 self.assertIn(pseudo, json.loads(row["images_json"]))
                 self.assertIn(pseudo, json.loads(row["selected_images_json"]))
                 self.assertEqual(row["primary_image_url"], pseudo)
@@ -545,7 +545,7 @@ class Phase493I37SevenStageAITests(unittest.TestCase):
                 image_dir = product_dir / "images"
                 image_dir.mkdir(parents=True, exist_ok=True)
                 old = image_dir / "old.png"
-                shot = image_dir / "source-page-screenshot-test.png"
+                shot = image_dir / "source-page-screenshot-20261004-123456.png"
                 Image.new("RGB", (320, 240), "white").save(old)
                 Image.new("RGB", (640, 480), "black").save(shot)
                 old_url = "local://old.png"
@@ -562,6 +562,9 @@ class Phase493I37SevenStageAITests(unittest.TestCase):
                 ):
                     result = capture_screenshot_for_site(app, product_id)
                 self.assertEqual(result["primary"], old_url)
+                screenshot_url = "local://source-page-screenshot-20261004-123456.png"
+                self.assertTrue(result["selected"])
+                self.assertIn(screenshot_url, json.loads(db.product(product_id)["images_json"]))
                 self.assertEqual(db.product(product_id)["primary_image_url"], old_url)
 
                 db.update_product(product_id, {

@@ -1120,7 +1120,7 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
         finally:
             page.close()
 
-    def test_ready_finalizes_newly_selected_screenshot_before_publish_gate(self):
+    def test_ready_quarantines_legacy_screenshot_from_product_publish_media(self):
         product_id = self._product("3491100")
         row = dict(self.db.product(product_id))
         image_dir = Path(row["local_dir"]) / "images"
@@ -1137,8 +1137,8 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
         })
 
         stale = publish_media_gate(self.db.product(product_id))
-        self.assertFalse(stale["ready"])
-        self.assertTrue(any("SEO metadata is missing" in value for value in stale["missing"]))
+        self.assertTrue(stale["ready"], stale["missing"])
+        self.assertEqual(len(stale["items"]), 1)
 
         ready = mark_ready_many(self.db, FakeStages(), [product_id])
         self.assertEqual(ready["marked"], 1)
@@ -1147,10 +1147,14 @@ class Phase493I49SiteBulkPublishTests(unittest.TestCase):
         gate = publish_media_gate(self.db.product(product_id))
         self.assertTrue(gate["ready"], gate["missing"])
         after = dict(self.db.product(product_id))
-        self.assertEqual(json.loads(after["selected_images_json"]), selected)
+        self.assertEqual(json.loads(after["selected_images_json"]), [canonical[0]])
+        # The source evidence identity and bytes remain preserved; only the
+        # explicit Site selection is repaired by the ready/finalize action.
+        self.assertEqual(json.loads(after["images_json"]), canonical)
+        self.assertTrue(screenshot.is_file())
         metadata = json.loads(after["image_metadata_json"])
-        self.assertEqual({item["source_url"] for item in metadata}, set(selected))
-        self.assertEqual(len(gate["items"]), 2)
+        self.assertEqual({item["source_url"] for item in metadata}, {canonical[0]})
+        self.assertEqual(len(gate["items"]), 1)
 
     def test_products_page_exposes_explicit_ready_and_bulk_publish_actions(self):
         page = ProductsPage(

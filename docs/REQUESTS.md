@@ -1,3 +1,38 @@
+## 2026-10-04 — Owner: stop Product gallery from showing/deleting/publishing a different image
+
+- Requested delta: diagnose the underlying photo identity/model-view mismatch using the supplied 3DPrint-Book reference; make the pictured local desktop build the source for correction; continue until the displayed image, selected identity, deleted identity, and Site/Instagram media bytes agree.
+- Root cause: a legacy fixed-name acquisition screenshot was inserted into Product `images_json`, later SEO-renamed, and then Stage-3 `current_local_items()` rebuilt it from raw DB state despite earlier gallery filtering. Feed media independently consumed raw canonical media. The separate operator Product Screenshot feature is intentionally preserved.
+- Implementation scope: photo identity resolver, Stage-3 current items/count, Site/Feed publisher boundaries, and isolated regression tests; no change to the operator screenshot capture flow.
+- Must not touch: working operator Product Screenshot capture flow; unrelated W5/social WIP; canonical Product/Catalog rows/files; Instagram sends; Host/Production; unrelated project folders.
+- Regression/safety: exact visible path/SHA must equal selection, delete only exact selected URL and reopen with sibling bytes unchanged; exclude only legacy acquisition evidence from Site and Feed; preserve all real Product images and operator screenshots; never silently rewrite canonical Product identities.
+- Status: `LOCAL_TESTED / VISIBLE_UI_PENDING`; direct canonical Catalog audit is read-only and reveals Product #964 contains a legacy acquisition screenshot identity. Local gallery fix is uncommitted; operator Screenshot behavior is preserved. Current 32 targeted tests (including 20-image grid/reopen), compileall, diff-check and fresh temporary empty-Catalog VerifyOnly pass; visible Desktop smoke remains the acceptance gate.
+
+## 2026-10-03 — Owner: fix wrong Product gallery image and wrong delete target
+Status: `BUILD_2026.10.03.2_LOCAL_TESTED / VISIBLE_ACCEPTANCE_PENDING`.
+
+Confirmed root causes: numbered downloader/cache files were paired with remote Product URLs by list order even when publication used URL-owned final files; the next candidate also exposed unreferenced leftover cache files as extra selectable `local://` cards. Build .2 removes both identity fallbacks when exact URL mappings exist and preserves only explicit persisted local aliases. Regression verifies displayed path equals publish path and exact one-image deletion/reload. Gallery/media 33/33, image recovery 11/11, Qt VerifyOnly and compileall pass. No book/reference file is needed to diagnose this source-level identity bug.
+
+The prior Temp Catalog is not a clean baseline: read-only comparison shows #1075 image metadata/media and #862 stage fields differ from the registered backup; it is retained, not overwritten. Canonical Catalog, Host and Production were not written. Remaining: fresh verified disposable clone + targetable visual smoke; then W5C/Desktop and GitHub exact-SHA gate.
+
+## 2026-09-30 — Owner: restore automatic AI Story send and allow intentional resends
+Status: `FOCUSED_TESTED / VERIFYONLY_AND_DESKTOP_GATES_OPEN` (Build `2026.09.30.4`, uncommitted).
+
+Build .3 incorrectly forced AI Popup Story through Buffer mobile notifications, blocking the previously working automatic route. Build .4 explicitly selects the automatic path even if manual Sticker preference is saved, leaves Link Sticker handoff optional elsewhere, and allows another send of the same Product/creative after the previous operation ends. Focused regression: 40 passed, one imported helper deselected; compileall, diff-check, VerifyOnly and clone/backup integrity passed. Read-only audit attributes clone SHA delta to one Product #862 view and three Story-preview history events; no Product/revision/receipt delta, no send receipt. No Instagram send occurred. Remaining: isolated foreground Popup close/reopen inspection without Send, then W5C/GitHub exact-SHA gate. No Host/Production deployment.
+
+## 2026-09-30 — Owner: fix false Story success and make Product URL a real Instagram Link Sticker
+Status: `LOCAL_TESTED / BUFFER_DEVICE_MISSING / FOREGROUND_AND_GITHUB_GATES_OPEN` (Build `2026.09.30.3`, uncommitted).
+
+Investigation proved the old Story receipt could suppress a different AI creative because dedupe used only the Site acknowledgement fingerprint; `already_sent` was also counted as new success. Dedupe now compares creative asset, link strategy and exact tracking URL, and duplicate status is not fresh delivery. A URL printed on the image is not clickable. Buffer/Instagram automatic publishing cannot insert Instagram's native Link Sticker: this must use Buffer notification/mobile handoff, then the operator opens Instagram, selects Sticker → Link, pastes the exact product URL and taps Share. The desktop records reminder-ready separately and does not show published until reconciled completion evidence. Added an in-app Buffer result check that never reposts.
+
+Read-only evidence: Product #862 had previous Story receipt #539 but selected AI Story revision #11 had no matching send receipt. Live Buffer readiness reported no active member device, so the new Link Sticker path is not yet ready; no actual publish was attempted. Regression `53 passed, 1 helper deselected`; compileall, diff-check, isolated Qt VerifyOnly and clone/backup integrity pass. Canonical Catalog, Host and Production unchanged.
+
+Next: register a Buffer mobile device/enable push; run foreground Popup visual acceptance on Build `.3` against the isolated Catalog. After separate action-time approval, make one controlled notification and complete the Sticker → Link → Share steps manually; reconcile without reposting. Then finish W5C/Desktop acceptance and commit/push exact SHA. No deploy in this Windows-only change. Following phase: W6 follow-through.
+
+## 2026-09-30 — Owner: send generated AI Story/Post from the creative popup
+Status: `IMPLEMENTED / FOCUSED_TESTED / DESKTOP_GATE_PENDING`.
+
+Add an explicit send action in the same AI Story/Post popup after a real revision is approved and prepared. Send exactly that Product through existing provider flow and preserve readiness, link preflight, and explicit confirmation. Clearly separate Buffer queued/sending from confirmed published status. Mock previews must never send. Popup/Instagram/Buffer tests pass 50/50, VerifyOnly and isolated DB integrity pass; no actual publish, Host, Production, or canonical Catalog mutation. Next: foreground visual smoke and W5C gate.
+
 ## 2026-09-29 - Owner: preserve exact 3DPrintHub Host route and continuity method
 Status: `METHOD_RECORDED / HOST_BRIDGE_UNAVAILABLE`.
 
@@ -781,6 +816,13 @@ Repository response:
 
 # PROJECT REQUESTS
 
+## 2026-09-30 — Owner: premium Story campaign art and real Image AI generation
+- Requested: upgrade Story styles 1/2/3/6 to bold branded advertising, retain liked #4 lifestyle and #5 surreal, send Product/logo/style/exact factual Persian copy and approved discount to image AI, preview and persist in Popup.
+- Touched: social_ai_design, social_ai_tab, settings_page, version history, focused tests and W5C docs.
+- Must not touch: canonical Catalog, Story/Post send behavior, Instagram, Host, Production, credentials or unrelated workflows.
+- Verified: 22 compatible discovery endpoints; total pricing considers two references; cheapest fixed compatible endpoint is Seedream 5 Lite at about $0.035/image. Focused regression 45/45; py_compile/diff-check PASS.
+- Status: LOCAL_TESTED for contracts/mock; real image, targetable native Popup and Desktop acceptance pending. No generation or publication performed; current cost approval is required before billed generation.
+
 ## REQ-49-085 — Fast progressive Product/Crawl loading + full pre-Qt acquisition controls
 Date: 2026-09-01  
 Status: `IMPLEMENTED + WINDOWS CI PASS / OWNER LOCAL QA NEXT`
@@ -1403,6 +1445,11 @@ The requested full-suite error investigation is recorded in `docs/phases/PHASE50
 The prior current suite count of 16 errors was not recovered. A new fully captured pre-fix run produced 971 tests / 12 failures / 15 errors; 14 error events reproduce on parent and the remaining event was fixed. Do not claim full-suite green: remaining failures/errors are baseline-proven. Ordered focused regression is 37/37 PASS; compileall, isolated Qt VerifyOnly and backup integrity checks PASS. Commit `83945715bbe50fb2588fc01abb68be363f308fe5` is exact Local=GitHub. Next: final foreground Desktop acceptance on isolated Catalog. No Instagram send or deploy.
 
 ---
+## 2026-10-03 — Owner: repair incorrect Product gallery image identity and deletion
+Status: `LOCAL_TESTED / QT_VERIFYONLY_PASS / VISIBLE_UI_GATE_OPEN` (v8.9.11 Build `2026.10.03.1`, local only).
+
+The gallery previously could preview a numbered cache/source file in place of a finalized Site image and could remove neighboring URL entries by matching basename. Use the exact Product URL→final file mapping, retain the complete image set (including >5), and remove only the selected identity. Related suite: 66/66 PASS; compileall/diff-check and isolated Qt VerifyOnly PASS. Visible isolated UI behavior remains unverified because the candidate window could not be foregrounded unobstructed; canonical Catalog and Production were not touched. Next: visible card/select/delete/reopen smoke on disposable data, then W5C/GitHub gates.
+
 
 ## REQ-50-039 — Consolidate Windows Catalog Center folders
 Date: 2026-10-08

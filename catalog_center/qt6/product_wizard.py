@@ -994,7 +994,9 @@ class ProductWizardPage(QWidget):
         )
         self.image_slider_enabled.blockSignals(False)
         local_count = len(items)
-        canonical_count = len(_json_list(row.get("images_json")))
+        # Match the visible/media authority count; source-page screenshots are
+        # evidence and must not inflate the Product-photo count.
+        canonical_count = len(self.kernel.images.source_ordered_urls(row))
         selected_urls = [
             str(value or "").strip()
             for value in _json_list(row.get("selected_images_json"))

@@ -1,3 +1,42 @@
+## 2026-10-04 Product screenshot/media identity audit
+
+- Desktop source remains `D:\projects\3DPrintHub-a2z-a2r-converge`, branch `wip/phase50-a2z-w5-manual-product-20260927`, base SHA/upstream `46497ccad3219300aea05a830c625086d79f789b`; Build `v8.9.11 / 2026.10.04.1` is local/uncommitted.
+- Canonical Catalog remains `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3`; opened with SQLite `mode=ro` only, `quick_check=ok`. Product #964 local media root: `D:\projects\3dprinthub-catalog-manager\collected\makerworld\2724780`. No data or media bytes changed.
+- The Product row's old screenshot path names `images\source-page-screenshot-20261003-113023.png`, while the evidence bytes are archived under `source_originals`; the renamed identity is excluded in code without deleting evidence or product files.
+- No new backup was required because the Catalog/media files were strictly read-only. Any future migration/cleanup of the real row requires a fresh integrity-checked SQLite/filesystem rollback first.
+
+## 2026-10-03 Gallery fix — verified paths and rollback (Build v8.9.11 / 2026.10.03.1)
+- Source is the same forward checkout used by requested Build `2026.09.30.4`: `D:\projects\3DPrintHub-a2z-a2r-converge`; branch `wip/phase50-a2z-w5-manual-product-20260927`; base HEAD/upstream `46497ccad3219300aea05a830c625086d79f789b`. This is an uncommitted successor candidate; prior `.4` runtime was not changed.
+- Canonical Catalog: `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3`; not opened/written by this work. Registered isolated acceptance Catalog: `D:\projects\3dprinthub-backups\phase50-w5c-desktop-acceptance-20260929-01\catalog.sqlite3`; quick_check/integrity_check `ok`, SHA256 `8573A5C9676C2D199CF3ECFA0D424693C9C4074996B9AFD31C7A1885FD718EB1`.
+- Fresh rollback generated via SQLite backup: `D:\projects\3dprinthub-backups\phase50-w5c-desktop-acceptance-20260929-01\catalog.pre-gallery-build-2026-10-03.sqlite3`; quick_check/integrity_check `ok`, SHA256 `EA11741EE4D7C29483A0B9EF53E9BAD0DF0AE20E094FB50238B23E319339DBAA`, size 994095104 bytes.
+- Qt VerifyOnly used disposable root `C:\Users\Emad-PC\AppData\Local\Temp\3dprinthub-gallery-verifyonly-20261003` created from that backup, with verified interpreter `D:\projects\3DPrintHub\.venv\Scripts\python.exe`, `PYTHONPATH=D:\projects\3DPrintHub-a2z-a2r-converge\catalog_center`, `CATALOG_DATA_ROOT` set to the disposable root; results `QT6_FOUNDATION_VERIFY=OK`, `QT6_42B2_FULL_PARITY_VERIFY=OK`. The root is about 1 GB, integrity remains `ok`, post-launch SHA256 `3290EB56226ACC2CB3136C8872B1D9489A5A24FC26A517D1728AAE158676838F`.
+- The disposable Temp copy is still present: exact-path cleanup was attempted but the execution tool blocked the operation. Do not switch to another deletion technique. No registered clone/canonical DB cleanup was attempted. UI target activation was obstructed by an unrelated terminal; visual acceptance remains pending.
+
+## 2026-09-30 W5C Build .4 — automatic Story resend correction
+- Active local source: `D:\projects\3DPrintHub-a2z-a2r-converge`; branch `wip/phase50-a2z-w5-manual-product-20260927`; base HEAD/upstream `46497ccad3219300aea05a830c625086d79f789b`; Build `v8.9.11 / 2026.09.30.4` is uncommitted.
+- Canonical Catalog remains `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3` and was not written. Acceptance Catalog and rollback backup remain in `D:\projects\3dprinthub-backups\phase50-w5c-desktop-acceptance-20260929-01\`; both passed quick_check/integrity_check after VerifyOnly.
+- Normal Story path restored to automatic Buffer; same-creative sends are allowed as new explicit operations. This build has not been visually launched/accepted because Computer Use returned no targetable Windows apps.
+- No Host/Production action; no commit/push. Exact next: visible isolated Popup smoke, then W5C/Desktop acceptance and GitHub exact-SHA gate.
+
+## 2026-09-30 W5C Build .3 — Story notification/link isolation
+- Forward source: `D:\projects\3DPrintHub-a2z-a2r-converge`, branch `wip/phase50-a2z-w5-manual-product-20260927`; base HEAD/upstream `46497ccad3219300aea05a830c625086d79f789b`; `.3` is still an uncommitted candidate.
+- Canonical Catalog (read-only / no acceptance writes): `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3`.
+- Writable isolated acceptance Catalog: `D:\projects\3dprinthub-backups\phase50-w5c-desktop-acceptance-20260929-01\catalog.sqlite3`.
+- Isolated pre-VerifyOnly rollback: `D:\projects\3dprinthub-backups\phase50-w5c-desktop-acceptance-20260929-01\catalog.pre-popup-send-build-2026-09-30.sqlite3`; SHA256 `5CC5D7BE95DA8FFCFFB28DAC7E06803E789F04ED299957DD2515DE9041B2E381`; backup integrity checked before/after.
+- Qt runtime interpreter: `D:\projects\3DPrintHub\.venv\Scripts\python.exe`; launch from the forward source with `PYTHONPATH=D:\projects\3DPrintHub-a2z-a2r-converge\catalog_center` and `CATALOG_DATA_ROOT=D:\projects\3dprinthub-backups\phase50-w5c-desktop-acceptance-20260929-01`.
+- Do not use `catalog_center\RUN_QT.ps1 -VerifyOnly` for isolated acceptance: this checked-in wrapper hardcodes the canonical Catalog data root. Invoke the verified interpreter and `qt_launch.py --verify-only` with the isolated environment override, as done for Build `.3`.
+- Build `.3` was launched from this forward checkout with `PYTHONPATH` and `CATALOG_DATA_ROOT` set for the isolated Catalog; local PID `11152` was confirmed running. Post-launch clone integrity remained OK and its SHA256 unchanged.
+- Read-only acceptance clone delta: four `product_history` rows for Product #862 (one `product_viewed`, three `story_preview_generated`); Product, AI revision and `sync_receipts` counts unchanged, no send receipt. Computer Use inventory returned no native apps/windows. Remote Desktop Commander can inspect device/processes but not show/capture/control the Qt window; visual acceptance is still pending.
+
+## 2026-09-30 W5C image AI isolation
+- Forward source: D:\projects\3DPrintHub-a2z-a2r-converge; verify branch and HEAD before each delivery.
+- Canonical Catalog (never acceptance-write): D:\projects\3dprinthub-catalog-manager\catalog.sqlite3.
+- Writable isolated acceptance Catalog: D:\projects\3dprinthub-backups\phase50-w5c-desktop-acceptance-20260929-01\catalog.sqlite3; last read-only quick_check/integrity_check OK. Separate prewrite backup is recorded in previous W5C checkpoints.
+- Qt dependency interpreter: D:\projects\3DPrintHub\.venv\Scripts\python.exe and pythonw.exe; launch forward repo source with PYTHONPATH=repo\catalog_center and CATALOG_DATA_ROOT=isolated clone.
+- Build `.2` was launched from this source against the isolated Catalog. Remote Desktop Commander confirms the device/process but provides no screenshot/window controls; Computer Use inventory returned `apps: []`, so the UI is not visually confirmed by the tool.
+- Pre-VerifyOnly backup in the same existing acceptance directory: `catalog.pre-popup-send-build-2026-09-30.sqlite3`; SHA256 is recorded in CURRENT_STATE. Both source clone and backup passed SQLite integrity checks.
+- The Desktop `.lnk` and `.cmd` remain pointed at this forward checkout's `catalog_center\RUN_QT.ps1`; no shortcut or folder relocation was made.
+
 ## 2026-09-29 current operator and Host transport status
 - Forward checkout: `D:\projects\3DPrintHub-a2z-a2r-converge`, branch `wip/phase50-a2z-w5-manual-product-20260927`; exact live HEAD is maintained in Git and must be reverified.
 - Host transport remains only `Windows 127.0.0.1:22024 -> Host bridge 127.0.0.1:22224`, through `D:\projects\.chatgpt-gateway\project-host.ps1 -Project 3dprinthub`.
@@ -277,6 +316,7 @@ This cPanel environment did not provide a reliable `/dev/fd` path for Bash proce
 - Dirty Local/Host worktree: STOP/INSPECT; no reset/delete shortcut.
 - Before Production migration verify exact project root, branch, commit, Python venv, DB vendor/name, backup target and rollback.
 - JSON/API smoke payloads are data, not executable source; use `python - <args>` and explicit `json.load` when verifying endpoint responses.
+
 
 ## 2026-10-08 — Canonical Windows paths after worktree cleanup
 

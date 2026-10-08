@@ -270,12 +270,14 @@ def _sha256_file(path: Path) -> str:
 def _selected_source_media_drift(row) -> dict[str, Any]:
     """Detect selected source bytes that changed after the last SEO finalization."""
     data = _row_dict(row)
+    evidence_urls = image_pipeline.source_screenshot_media_urls(data)
     selected = image_pipeline.cap_unique_urls(
         [
             str(item or "").strip()
             for item in _json_list(data.get("selected_images_json"))
         ]
     )
+    selected = [url for url in selected if url not in evidence_urls]
     metadata = [
         dict(item)
         for item in _json_list(data.get("image_metadata_json"))
@@ -434,12 +436,15 @@ def publish_media_gate(row) -> dict[str, Any]:
     """Fail closed unless every selected Product image is current final SEO WebP."""
     data = _row_dict(row)
     product_id = int(data.get("id") or 0)
+    evidence_urls = image_pipeline.source_screenshot_media_urls(data)
     selected = image_pipeline.cap_unique_urls(
         [str(item or "").strip() for item in _json_list(data.get("selected_images_json"))]
     )
+    selected = [url for url in selected if url not in evidence_urls]
     canonical_images = image_pipeline.cap_unique_urls(
         [str(item or "").strip() for item in _json_list(data.get("images_json"))]
     )
+    canonical_images = [url for url in canonical_images if url not in evidence_urls]
     canonical_set = set(canonical_images)
     primary = str(data.get("primary_image_url") or "").strip()
     missing: list[str] = []

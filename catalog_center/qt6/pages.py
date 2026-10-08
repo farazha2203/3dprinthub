@@ -331,6 +331,10 @@ class ProductsPage(QWidget):
         self.instagram_story_manual_btn.setToolTip(
             "تصویر و URL دقیق Product را برای انتشار دستی آماده می‌کند؛ Link Sticker باید داخل Instagram تأیید شود."
         )
+        self.instagram_reconcile_btn = QPushButton("↻ بررسی نتیجه Buffer")
+        self.instagram_reconcile_btn.setToolTip(
+            "فقط وضعیت پست‌های موجود را از Buffer می‌خواند؛ هیچ Story/Post تازه‌ای ایجاد نمی‌کند."
+        )
         self.bulk_publish_status = QLabel("")
         self.bulk_publish_status.setObjectName("Muted")
         self.ready_publish_btn.clicked.connect(self._mark_ready_selected)
@@ -344,11 +348,15 @@ class ProductsPage(QWidget):
         self.instagram_story_manual_btn.clicked.connect(
             self._prepare_manual_story_selected
         )
+        self.instagram_reconcile_btn.clicked.connect(
+            self._reconcile_instagram_selected
+        )
         publish_bar.addWidget(self.ready_publish_btn)
         publish_bar.addWidget(self.bulk_publish_btn)
         publish_bar.addWidget(self.instagram_post_btn)
         publish_bar.addWidget(self.instagram_story_btn)
         publish_bar.addWidget(self.instagram_story_manual_btn)
+        publish_bar.addWidget(self.instagram_reconcile_btn)
         publish_bar.addWidget(self.bulk_publish_status, 1)
         root.addLayout(publish_bar)
 
@@ -873,9 +881,15 @@ class ProductsPage(QWidget):
         tabs = QTabWidget(dialog)
         legacy = StoryPreviewTab(self.db, self.kernel, self._selected_product_ids, tabs)
         tabs.addTab(legacy, "Story چهار Preview")
-        ai_story = SocialAICreativeTab(self.db, self.kernel, self._selected_product_ids, kind="story", parent=tabs)
+        ai_story = SocialAICreativeTab(
+            self.db, self.kernel, self._selected_product_ids, kind="story",
+            on_send=self._send_ai_revision, parent=tabs,
+        )
         tabs.addTab(ai_story, "AI Story — ۶ سبک")
-        ai_post = SocialAICreativeTab(self.db, self.kernel, self._selected_product_ids, kind="post", parent=tabs)
+        ai_post = SocialAICreativeTab(
+            self.db, self.kernel, self._selected_product_ids, kind="post",
+            on_send=self._send_ai_revision, parent=tabs,
+        )
         tabs.addTab(ai_post, "AI Post — ۶ سبک")
         scroll = QScrollArea(dialog)
         scroll.setWidgetResizable(True)
@@ -890,7 +904,99 @@ class ProductsPage(QWidget):
     def _publish_instagram_story_selected(self) -> None:
         self._publish_instagram_scope_selected("story")
 
-    def _publish_instagram_scope_selected(self, scope: str) -> None:
+    def _reconcile_instagram_selected(self) -> None:
+        if self._instagram_worker is not None or self._bulk_publish_worker is not None:
+            QMessageBox.information(self, "بررسی نتیجه Buffer", "یک عملیات در حال اجرا است.")
+            return
+        product_ids = self._selected_product_ids()
+        if not product_ids:
+            QMessageBox.warning(self, "بررسی نتیجه Buffer", "ابتدا Productهای موردنظر را انتخاب کن.")
+            return
+        answer = QMessageBox.question(
+            self,
+            "بررسی نتیجه Buffer",
+            (
+                f"رسیدهای {len(product_ids)} محصول از Buffer خوانده می‌شوند.\n"
+                "هیچ Post/Story ساخته یا دوباره ارسال نمی‌شود. فقط اگر Buffer وضعیت تکمیل دستی و لینک انتشار را تأیید کند، رسید محلی نهایی می‌شود. ادامه؟"
+            ),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        self.instagram_reconcile_btn.setEnabled(False)
+        self.bulk_publish_status.setText("در حال بررسی رسیدهای موجود در Buffer…")
+        worker = Worker(
+            lambda progress: self.kernel.instagram.reconcile_product_receipts(
+                product_ids, progress=progress
+            )
+        )
+        self._instagram_worker = worker
+        worker.signals.progress.connect(
+            lambda value, message: self.bulk_publish_status.setText(
+                f"{value}% • {message}"
+            )
+        )
+        worker.signals.result.connect(self._instagram_reconcile_done)
+        worker.signals.error.connect(self._instagram_reconcile_error)
+        worker.signals.finished.connect(self._instagram_reconcile_finished)
+        self.publish_pool.start(worker)
+
+    def _instagram_reconcile_done(self, result=None) -> None:
+        data = dict(result or {})
+        results = list(data.get("results") or [])
+        failures = list(data.get("failures") or [])
+        reconciled = [item for group in results for item in group.get("reconciled") or []]
+        pending = [item for group in results for item in group.get("pending") or []]
+        self.refresh()
+        self.bulk_publish_status.setText(
+            f"Buffer: {len(reconciled)} رسید نهایی • {len(pending)} هنوز در انتظار • {len(failures)} خطا"
+        )
+        details = [
+            f"#{item.get('product_id')}: {item.get('error')}"
+            for item in failures[:5]
+        ]
+        details.extend(
+            f"{item.get('provider_post_id') or 'بدون شناسه'}: {item.get('reason')}"
+            for item in pending[:5]
+        )
+        QMessageBox.information(
+            self,
+            "بررسی نتیجه Buffer",
+            f"تکمیل تأییدشده: {len(reconciled)}\nدر انتظار: {len(pending)}\nخطا: {len(failures)}"
+            + (("\n\n" + "\n".join(details)) if details else ""),
+        )
+
+    def _instagram_reconcile_error(self, detail: str) -> None:
+        self.bulk_publish_status.setText("❌ بررسی رسیدهای Buffer ناموفق")
+        show_diagnostic_error(
+            self,
+            "بررسی نتیجه Buffer",
+            detail,
+            context={"operation": "buffer-social-receipt-reconciliation"},
+        )
+
+    def _instagram_reconcile_finished(self) -> None:
+        self._instagram_worker = None
+        self.instagram_reconcile_btn.setEnabled(True)
+
+    def _send_ai_revision(self, kind: str, product_id: int) -> None:
+        """Hand one approved AI revision to the existing, confirmation-gated publisher."""
+        scope = "feed" if str(kind).strip().lower() == "post" else "story"
+        self._publish_instagram_scope_selected(
+            scope,
+            product_ids_override=[int(product_id)],
+            force_automatic_story=(scope == "story"),
+        )
+
+    def _publish_instagram_scope_selected(
+        self,
+        scope: str,
+        *,
+        product_ids_override: list[int] | None = None,
+        require_link_sticker: bool = False,
+        force_automatic_story: bool = False,
+    ) -> None:
         scope = str(scope or "").strip().lower()
         if scope not in {"feed", "story"}:
             raise RuntimeError(f"Unsupported Instagram UI scope: {scope}")
@@ -902,7 +1008,11 @@ class ProductsPage(QWidget):
                 "یک عملیات انتشار در حال اجرا است.",
             )
             return
-        product_ids = self._selected_product_ids()
+        product_ids = (
+            sorted({int(value) for value in product_ids_override if int(value) > 0})
+            if product_ids_override is not None
+            else self._selected_product_ids()
+        )
         if not product_ids:
             QMessageBox.warning(
                 self,
@@ -913,7 +1023,11 @@ class ProductsPage(QWidget):
 
         try:
             social_readiness = dict(
-                self.kernel.instagram.delivery_readiness(scope=scope) or {}
+                self.kernel.instagram.delivery_readiness(
+                    scope=scope,
+                    require_link_sticker=(scope == "story" and require_link_sticker),
+                    force_automatic_story=(scope == "story" and force_automatic_story),
+                ) or {}
             )
         except Exception as exc:
             show_diagnostic_error(
@@ -966,11 +1080,29 @@ class ProductsPage(QWidget):
                 "در این عملیات هیچ Story جدیدی ساخته نمی‌شود."
             )
         else:
-            workflow_text = (
-                "ترتیب: readiness استوری → سایت در صورت نیاز → تأیید HTTPS Product → "
-                "Story برندشده 1080×1920. "
-                "در این عملیات هیچ Post/Feed جدیدی ساخته نمی‌شود."
-            )
+            if social_readiness.get("requires_mobile_handoff"):
+                workflow_text = (
+                    "حالت Link Sticker دستیِ Buffer فعال است: Buffer فقط یادآوری می‌فرستد؛ "
+                    "برای Story خودکار، instagram_story_link_mode را روی bio_shop_grid بگذار. "
+                    "این عملیات هیچ Post/Feed جدیدی نمی‌سازد."
+                )
+            else:
+                workflow_text = (
+                    "مسیر خودکار Story قبلی اجرا می‌شود؛ به Buffer mobile/Push Notification وابسته نیست. "
+                    "هر بار تأیید و ارسال، یک انتشار تازه است؛ لینک محصول از مسیر metadata/Shop Grid قبلی "
+                    "می‌آید و Link Sticker بومی را تضمین نمی‌کند. هیچ Post/Feed جدیدی ساخته نمی‌شود."
+                )
+        link_note = ""
+        if scope == "story" and require_link_sticker:
+            try:
+                exact_link = dict(self.kernel.instagram.preview(product_ids[0]) or {})
+                exact_link = str(
+                    exact_link.get("tracking_url") or exact_link.get("product_url") or ""
+                ).strip()
+            except Exception:
+                exact_link = ""
+            if exact_link:
+                link_note = f"\n\nURL دقیق Link Sticker:\n{exact_link}"
         answer = QMessageBox.question(
             self,
             f"تأیید Instagram {label}",
@@ -982,6 +1114,7 @@ class ProductsPage(QWidget):
                 f"Provider: {social_readiness.get('provider') or '-'}\n"
                 f"Scope: {label}\n\n"
                 + workflow_text
+                + link_note
             ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
@@ -1002,10 +1135,15 @@ class ProductsPage(QWidget):
             if scope == "feed"
             else self.kernel.instagram.publish_site_then_story
         )
+        publish_kwargs = {}
+        if scope == "story":
+            publish_kwargs["require_link_sticker"] = bool(require_link_sticker)
+            publish_kwargs["force_automatic_story"] = bool(force_automatic_story)
         worker = Worker(
             lambda progress: publisher(
                 actionable,
                 progress=progress,
+                **publish_kwargs,
             )
         )
         self._instagram_worker = worker
@@ -1030,11 +1168,15 @@ class ProductsPage(QWidget):
         site = dict(data.get("site") or {})
         instagram = dict(data.get("instagram") or {})
         published = int(instagram.get("published") or 0)
+        submitted = int(instagram.get("submitted") or 0)
         failed = int(instagram.get("failed") or 0)
+        skipped = int(instagram.get("skipped") or 0)
         story_notifications = int(instagram.get("story_notifications") or 0)
         site_blocked = list(data.get("site_blocked") or [])
         self.bulk_publish_status.setText(
-            f"✅ سایت {int(site.get('published') or 0)} • Instagram {label} {published}"
+            f"✅ سایت {int(site.get('published') or 0)} • Instagram {label} تأییدشده {published}"
+            f" • در صف {submitted}"
+            f" • تکراری/ردشده {skipped}"
             f" • خطا {failed + len(site_blocked)}"
         )
         lines = [
@@ -1049,12 +1191,21 @@ class ProductsPage(QWidget):
             mobile_note = (
                 f"\nStory نیازمند تکمیل روی موبایل: {story_notifications}"
             )
+            sticker_urls = list(dict.fromkeys(
+                str(item.get("tracking_url") or "").strip()
+                for item in (instagram.get("results") or [])
+                if item.get("link_sticker_required") and str(item.get("tracking_url") or "").strip()
+            ))
+            if sticker_urls:
+                mobile_note += "\nدر Instagram: Sticker → Link → Paste URL → Share\n" + "\n".join(sticker_urls)
         QMessageBox.information(
             self,
             f"نتیجه Instagram {label}",
             (
                 f"انتشار جدید سایت: {int(site.get('published') or 0)}\n"
-                f"Instagram {label} موفق: {published}\n"
+                f"Instagram {label} ارسال‌شده و تأییدشده: {published}\n"
+                f"Instagram {label} در صف/در حال ارسال: {submitted}\n"
+                f"Instagram {label} تکراری/ردشده: {skipped}\n"
                 f"Instagram {label} ناموفق: {failed}\n"
                 f"بدون لینک عمومی معتبر: {len(site_blocked)}"
                 + mobile_note

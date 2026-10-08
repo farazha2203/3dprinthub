@@ -1,3 +1,61 @@
+## ERR-50-GALLERY-EVIDENCE-001 — Source-page screenshot reappeared as Product photo after gallery refresh (2026-10-04)
+
+**Observed:** Owner selected/deleted images in the Product wizard, but a different image remained or was sent. Product #964 had two DB identities; the second `local://...02.webp` rendered the MakerWorld browser page, not the source Product image.
+
+**Root cause:** Legacy acquisition/capture code appended a page screenshot to Product `images_json`; SEO finalization then renamed/transcoded it, hiding its screenshot filename. The gallery's `urls()` filter could recognize it, but Stage-3 `current_local_items()` independently looped raw `images_json` and recreated the screenshot card. Instagram Feed had a separate all-canonical-images reader that also bypassed the selection filter.
+
+**Correction:** Keep the explicit operator Product Screenshot workflow unchanged: its timestamped image remains a visible, usable Product gallery item. Detect only the legacy fixed-name acquisition screenshot through the saved evidence path (including archived `source_originals`) and conservative visual fingerprint; prevent that legacy identity from being rebound as a different Product card and filter it from Site/Feed media truth. Finalization does not silently rewrite canonical `images_json` or delete files.
+
+**Verification:** Read-only canonical Product #964 audit: Catalog `quick_check=ok`; 2 stored identities, screenshot evidence is `local://bird-feeder-hexagonal-garden-manor-3d-print-02.webp`; corrected gallery, Site-selected and Feed resolvers each return the one actual Product image with identical SHA. Related regression `80/80 PASS`; compileall, diff-check and fresh temporary empty-Catalog Qt VerifyOnly pass. No canonical DB/file, Host/Production, Instagram, GitHub or deploy mutation. Foreground visual acceptance remains pending.
+
+**Failed attempt/prevention:** Build `.2` filtered `urls()` but missed the separate `current_local_items()` projector; earlier tests covered URL/path resolution but not the operator-facing Stage-3 rebuild. Any media filter must cover all independently materializing readers (current gallery items, selected Site, all-media Feed) and assert byte identity through delete/reopen and send resolvers.
+
+## ERR-50-SOCIAL-STORY-LINK-004 — AI Story send forced notification and blocked deliberate resend (2026-09-30)
+
+**Observed:** Build .3 Popup blocked Story sending until Buffer mobile notification was available, despite the previous automatic Story flow. A prior receipt also blocked deliberate resend of the same approved creative.
+
+**Cause:** The AI Popup forced `require_link_sticker=True`, switching its normal send to Buffer notification mode. An exact-asset receipt lock then prohibited intentional repeat sends. Buffer API docs define `stickerFields` as reminder/manual-publishing fields; this does not insert a native sticker.
+
+**Failed behavior:** The AI Story action switched to mobile notification instead of reusing the automatic route, and treated a prior same-asset receipt as a permanent lock.
+
+**Correction:** Build .4 restores automatic Story in the Popup by removing the forced Link Sticker requirement. Each deliberate operator send after the active operation completes creates a new provider publication, including repeat sends of the same image; the active-operation guard prevents simultaneous/double-click submits. Buffer notification/Link Sticker remains a separate optional manual flow. A product URL in artwork/metadata is not a native sticker.
+
+**Verification:** Build .4 focused Story/Post/Buffer/UI suite `40 passed, 1 imported helper deselected`; explicit same-asset resend creates a new provider post and Popup no longer forces mobile handoff. Compileall, diff-check, isolated VerifyOnly and clone/backup integrity pass. Read-only clone delta is four Product #862 history events only; no send receipt. No Story/notification send, canonical Catalog write, Host, Production, commit or push.
+
+**Prevention:** A CTA printed in pixels or Buffer metadata is not a native Link Sticker. Never force notification mode merely because a Product URL exists. Allow explicit repeat publication while guarding concurrent sends. Keep notification handoff status separate from automatic Story publication status.
+
+**Primary references:** [Buffer scheduling types](https://developers.buffer.com/types/SchedulingType.html); [Buffer InstagramStickerFields API](https://developers.buffer.com/types/InstagramStickerFields.html); [Meta Instagram API collection](https://www.postman.com/meta/instagram/documentation/6yqw8pt/instagram-api).
+
+## ERR-50-SOCIAL-SEND-UI-003 — AI Popup had no send action and queued Buffer work looked published (2026-09-30)
+
+**Observed:** AI-generated Story/Post revisions could be approved/prepared in the popup but the popup offered no send button. Separately, a Buffer response with `buffer_status=sending` was counted as published by the Qt summary, despite the receipt being `instagram_submitted`.
+
+**Cause/correction:** Popup tabs were not connected to the existing Product-page send controls. Added explicit per-revision send handoff after approval + preparation; it passes only the revision's Product ID into existing readiness/preflight/final-confirmation logic. Kernel/UI now distinguish provider-confirmed `sent` from submitted/in-progress.
+
+**Verification:** Popup/Instagram/Buffer regression 50/50 PASS (includes sending-vs-sent); py_compile, diff-check, isolated Qt VerifyOnly and clone integrity pass. No real send or canonical Catalog change. Foreground Desktop screenshot smoke remains pending because Computer Use exposes no native windows.
+
+**Prevention:** Never label a Buffer `sending` receipt as published. Keep popup handoff to one Product and retain the existing explicit send confirmation.
+
+## ERR-50-SOCIAL-AI-UI-001 — Story/Post Generate action was Mock-only (2026-09-30)
+
+**Observed:** Generate created a local source-image Mock revision; no selected style prompt reached OpenRouter.
+
+**Cause/correction:** The control called generate_mock() instead of the OpenRouter Images adapter. It now sends Product + official logo references, factual Persian copy, style art direction, ratio and pinned provider; response bytes are saved as an unapproved SQLite revision. Mock remains an explicitly separate control.
+
+**Verification:** Contract/Popup/Product social tests 45/45 PASS; live API discovery only. No billable image generated, so image/text quality remains unverified.
+
+**Prevention:** Tests assert adapter invocation, both references, provider pin, SQLite BLOB, unapproved state and same-fingerprint idempotency. Never report Mock as AI output.
+
+## ERR-50-IMAGE-PRICING-002 — Input-reference rate and count were omitted (2026-09-30)
+
+**Observed:** Earlier discovery read $0 input_image as free output; later estimates counted one reference while the request sends two.
+
+**Correction:** Show output/input separately, multiply per-image input rate by two references, rank fixed-image endpoints by expected total, and keep token-priced models variable. Provider response usage.cost is authoritative.
+
+**Verification:** Regression asserts Qwen Image 3 at $0.030 + 2 × $0.003 = $0.036 sorts after Seedream 5 Lite at $0.035 + two free references. Live discovery confirms those endpoint records at this date.
+
+**Prevention:** Cost dialogs must match exact output unit and actual reference count.
+
 ## ERR-50-REVERSE-TUNNEL-001 - Host SSH session exists but dedicated reverse-forward is unavailable (2026-09-29)
 
 **Observed**
@@ -3295,3 +3353,25 @@ Resolved and Production verified; do not treat as open without fresh evidence.
 **Prevention:** Wrappers around evolving shared APIs must preserve the full keyword contract, and regression coverage must execute the patch installer before calling APIs that use newly added keyword arguments.
 
 ---
+## ERR-50-MEDIA-GALLERY-IDENTITY-001 — Gallery preview mismatch and neighbor deletion (2026-10-03)
+
+**Observed:** Product gallery preview could show different bytes from the mapped Site image; deleting one local card could remove another image identity sharing a basename. Large image sets also needed to remain available beyond the first five.
+
+**Cause:** `display_local_paths` preferred numbered downloader/cache files and paired them with Product URLs by ordinal position even when a final SEO file existed. URL removal widened identity to basename for local media, so distinct paths/URLs could collide.
+
+**Correction:** Prefer exact Product URL→final-local-file mapping; keep URL identity exact through card loading and delete; allow a local-display alias only after validating the same Product source/external ID and a real contained file. Retain legacy numbered fallback only if no exact source mapping exists. Include tests for 20 images, exact finalized bytes, query variants, and same-basename deletion safety.
+
+**Verification:** Related regression `66/66 PASS` on project venv; compileall/diff-check and isolated Qt VerifyOnly PASS (`QT6_FOUNDATION_VERIFY=OK`, `QT6_42B2_FULL_PARITY_VERIFY=OK`). Initial test command used global Python and could not import `httpx`/`PySide6`; rerunning with the repository's verified venv resolved the environment mismatch. Visible UI smoke for Build `2026.10.03.1` remains pending because the target window could not be foregrounded unobstructed; no canonical Catalog or Production data was changed.
+
+**Prevention:** Never derive Product image identity from list index or basename when persisted URL/file metadata exists. Any fallback must be explicitly legacy-only and fail closed on ambiguity. Verify actual card bytes/path and exact affected URL before enabling destructive actions.
+## ERR-50-038 — Product gallery rendered unreferenced cache files as independent image identities (2026-10-03)
+
+**Observed:** operator-selected card could show different bytes than the image sent to the Site; after an earlier identity patch, leftover numbered files also appeared as extra local cards. Deleting one visible card could therefore act on another apparent copy/identity.
+
+**Root cause:** gallery and publish did not share one identity authority. Older code paired numbered `images/<slot>` files to URLs by list order, while publish resolved URL-owned final SEO files. The first correction stopped ordinal pairing but still enumerated all files left in the Product `images/` directory and surfaced unmapped files as `local://<filename>` cards, duplicating the same image under a second deletable identity.
+
+**Correct fix:** when exact URL mappings exist, gallery cards are derived only from persisted Product image identities and use the same strict URL→final-file resolver as publication. Resolve a legacy `local-display://` alias only when its source/external identity matches the same Product and file is physically inside its own image directory. Never promote an unreferenced disk file into a selectable Product image.
+
+**Verification:** new regression simulates changed bytes in numbered cache files after SEO finalization, asserts card URL/path equals publish URL/path, deletes one image identity and confirms only the sibling remains after reload. Gallery/media 33/33 and image recovery 11/11 PASS; compileall, Qt VerifyOnly and diff-check PASS. Visual foreground smoke remains pending.
+
+**Safety note:** the previous disposable Temp Catalog differs logically from its registered backup: Product #1075 image fields and Product #862 stage fields differ, with nine additional History rows. The exact point at which that divergence occurred is unknown because no pre-turn table manifest exists. Preserve that temp file for audit; do not use it as a fresh acceptance baseline. Canonical Catalog was not written.

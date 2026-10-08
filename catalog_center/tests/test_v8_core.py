@@ -107,7 +107,6 @@ class V8FeatureTests(unittest.TestCase):
                 "https://cdn.example/new.webp",
                 "local://04.webp",
                 "local://manual_custom_part.png",
-                "local://source-page-screenshot-20260918.png",
             ],
         )
         self.assertEqual(

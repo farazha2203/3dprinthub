@@ -42,6 +42,49 @@ from .parity_core import (
 T = TypeVar("T")
 
 
+def _instagram_result_confirmed(item: dict[str, Any]) -> bool:
+    """Only count provider-confirmed delivery as published; queued work is not sent."""
+    result_status = str(item.get("status") or "").strip().lower()
+    if result_status in {"already_sent", "duplicate", "already_exists"}:
+        return False
+    status = str(item.get("buffer_status") or "").strip().lower()
+    notification_mode = bool(
+        item.get("link_sticker_required")
+        or str(item.get("story_publish_mode") or "").strip().lower()
+        == "notification"
+    )
+    if notification_mode:
+        return bool(
+            item.get("instagram_live_confirmed") is True
+            and str(item.get("notification_status") or "").strip().lower()
+            == "markedaspublished"
+            and str(item.get("external_link") or "").strip()
+        )
+    if status:
+        return status == "sent"
+    return (
+        item.get("instagram_live_confirmed") is True
+        or bool(str(item.get("media_id") or "").strip())
+        or result_status in {"instagram_published", "instagram_story_published"}
+        or str(item.get("resume_status") or "").strip().lower() == "already_sent"
+    )
+
+
+def _instagram_result_submitted(item: dict[str, Any]) -> bool:
+    if _instagram_result_confirmed(item):
+        return False
+    if str(item.get("status") or "").strip().lower() in {
+        "already_sent", "duplicate", "already_exists"
+    }:
+        return False
+    status = str(item.get("buffer_status") or "").strip().lower()
+    if item.get("link_sticker_required") or str(
+        item.get("story_publish_mode") or ""
+    ).strip().lower() == "notification":
+        return status not in {"error", "failed", "rejected"}
+    return status in {"sending", "queued", "pending", "sent", "scheduled"}
+
+
 def _mark_published_product_dirty(db, product_id: int, *, before=None) -> bool:
     """Queue an already-published Product for guarded in-place re-publish."""
     row = before if before is not None else db.product(int(product_id))
@@ -475,6 +518,39 @@ class ImageCore:
             return "local://" + raw.rsplit("/", 1)[-1].casefold()
         return raw.casefold()
 
+    @staticmethod
+    def _legacy_local_alias_url(row: dict[str, Any], value: str) -> str:
+        """Translate only a same-Product local-display alias to its real file."""
+        raw = str(value or "").strip()
+        prefix = "local-display://"
+        if not raw.casefold().startswith(prefix):
+            return ""
+        parts = raw[len(prefix):].split("/")
+        if len(parts) != 3:
+            return ""
+        source_code = str(row.get("source_code") or "local").strip()
+        external_id = str(row.get("external_id") or "").strip()
+        if (
+            parts[0].casefold() != source_code.casefold()
+            or parts[1].casefold() != external_id.casefold()
+        ):
+            return ""
+        name = parts[2]
+        candidate_name = Path(name)
+        if not name or candidate_name.name != name or name in {".", ".."}:
+            return ""
+        root = str(row.get("local_dir") or "").strip()
+        if not root:
+            return ""
+        try:
+            image_dir = (Path(root).resolve() / "images").resolve()
+            candidate = (image_dir / name).resolve()
+            if candidate.parent != image_dir or not candidate.is_file():
+                return ""
+        except Exception:
+            return ""
+        return f"local://{name}"
+
     def source_ordered_urls(self, row: dict[str, Any] | Any) -> list[str]:
         """Return the source gallery order without inserting derived primary aliases."""
         data = dict(row) if not isinstance(row, dict) else row
@@ -491,7 +567,8 @@ class ImageCore:
                 if url and url not in output:
                     output.append(url)
             if output:
-                return output
+                screenshot_urls = image_pipeline.source_screenshot_media_urls(data)
+                return [url for url in output if url not in screenshot_urls]
         return self.urls(data)
 
     def urls(self, row: dict[str, Any] | Any) -> list[str]:
@@ -512,7 +589,8 @@ class ImageCore:
                     url = str(raw or "").strip()
                 if url and url not in output:
                     output.append(url)
-        return output
+        screenshot_urls = image_pipeline.source_screenshot_media_urls(data)
+        return [url for url in output if url not in screenshot_urls]
 
     def local_path_for_url(
         self,
@@ -574,6 +652,8 @@ class ImageCore:
                 except Exception:
                     continue
                 if resolved != local_dir and local_dir not in resolved.parents:
+                    continue
+                if image_pipeline.is_source_screenshot_file(data, resolved):
                     continue
                 value = str(resolved)
                 if value not in output:
@@ -808,13 +888,12 @@ class ImageCore:
         return [str(path) for path in preferred]
 
     def display_local_paths(self, row: dict[str, Any] | Any) -> list[str]:
-        """Return every real source image file needed for operator review.
+        """Return images through the exact Product URL -> local-file mapping.
 
-        Numbered files below ``local_dir/images`` are the mature downloader's
-        source-gallery order. Prefer them for review when present, then fill
-        missing source slots from strict URL mappings. This prevents a few
-        finalized SEO derivatives from hiding later downloaded source images.
-        Auxiliary screenshots/non-numbered files stay out of the Product grid.
+        Numbered cache filenames are not identity: they may be stale source
+        bytes while the Site publishes a finalized SEO derivative. Never pair
+        them with Product URLs by list position. Legacy folder fallback is
+        allowed only when no exact URL mapping exists at all.
         """
         data = dict(row) if not isinstance(row, dict) else row
 
@@ -827,96 +906,18 @@ class ImageCore:
             except Exception:
                 pass
 
-        source_urls = self.source_ordered_urls(data)
-        raw_root = str(data.get("local_dir") or "").strip()
-        numbered: dict[int, str] = {}
-        if raw_root:
-            try:
-                image_dir = Path(raw_root).resolve() / "images"
-            except Exception:
-                image_dir = Path()
-            if image_dir.is_dir():
-                try:
-                    children = sorted(
-                        image_dir.iterdir(),
-                        key=lambda item: item.name.casefold(),
-                    )
-                except OSError:
-                    children = []
-                for child in children:
-                    if not child.is_file() or not child.stem.isdigit():
-                        continue
-                    slot = int(child.stem)
-                    if slot < 1:
-                        continue
-                    try:
-                        numbered.setdefault(slot, str(child.resolve()))
-                    except OSError:
-                        continue
-
-        if numbered:
-            output: list[str] = []
-            seen: set[str] = set()
-            for slot, url in enumerate(source_urls, 1):
-                candidate = numbered.get(slot) or self.local_path_for_url(data, url)
-                if not candidate:
-                    continue
-                try:
-                    resolved = Path(candidate).resolve()
-                except Exception:
-                    continue
-                if not resolved.is_file():
-                    continue
-                key = str(resolved).casefold()
-                if key in seen:
-                    continue
-                seen.add(key)
-                output.append(str(resolved))
-            # Every real numbered file in the Product's own images directory is
-            # reviewable/editable even when an old Product no longer has a
-            # one-to-one source URL for that slot. Never synthesize a missing
-            # file; append only files that physically exist.
-            for slot in sorted(numbered):
-                candidate = numbered[slot]
-                try:
-                    resolved = Path(candidate).resolve()
-                except Exception:
-                    continue
-                if not resolved.is_file():
-                    continue
-                key = str(resolved).casefold()
-                if key in seen:
-                    continue
-                seen.add(key)
-                output.append(str(resolved))
-            for screenshot_url in self.urls(data):
-                screenshot_url = str(screenshot_url or "").strip()
-                if not screenshot_url.casefold().startswith(
-                    "local://source-page-screenshot"
-                ):
-                    continue
-                candidate = self.local_path_for_url(data, screenshot_url)
-                if not candidate:
-                    continue
-                try:
-                    resolved = Path(candidate).resolve()
-                except Exception:
-                    continue
-                if not resolved.is_file():
-                    continue
-                key = str(resolved).casefold()
-                if key in seen:
-                    continue
-                seen.add(key)
-                output.append(str(resolved))
-            if output:
-                return output
-
+        # Present persisted Site order first (primary + selected), then any
+        # remaining canonical images; this also keeps card order aligned with
+        # the exact URL emitted by publish preparation.
         urls = self.urls(data)
         exact: list[str] = []
         seen: set[str] = set()
         for url in urls:
-            path_value = self.local_path_for_url(data, url)
+            # Old operator-selected local assets may still be stored as a
+            # same-Product local-display alias. Resolve only that persisted
+            # identity; do not scan and promote arbitrary leftover cache files.
+            display_url = self._legacy_local_alias_url(data, url) or url
+            path_value = self.local_path_for_url(data, display_url)
             if not path_value:
                 continue
             try:
@@ -931,13 +932,17 @@ class ImageCore:
             seen.add(key)
             exact.append(str(resolved))
 
-        metadata = [
-            item for item in self._json_list(
-                data.get(image_pipeline.IMAGE_METADATA_COLUMN, "[]")
-            )
-            if isinstance(item, dict)
-        ]
-        if metadata and exact:
+        has_exact_remote_mapping = any(
+            url.casefold().startswith(("http://", "https://"))
+            and bool(self.local_path_for_url(data, url))
+            for url in self.source_ordered_urls(data)
+        )
+        if exact and has_exact_remote_mapping:
+            # Files that merely happen to remain in images/ are not Product
+            # identities. Showing them as local:// cards creates a second
+            # selectable/deletable identity for the same URL-backed image.
+            # Explicit local assets are already included above from the
+            # Product's persisted local:// URL list.
             return exact
 
         direct = self._preferred_legacy_display_files(self._legacy_local_candidates(data))
@@ -961,7 +966,10 @@ class ImageCore:
         return []
 
     @staticmethod
-    def _folder_has_displayable_image(local_dir: Path) -> bool:
+    def _folder_has_displayable_image(
+        local_dir: Path,
+        row: dict[str, Any] | Any | None = None,
+    ) -> bool:
         allowed = {
             ".webp", ".jpg", ".jpeg", ".png", ".avif", ".gif",
             ".bmp", ".tif", ".tiff",
@@ -977,6 +985,10 @@ class ImageCore:
                     if (
                         candidate.is_file()
                         and candidate.suffix.lower() in allowed
+                        and not (
+                            row is not None
+                            and image_pipeline.is_source_screenshot_file(row, candidate)
+                        )
                     ):
                         return True
             except OSError:
@@ -1011,7 +1023,7 @@ class ImageCore:
                 local_dir = Path(raw_local).resolve()
             except Exception:
                 local_dir = Path()
-            if local_dir.is_dir() and self._folder_has_displayable_image(local_dir):
+            if local_dir.is_dir() and self._folder_has_displayable_image(local_dir, data):
                 return True
 
         for url in self.urls(data):
@@ -1326,13 +1338,10 @@ class ImageCore:
         data = dict(row)
 
         primary = str(data.get("primary_image_url") or "").strip()
-        primary_key = self._url_asset_key(primary)
         slider_image = str(
             data.get("homepage_slider_image_url") or ""
         ).strip()
-        slider_key = self._url_asset_key(slider_image)
         urls = self.urls(data)
-        source_urls = self.source_ordered_urls(data)
         selected_urls: list[str] = []
         for raw in self._json_list(data.get("selected_images_json")):
             if isinstance(raw, dict):
@@ -1345,8 +1354,25 @@ class ImageCore:
                 url = str(raw or "").strip()
             if url:
                 selected_urls.append(url)
+        screenshot_urls = image_pipeline.source_screenshot_media_urls(data)
+        selected_urls = [url for url in selected_urls if url not in screenshot_urls]
         selected = set(selected_urls)
-        selected_keys = {self._url_asset_key(value) for value in selected_urls if value}
+        selected.update(
+            alias
+            for value in selected_urls
+            if (alias := self._legacy_local_alias_url(data, value))
+        )
+        primary_card_url = self._legacy_local_alias_url(data, primary) or primary
+        slider_card_url = self._legacy_local_alias_url(data, slider_image) or slider_image
+        if primary_card_url in screenshot_urls:
+            primary_card_url = ""
+        if slider_card_url in screenshot_urls:
+            slider_card_url = ""
+        source_urls = self.source_ordered_urls(data)
+        legacy_remote_urls = [
+            value for value in source_urls
+            if value.casefold().startswith(("http://", "https://"))
+        ]
         selected_position_by_key: dict[str, int] = {}
         for index, value in enumerate(selected_urls, 1):
             key = self._url_asset_key(value)
@@ -1411,6 +1437,11 @@ class ImageCore:
                 str(resolved).casefold(),
                 (slot, url),
             )
+        has_exact_source_mapping = any(
+            url.casefold().startswith(("http://", "https://"))
+            and bool(self.local_path_for_url(data, url))
+            for url in source_urls
+        )
 
         output: list[dict[str, Any]] = []
         used_urls: set[str] = set()
@@ -1433,15 +1464,16 @@ class ImageCore:
             if mapped is not None:
                 slot, url = mapped
             else:
+                # Numbered source files are a bounded compatibility contract
+                # for old Products with no URL/file provenance at all. Once
+                # any remote URL maps to a real file, never infer identity by
+                # its list index.
                 stem = file_path.stem
-                if stem.isdigit():
+                if not has_exact_source_mapping and stem.isdigit():
                     numbered_slot = int(stem)
-                    if 1 <= numbered_slot <= len(source_urls):
-                        candidate_url = source_urls[numbered_slot - 1]
-                        is_manual_screenshot = candidate_url.casefold().startswith(
-                            "local://source-page-screenshot"
-                        )
-                        if not is_manual_screenshot and candidate_url not in used_urls:
+                    if 1 <= numbered_slot <= len(legacy_remote_urls):
+                        candidate_url = legacy_remote_urls[numbered_slot - 1]
+                        if candidate_url not in used_urls:
                             slot = numbered_slot
                             url = candidate_url
                 if not url:
@@ -1470,7 +1502,6 @@ class ImageCore:
                         url = legacy_alias
                         display_only = True
             used_urls.add(url)
-
             width = height = file_bytes = 0
             image_format = ""
             try:
@@ -1568,20 +1599,9 @@ class ImageCore:
                     "filename": file_path.name,
                     "downloaded": True,
                     "display_only": display_only,
-                    "primary": (
-                        not display_only
-                        and bool(primary_key)
-                        and primary_key in candidate_keys
-                    ),
-                    "slider": (
-                        not display_only
-                        and bool(slider_key)
-                        and slider_key in candidate_keys
-                    ),
-                    "selected": (
-                        not display_only
-                        and bool(candidate_keys.intersection(selected_keys))
-                    ),
+                    "primary": not display_only and url == primary_card_url,
+                    "slider": not display_only and url == slider_card_url,
+                    "selected": not display_only and url in selected,
                     "width": width,
                     "height": height,
                     "format": image_format,
@@ -1621,35 +1641,42 @@ class ImageCore:
         if not local_dir.is_dir():
             return []
 
+        evidence_urls = image_pipeline.source_screenshot_media_urls(data)
         canonical = [
             str(value or "").strip()
             for value in self._json_list(data.get("images_json"))
             if str(value or "").strip()
+            and str(value or "").strip() not in evidence_urls
         ]
         selected = [
             str(value or "").strip()
             for value in self._json_list(data.get("selected_images_json"))
             if str(value or "").strip()
+            and str(value or "").strip() not in evidence_urls
         ]
-        canonical_keys = {
-            self._url_asset_key(value): index
-            for index, value in enumerate(canonical)
-            if self._url_asset_key(value)
-        }
+        selected_card_urls = set(selected)
+        selected_card_urls.update(
+            alias
+            for value in selected
+            if (alias := self._legacy_local_alias_url(data, value))
+        )
+        canonical_keys = {value: index for index, value in enumerate(canonical)}
+        selected_card_order = list(selected)
+        for value in selected:
+            alias = self._legacy_local_alias_url(data, value)
+            if alias and alias not in selected_card_order:
+                selected_card_order.append(alias)
         selected_keys = {
-            self._url_asset_key(value): index
-            for index, value in enumerate(selected)
-            if self._url_asset_key(value)
+            value: index for index, value in enumerate(selected_card_order)
         }
 
         output: list[dict[str, Any]] = []
-        by_key: dict[str, dict[str, Any]] = {}
         by_url: dict[str, dict[str, Any]] = {}
         for raw in self.local_items(int(product_id)):
             item = dict(raw)
             if bool(item.get("display_only")):
                 continue
-            key = self._url_asset_key(str(item.get("url") or ""))
+            key = str(item.get("url") or "").strip()
             if not key:
                 continue
             try:
@@ -1662,7 +1689,6 @@ class ImageCore:
             exact_url = str(item.get("url") or "").strip()
             if exact_url:
                 by_url.setdefault(exact_url, item)
-            by_key.setdefault(key, item)
 
         try:
             from app.phase50_a2w_media_sync import selected_local_media
@@ -1682,22 +1708,31 @@ class ImageCore:
             if isinstance(item, dict)
             and str(item.get("source_url") or item.get("url") or "").strip()
         }
-        primary_key = self._url_asset_key(
-            str(data.get("primary_image_url") or "")
-        )
-        slider_key = self._url_asset_key(
-            str(data.get("homepage_slider_image_url") or "")
-        )
+        primary_url = str(data.get("primary_image_url") or "").strip()
+        slider_url = str(data.get("homepage_slider_image_url") or "").strip()
+        if primary_url in evidence_urls:
+            primary_url = ""
+        if slider_url in evidence_urls:
+            slider_url = ""
 
-        for url in canonical:
-            key = self._url_asset_key(url)
-            # Exact URL identity wins.  Asset-key fallback intentionally comes
-            # second because two query variants can be distinct Product images
-            # while sharing the same normalized asset key.
-            item = dict(by_url.get(url) or by_key.get(key) or {})
-            exact = exact_selected.get(url) or exact_selected.get(key)
-            if exact:
-                path = Path(str(exact.get("local_path") or "")).resolve()
+        for canonical_index, url in enumerate(canonical, 1):
+            # Exact URL identity only: never bind a neighboring query variant.
+            item = dict(by_url.get(url) or {})
+            # Query variants can be distinct image identities. Never borrow a
+            # different URL's final file or selection merely because a
+            # normalized URL key happens to match.
+            exact = exact_selected.get(url)
+            exact_path = (
+                str(exact.get("local_path") or "").strip()
+                if exact
+                else self.local_path_for_url(data, url)
+            )
+            if exact_path:
+                path = Path(exact_path).resolve()
+                try:
+                    path.relative_to(local_dir)
+                except ValueError:
+                    path = Path()
                 if path.is_file():
                     if not item:
                         width = height = file_bytes = 0
@@ -1717,20 +1752,15 @@ class ImageCore:
                             pass
                         meta = metadata_by_url.get(url) or {}
                         item = {
-                            "slot": int(
-                                selected_keys.get(
-                                    key,
-                                    canonical_keys.get(key, 0),
-                                )
-                            ) + 1,
+                            "slot": canonical_index,
                             "url": url,
                             "path": str(path),
                             "filename": path.name,
                             "downloaded": True,
                             "display_only": False,
-                            "primary": bool(primary_key and key == primary_key),
-                            "slider": bool(slider_key and key == slider_key),
-                            "selected": key in selected_keys,
+                            "primary": bool(primary_url and url == primary_url),
+                            "slider": bool(slider_url and url == slider_url),
+                            "selected": url in selected_card_urls,
                             "width": width,
                             "height": height,
                             "format": image_format,
@@ -1753,13 +1783,13 @@ class ImageCore:
                     else:
                         item["path"] = str(path)
                         item["filename"] = path.name
-                        item["selected"] = key in selected_keys
-                        item["primary"] = bool(
-                            primary_key and key == primary_key
-                        )
-                        item["slider"] = bool(
-                            slider_key and key == slider_key
-                        )
+                        item["selected"] = url in selected_card_urls
+                        item["primary"] = bool(primary_url and url == primary_url)
+                        item["slider"] = bool(slider_url and url == slider_url)
+            if item:
+                item["selected"] = url in selected_card_urls
+                item["primary"] = url == primary_url
+                item["slider"] = url == slider_url
             if not item:
                 continue
             output.append(item)
@@ -1771,7 +1801,8 @@ class ImageCore:
         # folders without DB canonical media still expose trusted local files so
         # the operator can recover them explicitly.
         if not canonical:
-            for key, raw in by_key.items():
+            for raw in by_url.values():
+                key = str(raw.get("url") or "").strip()
                 if key in canonical_keys:
                     continue
                 output.append(dict(raw))
@@ -1780,13 +1811,14 @@ class ImageCore:
             # selected its identity (legacy local-display aliases included).
             # Unselected leftovers such as stale 05.webp must never appear as
             # a new Product image after refresh.
-            for key, raw in by_key.items():
+            for raw in by_url.values():
+                key = str(raw.get("url") or "").strip()
                 if key in canonical_keys or key not in selected_keys:
                     continue
                 output.append(dict(raw))
 
         def order_key(item: dict[str, Any]) -> tuple[int, int, int]:
-            key = self._url_asset_key(str(item.get("url") or ""))
+            key = str(item.get("url") or "").strip()
             if key in selected_keys:
                 return (0, selected_keys[key], int(item.get("slot") or 0))
             return (
@@ -1912,24 +1944,18 @@ class ImageCore:
             for value in urls or []
             if str(value or "").strip()
         }
-        remove_local_names = {
-            Path(value.split("local://", 1)[1]).name.casefold()
-            for value in remove
-            if value.startswith("local://")
-            and Path(value.split("local://", 1)[1]).name
-            == value.split("local://", 1)[1]
-        }
-
+        # Some legacy rows stored a path-qualified alias for the same file.
+        # Remove that alias only when it resolves to the exact local file of
+        # the selected card; never match unrelated URLs by basename alone.
+        for candidate in self.urls(data):
+            exact_local = self._legacy_local_alias_url(data, candidate)
+            if exact_local and exact_local in remove:
+                remove.add(candidate)
         def matches_remove(value: str) -> bool:
-            raw = str(value or "").strip()
-            if raw in remove:
-                return True
-            if remove_local_names and raw.startswith(
-                ("local://", "local-display://")
-            ):
-                name = raw.rsplit("/", 1)[-1].casefold()
-                return name in remove_local_names
-            return False
+            # A card operation is bound to its exact persisted source URL.
+            # Basename matching made deleting local://01.webp also delete
+            # unrelated local-display aliases with the same filename.
+            return str(value or "").strip() in remove
 
         all_urls = [
             url
@@ -3784,11 +3810,19 @@ class InstagramCore:
             ),
         )
 
-    def delivery_readiness(self, *, scope: str = "both") -> dict[str, Any]:
+    def delivery_readiness(
+        self,
+        *,
+        scope: str = "both",
+        require_link_sticker: bool = False,
+        force_automatic_story: bool = False,
+    ) -> dict[str, Any]:
         """Return fail-closed provider readiness for Feed, Story or combined work."""
         scope = str(scope or "both").strip().lower()
         if scope not in {"feed", "story", "both"}:
             raise RuntimeError(f"Unsupported Instagram delivery scope: {scope}")
+        if require_link_sticker and force_automatic_story:
+            raise RuntimeError("Automatic Story and manual Link Sticker modes are mutually exclusive.")
         provider = self.provider()
         companion_raw = str(
             self.db.setting("instagram_companion_story_enabled", "1") or "1"
@@ -3798,11 +3832,20 @@ class InstagramCore:
             self.db.setting("instagram_story_link_mode", "bio_shop_grid")
             or "bio_shop_grid"
         ).strip().lower()
-        native_sticker_enabled = link_mode in {
+        native_sticker_enabled = not force_automatic_story and (
+            bool(require_link_sticker) or link_mode in {
             "native_sticker_notification",
             "native_sticker",
             "notification",
-        }
+            }
+        )
+        effective_link_mode = (
+            "bio_shop_grid"
+            if force_automatic_story
+            else (
+                "native_sticker_notification" if require_link_sticker else link_mode
+            )
+        )
 
         state: dict[str, Any] = {
             "provider": provider,
@@ -3810,7 +3853,7 @@ class InstagramCore:
             "ready": True,
             "blockers": [],
             "companion_story_enabled": companion_enabled,
-            "story_link_mode": link_mode,
+            "story_link_mode": effective_link_mode,
             "clickable_story_enabled": native_sticker_enabled,
             "story_supported": provider == "buffer",
             "feed_link_mode": "buffer_shop_grid" if provider == "buffer" else "direct",
@@ -3863,8 +3906,14 @@ class InstagramCore:
         self,
         *,
         scope: str = "both",
+        require_link_sticker: bool = False,
+        force_automatic_story: bool = False,
     ) -> dict[str, Any]:
-        state = self.delivery_readiness(scope=scope)
+        state = self.delivery_readiness(
+            scope=scope,
+            require_link_sticker=require_link_sticker,
+            force_automatic_story=force_automatic_story,
+        )
         if state.get("ready") is True:
             return state
         blockers = [
@@ -3981,17 +4030,30 @@ class InstagramCore:
             "scope": "feed",
             "readiness": readiness,
             "requested": len(ids),
-            "published": len(results),
+            "published": sum(_instagram_result_confirmed(item) for item in results),
+            "submitted": sum(_instagram_result_submitted(item) for item in results),
+            "skipped": len(results) - sum(_instagram_result_confirmed(item) for item in results) - sum(_instagram_result_submitted(item) for item in results),
             "failed": len(failures),
             "story_notifications": 0,
             "results": results,
             "failures": failures,
         }
 
-    def publish_story_many(self, product_ids, *, progress=None) -> dict[str, Any]:
+    def publish_story_many(
+        self,
+        product_ids,
+        *,
+        progress=None,
+        require_link_sticker: bool = False,
+        force_automatic_story: bool = False,
+    ) -> dict[str, Any]:
         """Publish only Instagram Story. Never creates a Feed/Post."""
         provider = self.provider()
-        readiness = self.require_delivery_readiness(scope="story")
+        readiness = self.require_delivery_readiness(
+            scope="story",
+            require_link_sticker=require_link_sticker,
+            force_automatic_story=force_automatic_story,
+        )
         if provider != "buffer":
             raise RuntimeError(
                 "ارسال مستقل Story فقط در مسیر Buffer پشتیبانی می‌شود."
@@ -4059,9 +4121,7 @@ class InstagramCore:
                     site_url=settings.site_url,
                     story_url_override=str(provider_media.get("story_url") or ""),
                     story_meta=story_meta,
-                    link_notification=bool(
-                        readiness.get("requires_mobile_handoff")
-                    ),
+                    link_notification=bool(readiness.get("requires_mobile_handoff")),
                 )
                 results.append(
                     {"product_id": product_id, "provider": provider, **result}
@@ -4090,12 +4150,35 @@ class InstagramCore:
             "scope": "story",
             "readiness": readiness,
             "requested": len(ids),
-            "published": len(results),
+            "published": sum(_instagram_result_confirmed(item) for item in results),
+            "submitted": sum(_instagram_result_submitted(item) for item in results),
+            "skipped": len(results) - sum(_instagram_result_confirmed(item) for item in results) - sum(_instagram_result_submitted(item) for item in results),
             "failed": len(failures),
             "story_notifications": story_notifications,
             "results": results,
             "failures": failures,
         }
+
+    def reconcile_product_receipts(self, product_ids, *, progress=None) -> dict[str, Any]:
+        """Read Buffer state for existing posts and append only final evidence."""
+        provider = self.provider()
+        if provider != "buffer":
+            raise RuntimeError("تطبیق رسیدهای Instagram فقط برای Provider=Buffer پشتیبانی می‌شود.")
+        from app.buffer_publish import reconcile_product_receipts
+
+        ids = sorted({int(value) for value in product_ids or [] if int(value) > 0})
+        results, failures = [], []
+        cfg = self.config()
+        for index, product_id in enumerate(ids, 1):
+            if progress:
+                progress(int((index - 1) / max(1, len(ids)) * 100), f"بررسی Buffer برای #{product_id}")
+            try:
+                results.append(reconcile_product_receipts(self.db, product_id, cfg))
+            except Exception as exc:
+                failures.append({"product_id": product_id, "error": str(exc)})
+        if progress:
+            progress(100, "بررسی رسیدهای Buffer تمام شد")
+        return {"provider": provider, "requested": len(ids), "results": results, "failures": failures}
 
     def _publish_site_then_social(
         self,
@@ -4103,12 +4186,18 @@ class InstagramCore:
         *,
         scope: str,
         progress=None,
+        require_link_sticker: bool = False,
+        force_automatic_story: bool = False,
     ) -> dict[str, Any]:
         """Ensure Site truth first, then execute exactly one Social scope."""
         scope = str(scope or "").strip().lower()
         if scope not in {"feed", "story"}:
             raise RuntimeError(f"Unsupported social scope: {scope}")
-        self.require_delivery_readiness(scope=scope)
+        self.require_delivery_readiness(
+            scope=scope,
+            require_link_sticker=(scope == "story" and require_link_sticker),
+            force_automatic_story=(scope == "story" and force_automatic_story),
+        )
         ids = sorted({int(value) for value in product_ids or [] if int(value) > 0})
         already_public, site_needed = [], []
         for product_id in ids:
@@ -4171,9 +4260,8 @@ class InstagramCore:
             if scope == "feed"
             else self.publish_story_many
         )
-        social_result = publisher(
-            social_ready,
-            progress=(
+        publisher_kwargs = {
+            "progress": (
                 (
                     lambda value, message: progress(
                         68 + int(value * 0.32),
@@ -4182,8 +4270,12 @@ class InstagramCore:
                 )
                 if progress
                 else None
-            ),
-        )
+            )
+        }
+        if scope == "story":
+            publisher_kwargs["require_link_sticker"] = bool(require_link_sticker)
+            publisher_kwargs["force_automatic_story"] = bool(force_automatic_story)
+        social_result = publisher(social_ready, **publisher_kwargs)
         return {
             "social_kind": scope,
             "requested": len(ids),
@@ -4200,11 +4292,20 @@ class InstagramCore:
             progress=progress,
         )
 
-    def publish_site_then_story(self, product_ids, *, progress=None) -> dict[str, Any]:
+    def publish_site_then_story(
+        self,
+        product_ids,
+        *,
+        progress=None,
+        require_link_sticker: bool = False,
+        force_automatic_story: bool = False,
+    ) -> dict[str, Any]:
         return self._publish_site_then_social(
             product_ids,
             scope="story",
             progress=progress,
+            require_link_sticker=require_link_sticker,
+            force_automatic_story=force_automatic_story,
         )
 
     def publish_many(self, product_ids, *, progress=None) -> dict[str, Any]:

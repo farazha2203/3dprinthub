@@ -214,6 +214,30 @@ class _PublishCore:
 
 
 class InstagramSplitContractTests(unittest.TestCase):
+    def test_confirmed_instagram_api_media_id_counts_as_published(self):
+        from qt6.kernel import _instagram_result_confirmed
+        self.assertTrue(_instagram_result_confirmed({"media_id": "ig-123"}))
+        self.assertFalse(_instagram_result_confirmed({"provider_post_id": "buffer-123", "buffer_status": "sending"}))
+        self.assertFalse(_instagram_result_confirmed({
+            "status": "already_sent",
+            "provider_post_id": "old-story",
+        }))
+        self.assertFalse(_instagram_result_confirmed({
+            "buffer_status": "sent",
+            "story_publish_mode": "notification",
+            "link_sticker_required": True,
+            "notification_status": "notified",
+            "instagram_live_confirmed": False,
+        }))
+        self.assertTrue(_instagram_result_confirmed({
+            "buffer_status": "sent",
+            "story_publish_mode": "notification",
+            "link_sticker_required": True,
+            "notification_status": "markedAsPublished",
+            "instagram_live_confirmed": True,
+            "external_link": "https://instagram.com/stories/demo/123",
+        }))
+
     def core(self, *, story_mode="bio_shop_grid"):
         return InstagramCore(
             _SocialDB(story_mode=story_mode),
@@ -237,6 +261,39 @@ class InstagramSplitContractTests(unittest.TestCase):
         self.assertFalse(feed["requires_mobile_handoff"])
         self.assertFalse(story["ready"])
         self.assertTrue(story["requires_mobile_handoff"])
+
+    @patch("app.buffer_publish.test_connection")
+    def test_ai_story_link_sticker_fails_closed_without_active_mobile_device(
+        self, test_connection
+    ):
+        test_connection.return_value = {
+            "id": "chan-1",
+            "name": "demo",
+            "has_active_member_device": False,
+        }
+        state = self.core(story_mode="bio_shop_grid").delivery_readiness(
+            scope="story", require_link_sticker=True
+        )
+        self.assertFalse(state["ready"])
+        self.assertTrue(state["requires_mobile_handoff"])
+        self.assertTrue(state["clickable_story_enabled"])
+
+    @patch("app.buffer_publish.test_connection")
+    def test_ai_popup_automatic_story_ignores_saved_manual_sticker_preference(
+        self, test_connection
+    ):
+        test_connection.return_value = {
+            "id": "chan-1",
+            "name": "demo",
+            "has_active_member_device": False,
+        }
+        state = self.core(story_mode="native_sticker_notification").delivery_readiness(
+            scope="story", force_automatic_story=True
+        )
+        self.assertTrue(state["ready"])
+        self.assertFalse(state["requires_mobile_handoff"])
+        self.assertFalse(state["clickable_story_enabled"])
+        self.assertEqual(state["story_link_mode"], "bio_shop_grid")
 
     @patch("app.buffer_publish.publish_product")
     @patch("app.buffer_media_host.rehost_buffer_assets")
@@ -276,6 +333,7 @@ class InstagramSplitContractTests(unittest.TestCase):
 
         self.assertEqual(result["scope"], "feed")
         self.assertEqual(result["published"], 1)
+        self.assertEqual(result["submitted"], 0)
         kwargs = publish_feed.call_args.kwargs
         self.assertFalse(kwargs["companion_story"])
         self.assertNotIn("story_asset_url", kwargs)
@@ -324,6 +382,23 @@ class InstagramSplitContractTests(unittest.TestCase):
         self.assertEqual(feed_meta["source_urls"], [])
         publish_story.assert_called_once()
 
+    @patch("app.buffer_publish.publish_product")
+    @patch("app.buffer_media_host.rehost_buffer_assets")
+    @patch("app.instagram_feed_asset.prepare_all_current_product_feed_assets")
+    @patch("app.buffer_publish.test_connection")
+    def test_feed_sending_is_reported_as_submitted_not_published(
+        self, test_connection, prepare_feed, rehost, publish_feed
+    ):
+        test_connection.return_value = {"id": "chan-1", "name": "demo", "has_active_member_device": False}
+        prepare_feed.return_value = {"urls": [], "local_paths": [], "source_urls": [], "revision": "feedrev"}
+        rehost.return_value = {"host": "site", "feed_urls": ["https://3dprinthub.ir/media/feed.png"], "story_url": "", "commit_sha": ""}
+        publish_feed.return_value = {"provider_post_id": "post-queued", "buffer_status": "sending"}
+        core = self.core()
+        core.preview = lambda product_id: {"product_url": "https://3dprinthub.ir/p/7"}
+        result = core.publish_feed_many([7])
+        self.assertEqual(result["published"], 0)
+        self.assertEqual(result["submitted"], 1)
+
 
 class ProductPageSourceContractTests(unittest.TestCase):
     def test_products_page_exposes_requested_filters_and_split_social_buttons(self):
@@ -341,8 +416,15 @@ class ProductPageSourceContractTests(unittest.TestCase):
             'self.instagram_story_btn = QPushButton("📱 ارسال استوری Instagram")',
             "publish_site_then_feed",
             "publish_site_then_story",
+            "مسیر خودکار Story قبلی اجرا می‌شود",
+            "Sticker → Link",
         ):
             self.assertIn(marker, source)
+        self.assertNotIn(
+            "require_link_sticker=(scope == \"story\")",
+            source,
+            "AI popup Story must not force Buffer mobile Link Sticker handoff",
+        )
         self.assertNotIn("instagram_publish_btn", source)
 
 

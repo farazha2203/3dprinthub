@@ -1,4 +1,56 @@
+## Active continuation — 2026-10-04 Product photo identity / Build 2026.10.04.2
+- [x] Reproduce actual Product #964 mismatch with read-only Catalog evidence: browser page screenshot was misclassified/renamed as Product image.
+- [x] Fix the Stage-3 `current_local_items()` bypass that reintroduced raw screenshot identity after gallery filtering.
+- [x] Exclude the legacy fixed-name acquisition screenshot identity from Site/Feed/media truth; preserve the explicit operator Product Screenshot flow and its timestamped gallery item.
+- [x] Add exact screenshot/provenance and visible-card/delete/reopen regressions; targeted screenshot/media tests pass.
+- [x] Add 20-image Product Wizard display/reopen regression; all 20 URL-to-file identities remain visible after reload.
+- [x] Revalidate after restoring the operator Screenshot flow: 32 targeted tests PASS (22 capture/flow, 8 gallery/screenshot, 1 Site media gate, 1 twenty-image UI projection), compileall and diff check.
+- [x] Run Qt VerifyOnly on a fresh temporary empty Catalog (`QT6_FOUNDATION_VERIFY=OK`, `QT6_42B2_FULL_PARITY_VERIFY=OK`); Product-specific behavior is covered by the isolated regression tests and read-only canonical resolver audit.
+- [ ] Foreground visual select/delete/reopen acceptance for Build `2026.10.04.2` on a clean isolated Catalog; UI target remains unavailable (`apps=[]`).
+- [ ] Close W5C/Desktop, inspect preserved WIP, then GitHub exact-SHA gate. No Instagram send, Host/Production or deploy.
+
+## Active continuation — 2026-10-03 Product gallery identity / Build 2026.10.03.2
+- [x] Remove unreferenced cache leftovers from the canonical gallery when exact Product URL mappings exist; keep explicit persisted local identities and same-Product aliases.
+- [x] Verify card path equals exact publish path; test single deletion and reload (33 gallery/media + 11 image recovery tests PASS).
+- [x] Compileall and isolated Qt VerifyOnly PASS.
+- [ ] Rebuild a logically verified disposable Catalog baseline and obtain targetable foreground UI for visible card/select/delete/reopen acceptance.
+- [ ] Close W5C/Desktop, review preserved WIP, then GitHub exact-SHA gate. No Host/Production deploy.
+
+## Active continuation — 2026-09-30 W5C Story automatic resend correction
+
+Status: `LOCAL_TESTED / FOREGROUND_ACCEPTANCE_BLOCKED / GITHUB_GATE_PENDING` (Build `2026.09.30.4`, local only).
+
+- [x] Restore the proven automatic Story path for the AI Popup, overriding saved manual-Sticker preference for this action.
+- [x] Allow intentional resend of the same Product and approved asset after the prior operation completes; keep the concurrent-send guard.
+- [x] Keep native Link Sticker notification as a distinct optional mode and keep its reminder status separate from automatic Story delivery.
+- [x] Focused related suite `40 passed, 1 imported helper deselected`, including same-asset resend and no-mobile automatic readiness.
+- [x] Build .4 compileall and diff-check.
+- [x] Isolated Qt VerifyOnly (`QT6_FOUNDATION_VERIFY=OK`, `QT6_42B2_FULL_PARITY_VERIFY=OK`) and Catalog/backup quick/integrity checks after final readiness-policy refinement.
+- [x] Read-only explain the acceptance-clone SHA delta: four `product_history` rows for Product #862 (one view and three Story previews); Products, AI revisions and sync receipts unchanged, no send receipt.
+- [ ] Foreground visual acceptance of Build `.4` Popup and close/reopen on isolated Catalog, without pressing Send; current Computer Use exposes `apps: []`.
+- [ ] Complete W5C/Desktop gates, then commit/push and verify exact SHA. No Host/Production deploy; server delta is empty.
+
+Native Link Sticker remains a separate manual Instagram handoff; automatic Stories and deliberate repeats do not depend on it. After W5C/Desktop closure, resume W6 follow-through. Real publishing and deployment remain separate gates.
+
 ## Current — 2026-09-29 W5C baseline classification and provider-wrapper hotfix
+
+## Current continuation — AI Story/Post send and truthful delivery status (2026-09-30)
+- [x] Add in-Popup send buttons for approved/prepared real AI Story/Post revisions, routed only to the exact Product through the existing guarded flow.
+- [x] Count Buffer `sending` as submitted/in-progress, not successful publication.
+- [x] Focused Popup/Instagram/Buffer regression 50/50 PASS; compile/diff and isolated Qt VerifyOnly PASS.
+- [x] Isolated Catalog and pre-VerifyOnly backup integrity PASS.
+- [ ] Foreground visual Desktop smoke; current Computer Use session exposes no native windows.
+- [ ] W5C/Desktop acceptance and GitHub exact-SHA gate. No live Instagram send, Host or Production action in this subphase.
+
+## 2026-09-30 — W5C Image AI / branded Story subphase (IN_PROGRESS)
+- [x] Fix Image AI Generate action to invoke OpenRouter Images API and send Product + official brand references with pinned provider.
+- [x] Upgrade Story directions 1/2/3/6; preserve owner favorites #4 lifestyle and #5 controlled surreal.
+- [x] Include factual Persian copy and optional operator-selected discount; keep URL/Mention in publication metadata.
+- [x] Account for output plus two input references; live discovery finds Seedream 5 Lite at estimated $0.035/image as cheapest fixed-price compatible endpoint.
+- [x] Focused Social regression 45/45; py_compile/diff-check PASS.
+- [ ] Targetable Desktop Popup verification on this build and isolated Catalog; current Computer Use inventory lists no native windows.
+- [ ] Save endpoint only in isolated Catalog; stop at cost confirmation pending action-time billing approval.
+- [ ] Verify generated BLOB, preview persistence/reopen/idempotency, Qt VerifyOnly and exact-SHA GitHub gate. No Instagram/Host/Production send/deploy.
 
 Status: `GITHUB_UPDATED / DESKTOP_ACCEPTANCE_PENDING` (not accepted).
 
@@ -1534,6 +1586,16 @@ Status: `GITHUB_UPDATED / DESKTOP ACCEPTANCE PENDING / W5C NOT ACCEPTED`.
 Immediately next: final foreground Desktop acceptance on the exact GitHub SHA. Following phase: close W5C/Desktop acceptance; no send/deploy without separate gates.
 
 ---
+## Active continuation — 2026-10-03 Gallery identity fix (v8.9.11 Build 2026.10.03.1)
+
+- [x] Use exact Product URL-to-file mappings for preview; do not pair cache images to URLs by list position.
+- [x] Preserve all Product gallery images, including counts above five, and keep non-mapped local files explicitly local-only.
+- [x] Make removal exact-identity only; protect same-basename and cross-Product/source aliases.
+- [x] Focused related regression: 66/66 PASS; compileall/diff-check PASS.
+- [x] Integrity-check registered isolated Catalog and rollback; Qt VerifyOnly PASS on separate disposable data copy (`QT6_FOUNDATION_VERIFY=OK`, `QT6_42B2_FULL_PARITY_VERIFY=OK`).
+- [ ] Visible isolated UI smoke: candidate process loaded Build `.1`, but target window could not be foregrounded unobstructed; compare bytes/filename, exercise selection/delete only on disposable data, close/reopen.
+- [ ] Finish W5C/Desktop acceptance and exact-SHA GitHub gate. No canonical Catalog, Instagram, Host or Production mutation.
+
 
 ## 2026-10-08 — Windows workspace consolidation
 - [x] Verify the actually running Catalog Center as v8.9.11 / Build 2026.10.04.2 and resolve source/launcher/data/shortcut paths.

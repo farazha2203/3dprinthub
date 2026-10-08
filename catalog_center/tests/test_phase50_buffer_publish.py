@@ -418,6 +418,100 @@ class BufferPublishTests(unittest.TestCase):
         self.assertEqual(db.receipts[-1]["status"], "instagram_story_published")
 
     @patch("app.buffer_publish.get_secret", return_value="secret")
+    @patch("app.buffer_publish._read_post_state")
+    def test_notification_sent_is_still_pending_until_marked_published(
+        self, post_state, _secret
+    ):
+        db = _DB()
+        fingerprint = db.row["server_ack_json"]
+        db.record_sync_receipt(
+            7,
+            "instagram:buffer:story:notify-pending",
+            "instagram_story_notification_ready",
+            server_id="notify-pending",
+            payload={
+                "provider_post_id": "notify-pending",
+                "site_ack_fingerprint": fingerprint,
+                "story_asset_url": "https://cdn.example/ai-story.png",
+                "story_link_strategy": "native_sticker_notification",
+                "link_sticker_required": True,
+                "tracking_url": "https://3dprinthub.ir/store/product/demo/",
+                "buffer_status": "sent",
+                "instagram_live_confirmed": False,
+            },
+        )
+        post_state.return_value = {
+            "id": "notify-pending",
+            "status": "sent",
+            "notificationStatus": "notified",
+            "externalLink": "",
+        }
+
+        result = reconcile_product_receipts(db, 7, BufferConfig(channel_id="chan-1"))
+
+        self.assertEqual(result["reconciled"], [])
+        self.assertEqual(
+            result["pending"][0]["reason"],
+            "notification_not_completed_in_instagram",
+        )
+        self.assertEqual(len(db.receipts), 1)
+
+    @patch("app.buffer_publish.get_secret", return_value="secret")
+    @patch("app.buffer_publish._read_post_state")
+    def test_completed_notification_reconciles_by_provider_id_not_old_story_fingerprint(
+        self, post_state, _secret
+    ):
+        db = _DB()
+        fingerprint = db.row["server_ack_json"]
+        db.record_sync_receipt(
+            7,
+            "instagram:buffer:old-story",
+            "instagram_story_published",
+            server_id="old-story",
+            payload={
+                "provider_post_id": "old-story",
+                "site_ack_fingerprint": fingerprint,
+                "story_asset_url": "https://cdn.example/old.png",
+                "instagram_live_confirmed": True,
+            },
+        )
+        db.record_sync_receipt(
+            7,
+            "instagram:buffer:new-ai-story",
+            "instagram_story_notification_ready",
+            server_id="new-ai-story",
+            payload={
+                "provider_post_id": "new-ai-story",
+                "site_ack_fingerprint": fingerprint,
+                "story_asset_url": "https://cdn.example/ai-story.png",
+                "story_link_strategy": "native_sticker_notification",
+                "link_sticker_required": True,
+                "tracking_url": "https://3dprinthub.ir/store/product/demo/",
+                "buffer_status": "sent",
+                "instagram_live_confirmed": False,
+            },
+        )
+        post_state.return_value = {
+            "id": "new-ai-story",
+            "status": "sent",
+            "notificationStatus": "markedAsPublished",
+            "externalLink": "https://instagram.com/stories/demo/new",
+        }
+
+        result = reconcile_product_receipts(db, 7, BufferConfig(channel_id="chan-1"))
+
+        self.assertEqual(len(result["reconciled"]), 1)
+        self.assertEqual(result["reconciled"][0]["provider_post_id"], "new-ai-story")
+        self.assertEqual(db.receipts[-1]["status"], "instagram_story_published")
+        payload = json.loads(db.receipts[-1]["payload_json"])
+        self.assertTrue(payload["instagram_live_confirmed"])
+        self.assertEqual(payload["notification_status"], "markedAsPublished")
+        self.assertEqual(
+            payload["completion_evidence"],
+            "buffer_marked_as_published_with_external_link",
+        )
+
+    @patch("app.buffer_publish.get_secret", return_value="secret")
     @patch("app.buffer_publish._recent_asset_matches")
     def test_reconcile_asset_fallback_requires_unique_match(
         self, asset_matches, _secret

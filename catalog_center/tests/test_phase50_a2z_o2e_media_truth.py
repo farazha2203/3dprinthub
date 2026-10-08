@@ -122,6 +122,157 @@ class Phase50A2ZO2EMediaTruthTests(unittest.TestCase):
             any("refetch_20260924" in str(item["path"]) for item in items)
         )
 
+    def test_gallery_preview_uses_exact_final_mapping_not_numbered_source_cache(self):
+        product_id, url1, url2, final1, final2 = self._product(
+            selected_only_first=False
+        )
+        local_dir = Path(dict(self.db.product(product_id))["local_dir"])
+        (local_dir / "image_seo_manifest.json").write_text(
+            json.dumps({"items": [
+                {"source_url": url1, "final_local_file": str(final1)},
+                {"source_url": url2, "final_local_file": str(final2)},
+            ]}),
+            encoding="utf-8",
+        )
+
+        paths = self.kernel.images.display_local_paths(
+            dict(self.db.product(product_id))
+        )
+        items = self.kernel.images.current_local_items(product_id)
+
+        self.assertEqual(
+            [Path(value).resolve() for value in paths],
+            [final1.resolve(), final2.resolve()],
+        )
+        self.assertEqual(
+            {item["url"]: Path(item["path"]).resolve() for item in items},
+            {url1: final1.resolve(), url2: final2.resolve()},
+        )
+
+    def test_gallery_shows_all_twenty_exact_product_images_not_a_five_item_slice(self):
+        product_id, url1, url2, final1, final2 = self._product(
+            selected_only_first=True
+        )
+        row = dict(self.db.product(product_id))
+        local_dir = Path(row["local_dir"])
+        image_dir = local_dir / "images"
+        urls = [url1, url2]
+        paths = [image_dir / "01.jpg", image_dir / "02.jpg"]
+        for index in range(3, 21):
+            url = f"https://makerworld.com/media/lamp-{index}.jpg"
+            path = image_dir / f"{index:02d}.jpg"
+            Image.new("RGB", (64, 64), (index * 7 % 255, 70, 130)).save(path, "JPEG")
+            urls.append(url)
+            paths.append(path)
+        (local_dir / "page_extract.json").write_text(
+            json.dumps({
+                "images": [
+                    {"url": url, "local_file": str(path)}
+                    for url, path in zip(urls, paths)
+                ]
+            }),
+            encoding="utf-8",
+        )
+        self.db.update_product(product_id, {
+            "images_json": json.dumps(urls),
+            "selected_images_json": json.dumps(urls[:5]),
+            "primary_image_url": urls[0],
+        })
+
+        items = self.kernel.images.current_local_items(product_id)
+        expected_paths = [final1, final2, *paths[2:]]
+
+        self.assertEqual(len(items), 20)
+        self.assertEqual([item["url"] for item in items], urls)
+        self.assertEqual(
+            [Path(item["path"]).resolve() for item in items],
+            [path.resolve() for path in expected_paths],
+        )
+        self.assertEqual(sum(bool(item["selected"]) for item in items), 5)
+
+    def test_query_variant_does_not_inherit_neighbor_selection_or_image(self):
+        product_id, url1, url2, final1, final2 = self._product(
+            selected_only_first=True
+        )
+        variant = url2 + "?variant=blue"
+        row = dict(self.db.product(product_id))
+        self.db.update_product(product_id, {
+            "images_json": json.dumps([url1, variant]),
+            "selected_images_json": json.dumps([url1]),
+            "primary_image_url": url1,
+        })
+        local_dir = Path(row["local_dir"])
+        (local_dir / "image_seo_manifest.json").write_text(
+            json.dumps({"items": [
+                {"source_url": url1, "final_local_file": str(final1)},
+                {"source_url": variant, "final_local_file": str(final2)},
+            ]}),
+            encoding="utf-8",
+        )
+
+        items = self.kernel.images.current_local_items(product_id)
+
+        self.assertEqual([item["url"] for item in items], [url1, variant])
+        self.assertEqual([item["selected"] for item in items], [True, False])
+        self.assertEqual(
+            [Path(item["path"]).resolve() for item in items],
+            [final1.resolve(), final2.resolve()],
+        )
+
+    def test_remove_local_url_does_not_remove_unrelated_same_basename_identity(self):
+        product_id, _url1, _url2, _final1, _final2 = self._product()
+        exact = "local://01.webp"
+        same_name_url = "https://cdn.example.com/01.webp"
+        unrelated_alias = "local-display://other-source/9001/01.webp"
+        self.db.update_product(product_id, {
+            "images_json": json.dumps([exact, same_name_url, unrelated_alias]),
+            "selected_images_json": json.dumps([exact, same_name_url, unrelated_alias]),
+            "primary_image_url": exact,
+        })
+
+        self.kernel.images.remove_urls(product_id, [exact])
+
+        refreshed = dict(self.db.product(product_id))
+        self.assertEqual(
+            json.loads(refreshed["images_json"]),
+            [same_name_url, unrelated_alias],
+        )
+        self.assertEqual(
+            json.loads(refreshed["selected_images_json"]),
+            [same_name_url, unrelated_alias],
+        )
+        self.assertEqual(refreshed["primary_image_url"], same_name_url)
+
+    def test_delete_then_renumber_preserves_remaining_exact_image_identity(self):
+        product_id, url1, url2, _final1, _final2 = self._product(
+            selected_only_first=False
+        )
+
+        self.kernel.images.remove_urls(product_id, [url1])
+        self.kernel.images.renumber(product_id)
+
+        refreshed = dict(self.db.product(product_id))
+        self.assertEqual(json.loads(refreshed["images_json"]), [url2])
+        self.assertEqual(json.loads(refreshed["selected_images_json"]), [url2])
+        self.assertEqual(refreshed["primary_image_url"], url2)
+        items = self.kernel.images.current_local_items(product_id)
+        self.assertEqual([item["url"] for item in items], [url2])
+        metadata = json.loads(refreshed["image_metadata_json"])
+        self.assertEqual(len(metadata), 1)
+        self.assertEqual(metadata[0]["source_url"], url2)
+        self.assertEqual(
+            Path(items[0]["path"]).resolve(),
+            Path(metadata[0]["final_local_file"]).resolve(),
+        )
+        source_path = Path(refreshed["local_dir"]) / "images" / "02.jpg"
+        with Image.open(source_path) as source_image:
+            source_blue = source_image.convert("RGB").getpixel((160, 120))[2]
+        with Image.open(items[0]["path"]) as final_image:
+            final_rgb = final_image.convert("RGB").getpixel((160, 120))
+        self.assertGreater(source_blue, 100)
+        self.assertGreater(final_rgb[2], final_rgb[0] + 40)
+        self.assertGreater(final_rgb[2], final_rgb[1] + 30)
+
     def test_current_gallery_dedupes_alias_urls_that_resolve_to_one_local_file(self):
         product_id, url1, url2, final1, _final2 = self._product(
             selected_only_first=False
@@ -129,6 +280,9 @@ class Phase50A2ZO2EMediaTruthTests(unittest.TestCase):
         row = dict(self.db.product(product_id))
         metadata = json.loads(row["image_metadata_json"])
         metadata[1]["final_local_file"] = str(final1)
+        metadata[1]["final_sha256"] = hashlib.sha256(
+            final1.read_bytes()
+        ).hexdigest()
         self.db.update_product(
             product_id,
             {"image_metadata_json": json.dumps(metadata)},

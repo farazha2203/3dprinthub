@@ -1,3 +1,41 @@
+## 2026-10-04 — v8.9.11 Build 2026.10.04.2 — Stable gallery identity, Screenshot preserved
+
+- Added a Product Wizard regression with 20 persisted image URLs; all 20 visible cards resolve to their exact URL-owned final files and remain identical after closing/reopening the Product.
+- Latest targeted verification: 32/32 (22 capture/flow, 8 gallery/screenshot, 1 Site-media, 1 twenty-image grid test). Existing product-page Screenshot capture implementation is unchanged.
+
+- Fixed identity leakage for legacy fixed-name acquisition screenshots while preserving the explicit operator Product Screenshot capture and its timestamped gallery item.
+- `current_local_items()` now filters the legacy fixed-name acquisition screenshot identity before rebuilding cards from canonical DB rows; operator-created timestamped Product screenshots remain visible and selectable.
+- Product-photo count and media truth use the same stable identity set. Deletion addresses the selected persisted URL only; unrelated screenshot-capture behavior and canonical image rows/files remain intact.
+- Added regressions for legacy renamed acquisition screenshot, exact displayed/deleted/reopened image identity, Feed/Site parity, and preserved operator screenshot/SEO flow.
+- Local candidate only; no canonical Catalog write, send, Host/Production, commit/push or deployment. Visible Desktop acceptance remains open.
+
+## 2026-10-03 — v8.9.11 Build 2026.10.03.2 (LOCAL_TESTED / visible gallery gate open)
+- Fixed Product gallery identity leakage: with exact remote URL mappings, arbitrary leftover files in `images/` are no longer appended as selectable `local://` cards. Persisted same-Product local-display aliases still resolve to their exact file.
+- Added regression for stale numbered cache bytes vs final publish file, exact card URL/path parity, deleting one image and reloading. Gallery/media tests 33/33 and image recovery tests 11/11 PASS; Qt VerifyOnly PASS; compileall/diff-check pending final close.
+- Visual smoke remains blocked (`Computer Use apps=[]`, no window handle). The disposable Temp Catalog has logical changes versus its registered backup and is preserved, not treated as a clean acceptance clone. Canonical Catalog/Host/Production untouched; no commit/push/deploy.
+
+## 2026-09-30 — v8.9.11 Build 2026.09.30.4 (FOCUSED_TESTED / W5C open)
+- Restored the AI Popup Story send to the existing automatic Buffer route; it overrides a stored manual Sticker preference for this action and does not require an active mobile device.
+- Removed the permanent same-creative receipt lock. Every deliberate send after the previous operation completes creates a new Story; the in-flight UI guard still prevents simultaneous clicks. Optional native Link Sticker notification remains separate.
+- Focused Story/Post/Buffer/UI suite `40 passed, 1 imported helper deselected`; compileall, diff-check, isolated VerifyOnly and Catalog/backup quick/integrity checks pass. Read-only audit attributes clone delta to Product #862 history only (one view, three Story-preview events); no Product/revision/receipt delta and no send receipt. No actual Story/Post was sent. Foreground Popup acceptance and W5C/GitHub gate remain pending.
+
+## 2026-09-30 — v8.9.11 Build 2026.09.30.3 (LOCAL_TESTED / W5C open)
+- Fixed the false-success path where an old Story receipt for the same Site ACK caused a different approved AI Story revision to be skipped as `already_sent` and counted as fresh.
+- Story idempotency now includes the actual public image asset, link strategy and exact canonical/tracking URL; exact duplicate retry is a no-op, changed creative is eligible for its own send.
+- A printed URL is not a clickable Instagram sticker. When a native Story Link Sticker is required, use Buffer notification publishing with the URL as an operator reminder; apply Sticker → Link in Instagram and Share manually. Queue/notification readiness is explicitly not live publication. Added local Buffer receipt reconciliation without reposting.
+- Read-only Buffer readiness currently reports no active member device. No send, canonical Catalog write, Host/Production action, commit or push occurred. Focused Story/Post/Buffer regression 53 passed, one imported helper deselected; compileall, diff-check, isolated Qt VerifyOnly and isolated clone/backup integrity checks passed. Foreground visual Desktop acceptance remains pending.
+
+## 2026-09-30 — v8.9.11 Build 2026.09.30.2 (LOCAL_TESTED / W5C open)
+- Added per-revision Send Story / Send Post buttons inside the AI popup. They stay disabled until a real AI-generated SQLite revision is approved and prepared; the handoff passes only that Product into the existing readiness, preflight and explicit-send-confirmation flow.
+- Buffer `sending`/queued responses are now counted as submitted, not published; only provider `sent` / explicit live-confirmed outcomes count as published. Result UI now reports confirmed, queued and failed separately.
+- Focused Popup/Instagram/Buffer regression: 50/50 PASS; py_compile/diff-check and isolated Qt VerifyOnly PASS. Isolated Catalog + pre-VerifyOnly backup quick/integrity checks PASS. No Instagram call, canonical Catalog write, Host, Production, commit or push performed. Visual desktop smoke remains pending because Computer Use exposes no native app/window.
+
+## 2026-09-30 — v8.9.11 Build 2026.09.30.1 (IN_PROGRESS)
+- Replaced ordinary Story campaign directions 1/2/3/6 with distinct brand-forward art direction; preserved #4 lifestyle and #5 controlled surreal.
+- Real Image AI request carries Product + official 3DPrintHub logo references, selected composition, exact factual Persian Product copy and optional approved discount; provider is pinned.
+- Discovery requires both 9:16 and 4:5 ratios and two input references. Cost ranking includes two reference image charges; current cheapest fixed-price compatible option is Seedream 5 Lite, estimated $0.035/image.
+- Focused Social regression 45/45, py_compile and diff-check pass. Paid generation, Persian typography quality, final Popup and Desktop acceptance remain pending; no publish/deploy occurred.
+
 ## 2026-09-29 - Reverse tunnel route reverified (documentation only)
 - Stored the documented Host access method: dedicated reverse loopback 22024 to Host bridge 22224; project gateway `project-host.ps1 -Project 3dprinthub`; Host cron watchdog + repository bootstrap; no fallback routes or secret exposure.
 - Current read-only liveness shows Host-origin SSH reaches Windows `sshd`, but 22024 reverse-forward and authenticated bridge health are unavailable even after 60 seconds. Cause is unclassified; Host operations are blocked. No system/service/Host/Production changes.
@@ -1876,6 +1914,12 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - Local source only; no Catalog/Host/Production/Instagram mutation or deployment.
 
 ---
+## 2026-10-03 — v8.9.11 Build 2026.10.03.1 (LOCAL TESTED / UI GATES OPEN)
+- Fixed gallery preview identity: exact Product URL-to-final-file mapping is authoritative; numbered source/cache files are no longer positionally substituted for Site images.
+- Removed any five-image presentation cap from the corrected data boundary; all resolvable Product images can be represented while selection remains separate.
+- Delete now targets the exact selected URL identity and will not remove a neighbor because its basename matches. A same-Product local-display alias is accepted only after source/external ID and file existence validation.
+- Related regression: 66/66 PASS; compileall/diff-check PASS; isolated Qt VerifyOnly PASS on a disposable Catalog copy. Visible UI smoke remains open because the target candidate window could not be foregrounded unobstructed. W5C/Desktop acceptance and GitHub gate remain open. Canonical Catalog, Host, Production, and Instagram were not changed.
+
 
 ## 2026-10-08 — Windows 3DPrintHub workspace consolidation
 - Kept the owner-accepted Catalog Center v8.9.11 / Build 2026.10.04.2 runtime and its live Catalog data.

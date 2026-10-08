@@ -63,7 +63,7 @@ class Phase493I26OperatorCompletionTests(unittest.TestCase):
         source = Path(phase.__file__).read_text(encoding="utf-8")
         self.assertIn('local_url = "local://source-page-screenshot.png"', source)
         self.assertIn("collect_classic_exact", source)
-        self.assertIn("result[\"images_json\"]", source)
+        self.assertIn('result["images_json"]', source)
 
     def test_progress_has_recheck_path_after_timeout(self):
         source = Path(phase.__file__).read_text(encoding="utf-8")

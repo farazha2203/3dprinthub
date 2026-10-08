@@ -441,31 +441,6 @@ def publish_product(
 _publish_feed_product = publish_product
 
 
-def _story_already_sent(db, product_id: int, fingerprint: str) -> bool:
-    if not fingerprint:
-        return False
-    for receipt in db.sync_receipts(int(product_id), limit=120):
-        if str(receipt["status"] or "") not in {
-            "instagram_story_published",
-            "instagram_story_submitted",
-            "instagram_story_notification_ready",
-        }:
-            continue
-        try:
-            previous = json.loads(receipt["payload_json"] or "{}")
-        except Exception:
-            previous = {}
-        if str(previous.get("site_ack_fingerprint") or "") != fingerprint:
-            continue
-        if (
-            str(receipt["status"] or "") == "instagram_story_notification_ready"
-            and str(previous.get("buffer_status") or "").strip().lower() == "error"
-        ):
-            continue
-        return True
-    return False
-
-
 def publish_story_for_product(
     db,
     product_id: int,
@@ -474,7 +449,7 @@ def publish_story_for_product(
     site_url: str,
     story_url_override: str = "",
     story_meta: dict[str, Any] | None = None,
-    link_notification: bool = True,
+    link_notification: bool = False,
 ) -> dict[str, Any]:
     row = db.product(int(product_id))
     if row is None:
@@ -482,13 +457,6 @@ def publish_story_for_product(
     data = dict(row)
     payload = canonical_site_payload(data, site_url=site_url)
     fingerprint = str(data.get("server_ack_json") or "").strip()
-    if _story_already_sent(db, int(product_id), fingerprint):
-        return {"status": "already_sent", "site_product_url": payload["product_url"]}
-
-    token = get_secret("buffer_api_key")
-    if not token:
-        raise RuntimeError("Buffer API Key is not configured in the secure secret store.")
-
     ack = {}
     try:
         ack = json.loads(data.get("server_ack_json") or "{}")
@@ -505,13 +473,24 @@ def publish_story_for_product(
     if not story_url.startswith("https://"):
         raise RuntimeError("A public HTTPS Story asset is required for Buffer/Instagram.")
 
+    tracking_url = str(payload.get("tracking_url") or payload["product_url"])
+    story_link_strategy = (
+        "native_sticker_notification" if link_notification else "automatic_product_link"
+    )
+    # A completed Story is not a permanent per-Product lock. Every explicit
+    # operator send is a new publication, even for the same approved creative.
+    # The UI blocks concurrent sends; uncertain provider outcomes are reconciled
+    # using the provider post/asset identity instead of replaying the request.
+    token = get_secret("buffer_api_key")
+    if not token:
+        raise RuntimeError("Buffer API Key is not configured in the secure secret store.")
+
     image: dict[str, Any] = {"url": story_url}
     alt_texts = list(payload.get("alt_texts") or [])
     if alt_texts and alt_texts[0]:
         image["metadata"] = {"altText": str(alt_texts[0])[:1000]}
 
     ai_generated = True
-    tracking_url = str(payload.get("tracking_url") or payload["product_url"])
     product_details = dict(payload.get("product_details") or {})
     source_product_url = str(product_details.get("source_url") or "").strip()
     instagram_metadata: dict[str, Any] = {
@@ -522,13 +501,11 @@ def publish_story_for_product(
     scheduling_type = "automatic"
     if link_notification:
         scheduling_type = "notification"
-        detail_lines = [f"سفارش 3DPrintHub: {tracking_url}"]
-        if source_product_url:
-            detail_lines.append(f"منبع اصلی: {source_product_url}")
         instagram_metadata["stickerFields"] = {
-            "text": "لینک محصول",
-            "products": "\n".join(detail_lines),
-            "other": f"Link Sticker URL: {tracking_url}",
+            "other": (
+                "در Instagram: Add Sticker → Link → این نشانی را Paste کن؛ "
+                f"لینک دقیق محصول: {tracking_url}"
+            ),
         }
     else:
         # Production-proven historical Buffer route (Product #625):
@@ -602,11 +579,7 @@ def publish_story_for_product(
         "product_details": product_details,
         "source_product_url": source_product_url,
         "story_publish_mode": "notification" if link_notification else "automatic",
-        "story_link_strategy": (
-            "native_sticker_notification"
-            if link_notification
-            else "automatic_product_link"
-        ),
+        "story_link_strategy": story_link_strategy,
         "link_sticker_required": bool(link_notification),
         "link_sticker_label": "لینک محصول" if link_notification else "",
         "instagram_live_confirmed": (
@@ -626,6 +599,8 @@ def publish_story_for_product(
         "site_ack_fingerprint": fingerprint,
         "buffer_channel_id": cfg.channel_id,
         "buffer_status": provider_status,
+        "notification_status": str(post.get("notificationStatus") or "").strip(),
+        "notification_requires_manual_completion": bool(link_notification),
         "highlight_target": highlight_target_for_product(data),
         "highlight_status": "operator_required",
         "external_link": str(post.get("externalLink") or ""),
@@ -659,6 +634,7 @@ def reconcile_product_receipts(
     final_statuses = {
         "instagram_submitted": "instagram_published",
         "instagram_story_submitted": "instagram_story_published",
+        "instagram_story_notification_ready": "instagram_story_published",
     }
     already_final: set[tuple[str, str]] = set()
     parsed: list[tuple[Any, dict[str, Any]]] = []
@@ -670,9 +646,12 @@ def reconcile_product_receipts(
             payload = {}
         parsed.append((receipt, payload))
         status = str(receipt["status"] or "")
-        receipt_fingerprint = str(payload.get("site_ack_fingerprint") or "")
         if status in final_statuses.values():
-            already_final.add((status, receipt_fingerprint))
+            prior_provider_id = str(
+                payload.get("provider_post_id") or receipt["server_id"] or ""
+            ).strip()
+            if prior_provider_id:
+                already_final.add((status, prior_provider_id))
 
     reconciled: list[dict[str, Any]] = []
     pending: list[dict[str, Any]] = []
@@ -686,14 +665,13 @@ def reconcile_product_receipts(
         if receipt_fingerprint != fingerprint:
             stale_skipped += 1
             continue
-        if (final_status, fingerprint) in already_final:
-            continue
-
         provider_id = str(
             payload.get("provider_post_id")
             or receipt["server_id"]
             or ""
         ).strip()
+        if provider_id and (final_status, provider_id) in already_final:
+            continue
         post: dict[str, Any] = {}
         match_mode = ""
         if provider_id:
@@ -766,19 +744,45 @@ def reconcile_product_receipts(
             )
             continue
 
+        notification_status = str(post.get("notificationStatus") or "").strip()
+        external_link = str(post.get("externalLink") or "").strip()
+        if status == "instagram_story_notification_ready":
+            if notification_status.lower() != "markedaspublished":
+                pending.append(
+                    {
+                        "status": status,
+                        "provider_post_id": provider_id,
+                        "provider_status": provider_status,
+                        "notification_status": notification_status,
+                        "reason": "notification_not_completed_in_instagram",
+                    }
+                )
+                continue
+            if not external_link:
+                pending.append(
+                    {
+                        "status": status,
+                        "provider_post_id": provider_id,
+                        "provider_status": provider_status,
+                        "notification_status": notification_status,
+                        "reason": "instagram_story_link_unavailable",
+                    }
+                )
+                continue
+
         final_payload = {
             **payload,
             "provider_post_id": provider_id,
             "buffer_status": "sent",
-            "external_link": str(
-                post.get("externalLink")
-                or payload.get("external_link")
-                or ""
-            ),
+            "notification_status": notification_status,
+            "external_link": external_link or str(payload.get("external_link") or ""),
+            "instagram_live_confirmed": True,
             "reconciled_from_receipt_id": int(receipt["id"] or 0),
             "reconciled_without_repost": True,
             "reconcile_match_mode": match_mode,
         }
+        if status == "instagram_story_notification_ready":
+            final_payload["completion_evidence"] = "buffer_marked_as_published_with_external_link"
         db.record_sync_receipt(
             int(product_id),
             f"instagram:buffer:reconcile:{provider_id}",
@@ -786,7 +790,7 @@ def reconcile_product_receipts(
             server_id=provider_id,
             payload=final_payload,
         )
-        already_final.add((final_status, fingerprint))
+        already_final.add((final_status, provider_id))
         reconciled.append(
             {
                 "status": final_status,

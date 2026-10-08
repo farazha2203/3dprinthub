@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import tempfile
 import unittest
@@ -15,6 +16,8 @@ from PySide6.QtGui import QWheelEvent
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from app.db import Database
+from app.phase49_3i33_ai_core import ensure_schema as ensure_ai_source_schema
+from app.phase50_a2w_media_sync import selected_local_media, selected_source_urls
 from qt6.image_gallery import ImageSeoDialog
 from qt6.kernel import AICore, build_kernel
 from qt6.pages import OperationsPage, ProductsPage
@@ -421,6 +424,120 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
         finally:
             page.close()
 
+    def test_gallery_uses_same_final_bytes_as_selected_publish_url(self):
+        """A stale numbered cache must never override the URL's final image."""
+        local_dir = self.root / "gallery-final-byte-identity"
+        image_dir = local_dir / "images"
+        image_dir.mkdir(parents=True, exist_ok=True)
+        urls = [
+            "https://cdn.example.com/gallery-a.jpg",
+            "https://cdn.example.com/gallery-b.jpg",
+        ]
+        numbered_paths = [image_dir / "01.jpg", image_dir / "02.jpg"]
+        source_colors = [(220, 30, 30), (20, 40, 220)]
+        for path, color in zip(numbered_paths, source_colors):
+            Image.new("RGB", (80, 60), color).save(path, format="JPEG")
+        (local_dir / "page_extract.json").write_text(
+            json.dumps(
+                {
+                    "images": [
+                        {"url": url, "local_file": str(path)}
+                        for url, path in zip(urls, numbered_paths)
+                    ]
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        product_id = self._make_product(
+            "3147099",
+            local_dir=local_dir,
+            urls=urls,
+        )
+        self.kernel.images.finalize(product_id)
+
+        # Simulate legacy numbered cache files being refreshed/reused with
+        # different bytes after the canonical SEO files were finalized.
+        for path, color in zip(numbered_paths, reversed(source_colors)):
+            Image.new("RGB", (80, 60), color).save(path, format="JPEG")
+
+        row = dict(self.db.product(product_id))
+        gallery = self.kernel.images.local_items(product_id)
+        by_url = {item["url"]: Path(item["path"]).resolve() for item in gallery}
+        self.assertEqual(
+            set(by_url),
+            set(urls),
+            f"gallery must contain only persisted image identities: {by_url}",
+        )
+        for url in urls:
+            self.assertEqual(
+                by_url[url],
+                Path(self.kernel.images.local_path_for_url(row, url)).resolve(),
+                f"gallery card for {url} must show the exact file used by publish",
+            )
+
+        self.kernel.images.remove_urls(product_id, [urls[0]])
+        remaining = self.kernel.images.local_items(product_id)
+        self.assertEqual([item["url"] for item in remaining], [urls[1]])
+        self.assertEqual(
+            Path(remaining[0]["path"]).resolve(),
+            Path(self.kernel.images.local_path_for_url(
+                self.db.product(product_id), urls[1]
+            )).resolve(),
+        )
+
+    def test_product_wizard_displays_all_twenty_persisted_images_after_reopen(self):
+        """The Product UI must not silently truncate a larger saved gallery."""
+        local_dir = self.root / "gallery-twenty-images"
+        image_dir = local_dir / "images"
+        image_dir.mkdir(parents=True, exist_ok=True)
+        urls = [f"https://cdn.example.com/twenty-{index:02}.jpg" for index in range(20)]
+        extracted = []
+        expected_paths = {}
+        for index, url in enumerate(urls):
+            path = image_dir / f"source-{index:02}.jpg"
+            Image.new("RGB", (64, 48), (index * 11, 180 - index * 5, 70 + index * 7)).save(
+                path, format="JPEG", quality=95
+            )
+            extracted.append({"url": url, "local_file": str(path)})
+            expected_paths[url] = path.resolve()
+        (local_dir / "page_extract.json").write_text(
+            json.dumps({"images": extracted}, ensure_ascii=False), encoding="utf-8"
+        )
+        product_id = self._make_product(
+            "3147099", local_dir=local_dir, urls=urls
+        )
+        self.kernel.images.finalize(product_id)
+
+        page = ProductWizardPage(self.db, kernel=self.kernel)
+        try:
+            page.load_product(product_id)
+            cards = {str(card.item["url"]): Path(card.item["path"]).resolve()
+                     for card in page.image_grid.cards}
+            self.assertEqual(set(cards), set(urls))
+            self.assertEqual(len(page.image_grid.cards), 20)
+            for url in urls:
+                self.assertEqual(
+                    cards[url],
+                    Path(self.kernel.images.local_path_for_url(
+                        self.db.product(product_id), url
+                    )).resolve(),
+                )
+        finally:
+            page.close()
+
+        reopened = ProductWizardPage(self.db, kernel=self.kernel)
+        try:
+            reopened.load_product(product_id)
+            reopened_cards = {
+                str(card.item["url"]): Path(card.item["path"]).resolve()
+                for card in reopened.image_grid.cards
+            }
+            self.assertEqual(reopened_cards, cards)
+            self.assertEqual(len(reopened.image_grid.cards), 20)
+        finally:
+            reopened.close()
+
     def test_full_ai_repair_rebuilds_derived_image_seo_but_preserves_operator_title(self):
         product_id, urls, _local_dir = self._mapped_image_product()
         self.kernel.images.update_metadata(
@@ -594,7 +711,9 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
         page = ProductWizardPage(self.db, kernel=self.kernel)
         try:
             page.load_product(product_id)
-            self.assertEqual(page.image_grid.columns, 3)
+            # ProductImageGrid currently clamps Stage 3 to four columns;
+            # image count controls scroll rows, not a hidden five-image cap.
+            self.assertEqual(page.image_grid.columns, 4)
             self.assertTrue(page.image_grid.large_cards)
             self.assertEqual(len(page.image_grid.cards), 3)
             self.assertEqual(page.image_grid.cards[0].minimumWidth(), 300)
@@ -630,7 +749,7 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
             grid = page.image_grid
             bar = grid.scroll.verticalScrollBar()
             self.assertEqual(grid.minimumHeight(), 670)
-            self.assertEqual(grid.columns, 3)
+            self.assertEqual(grid.columns, 4)
 
             toolbar_y = {
                 button.mapTo(page, QPoint(0, 0)).y()
@@ -749,6 +868,179 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
             self.assertEqual(row["primary_image_url"], urls[0])
         finally:
             page.close()
+
+    def test_gallery_delete_renumber_reopen_preserves_exact_visible_and_publish_bytes(self):
+        """Visible card, delete identity and publisher must stay on one asset."""
+        local_dir = self.root / "gallery-delete-roundtrip"
+        image_dir = local_dir / "images"
+        image_dir.mkdir(parents=True, exist_ok=True)
+        urls = [f"https://cdn.example.com/roundtrip-{index}.jpg" for index in range(4)]
+        colors = [(230, 25, 35), (25, 205, 45), (35, 60, 225), (225, 185, 25)]
+        extract_images = []
+        for index, (url, color) in enumerate(zip(urls, colors), start=1):
+            path = image_dir / f"source-{index}.jpg"
+            Image.new("RGB", (320, 240), color).save(path, format="JPEG", quality=100)
+            extract_images.append({"url": url, "local_file": str(path)})
+        (local_dir / "page_extract.json").write_text(
+            json.dumps({"images": extract_images}), encoding="utf-8"
+        )
+        product_id = self._make_product(
+            "3147099", local_dir=local_dir, urls=urls
+        )
+        self.kernel.images.finalize(product_id)
+
+        page = ProductWizardPage(self.db, kernel=self.kernel)
+        try:
+            page.load_product(product_id)
+            before = {
+                str(card.item["url"]): {
+                    "path": Path(card.item["path"]).resolve(),
+                    "sha256": hashlib.sha256(Path(card.item["path"]).read_bytes()).hexdigest(),
+                    "color": Image.open(card.item["path"]).convert("RGB").getpixel((160, 120)),
+                }
+                for card in page.image_grid.cards
+            }
+            self.assertEqual(set(before), set(urls))
+            for url, expected_color in zip(urls, colors):
+                actual = before[url]["color"]
+                self.assertLessEqual(max(abs(actual[i] - expected_color[i]) for i in range(3)), 12)
+
+            # The operator picks the second and fourth *visible cards* for removal.
+            page.image_grid.item_for_url(urls[1])
+            cards = {str(card.item["url"]): card for card in page.image_grid.cards}
+            cards[urls[1]].bulk_selected.setChecked(True)
+            cards[urls[3]].bulk_selected.setChecked(True)
+            with patch(
+                "qt6.product_wizard.QMessageBox.question",
+                return_value=QMessageBox.StandardButton.Yes,
+            ):
+                page._delete_selected_images()
+
+            remaining_urls = [urls[0], urls[2]]
+            row = dict(self.db.product(product_id))
+            self.assertEqual(json.loads(row["images_json"]), remaining_urls)
+            self.assertEqual(json.loads(row["selected_images_json"]), remaining_urls)
+            after_delete = {
+                str(card.item["url"]): Path(card.item["path"]).resolve()
+                for card in page.image_grid.cards
+            }
+            self.assertEqual(set(after_delete), set(remaining_urls))
+            for url in remaining_urls:
+                shown_path = after_delete[url]
+                shown_color = Image.open(shown_path).convert("RGB").getpixel((160, 120))
+                self.assertLessEqual(
+                    max(abs(shown_color[i] - colors[urls.index(url)][i]) for i in range(3)),
+                    12,
+                    f"visible card for {url} changed to another image after delete/renumber",
+                )
+
+            # The actual media resolver used by Social/publishing must resolve
+            # the same file bytes the reloaded Product editor now displays.
+            from app.phase50_a2w_media_sync import selected_local_media
+
+            published = {
+                item["source_url"]: Path(item["local_path"]).resolve()
+                for item in selected_local_media(row)
+            }
+            self.assertEqual(published, after_delete)
+            for url in remaining_urls:
+                self.assertEqual(
+                    hashlib.sha256(published[url].read_bytes()).hexdigest(),
+                    hashlib.sha256(after_delete[url].read_bytes()).hexdigest(),
+                )
+        finally:
+            page.close()
+
+        reopened = ProductWizardPage(self.db, kernel=self.kernel)
+        try:
+            reopened.load_product(product_id)
+            reopened_paths = {
+                str(card.item["url"]): Path(card.item["path"]).resolve()
+                for card in reopened.image_grid.cards
+            }
+            self.assertEqual(reopened_paths, after_delete)
+            for url, path in reopened_paths.items():
+                color = Image.open(path).convert("RGB").getpixel((160, 120))
+                self.assertLessEqual(
+                    max(abs(color[i] - colors[urls.index(url)][i]) for i in range(3)),
+                    12,
+                    f"reopened card for {url} no longer represents its original image",
+                )
+        finally:
+            reopened.close()
+
+    def test_legacy_source_page_screenshot_is_hidden_from_gallery_and_publish(self):
+        """A renumbered MakerWorld page capture must never masquerade as a product photo."""
+        local_dir = self.root / "legacy-screenshot-product"
+        image_dir = local_dir / "images"
+        archive_dir = local_dir / "source_originals"
+        image_dir.mkdir(parents=True, exist_ok=True)
+        archive_dir.mkdir(parents=True, exist_ok=True)
+        capture = Image.new("RGB", (960, 560), "#18334a")
+        from PIL import ImageDraw
+        draw = ImageDraw.Draw(capture)
+        draw.rectangle((35, 40, 310, 210), fill="#efb346")
+        draw.ellipse((470, 130, 770, 430), fill="#a23b5c")
+        draw.text((45, 480), "MAKERWORLD PAGE EVIDENCE", fill="white")
+        screenshot_path = archive_dir / "source-page-screenshot-legacy.png"
+        capture.save(screenshot_path, format="PNG")
+        screenshot_webp = image_dir / "legacy-renumbered-02.webp"
+        capture.save(screenshot_webp, format="WEBP", quality=96)
+
+        hero_url = "https://cdn.example.com/real-product-photo.jpg"
+        screenshot_url = "local://legacy-renumbered-02.webp"
+        hero_path = image_dir / "hero.jpg"
+        Image.new("RGB", (640, 480), "#30a060").save(hero_path, format="JPEG", quality=100)
+        (local_dir / "page_extract.json").write_text(
+            json.dumps({"images": [{"url": hero_url, "local_file": str(hero_path)}]}),
+            encoding="utf-8",
+        )
+        product_id = self._make_product(
+            "3147100", local_dir=local_dir, urls=[hero_url, screenshot_url]
+        )
+        ensure_ai_source_schema(self.db)
+        self.db.update_product(product_id, {
+            "source_page_screenshot_path": str(local_dir / "images" / screenshot_path.name),
+            "image_metadata_json": json.dumps([
+                {"source_url": screenshot_url, "final_local_file": str(screenshot_webp)},
+            ]),
+        })
+
+        row = dict(self.db.product(product_id))
+        self.assertEqual(
+            self.kernel.images.source_ordered_urls(row),
+            [hero_url],
+        )
+        self.assertEqual(
+            [item["url"] for item in self.kernel.images.current_local_items(product_id)],
+            [hero_url],
+        )
+        visible = self.kernel.images.display_local_paths(row)
+        self.assertEqual(len(visible), 1)
+        self.assertEqual(Path(visible[0]).resolve(), hero_path.resolve())
+        self.assertEqual(selected_source_urls(row), [hero_url])
+        self.assertEqual([item["source_url"] for item in selected_local_media(row)], [hero_url])
+        from app.phase50_a2w_media_sync import (
+            current_product_local_media,
+            media_truth_snapshot,
+        )
+        self.assertEqual(
+            [item["source_url"] for item in current_product_local_media(row)],
+            [hero_url],
+        )
+        truth = media_truth_snapshot(self.db, self.kernel.images, product_id)
+        self.assertEqual(truth["canonical_count"], 1)
+        self.assertEqual(truth["selected_count"], 1)
+        self.assertEqual(truth["selected_local_count"], 1)
+
+        finalized = self.kernel.images.finalize(product_id)
+        updated = dict(self.db.product(product_id))
+        self.assertEqual(finalized["kept"], 1)
+        # Finalization repairs selection but does not silently rewrite
+        # canonical Product identities or delete source evidence.
+        self.assertEqual(json.loads(updated["images_json"]), [hero_url, screenshot_url])
+        self.assertEqual(json.loads(updated["selected_images_json"]), [hero_url])
+        self.assertEqual(updated["primary_image_url"], hero_url)
 
     def test_apply_product_seo_targets_only_operation_selected_images(self):
         product_id, urls, _local_dir = self._mapped_image_product()
@@ -915,9 +1207,13 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
             local_dir=local_dir,
             urls=[source_url, screenshot_url],
         )
+        ensure_ai_source_schema(self.db)
         self.db.update_product(
             product_id,
-            {"selected_images_json": json.dumps([source_url], ensure_ascii=False)},
+            {
+                "selected_images_json": json.dumps([source_url], ensure_ascii=False),
+                "source_page_screenshot_path": str(image_dir / screenshot_name),
+            },
         )
 
         items = self.kernel.images.local_items(product_id)
@@ -930,6 +1226,8 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
         self.assertEqual(by_name[screenshot_name]["url"], screenshot_url)
         self.assertFalse(by_name[screenshot_name]["display_only"])
         self.assertFalse(by_name[screenshot_name]["selected"])
+        current_items = self.kernel.images.current_local_items(product_id)
+        self.assertIn(screenshot_url, {item["url"] for item in current_items})
 
     def test_screenshot_seo_defaults_and_metadata_persist_without_site_selection(self):
         local_dir = self.root / "screenshot-seo"
@@ -991,33 +1289,17 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
             screenshot_item = page.image_grid.item_for_url(screenshot_url)
             self.assertIsNotNone(screenshot_item)
             self.assertFalse(bool(screenshot_item.get("selected")))
-
             defaults = page._product_image_seo_values()
-            dialog = ImageSeoDialog(
-                [screenshot_item],
-                parent=page,
-                defaults=defaults,
-            )
+            dialog = ImageSeoDialog([screenshot_item], parent=page, defaults=defaults)
             try:
-                self.assertEqual(
-                    dialog.alt.text(),
-                    "اسپینوزور مینی | سفارش چاپ سه‌بعدی در 3DPrintHub",
-                )
-                self.assertEqual(
-                    dialog.title.text(),
-                    "اسپینوزور مینی | سفارش چاپ سه‌بعدی در 3DPrintHub",
-                )
+                self.assertEqual(dialog.alt.text(), "اسپینوزور مینی | سفارش چاپ سه‌بعدی در 3DPrintHub")
+                self.assertEqual(dialog.title.text(), "اسپینوزور مینی | سفارش چاپ سه‌بعدی در 3DPrintHub")
                 self.assertTrue(dialog.caption.toPlainText().strip())
                 self.assertIn("اسپینوزور", dialog.keywords.toPlainText())
                 self.assertTrue(dialog.filename.text().endswith(".webp"))
             finally:
                 dialog.close()
-
-            self.kernel.images.update_metadata(
-                product_id,
-                [screenshot_url],
-                defaults,
-            )
+            self.kernel.images.update_metadata(product_id, [screenshot_url], defaults)
             row = dict(self.db.product(product_id))
             self.assertEqual(
                 json.loads(row["selected_images_json"]),
@@ -1029,29 +1311,14 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
             }
             self.assertIn(screenshot_url, metadata)
             screenshot_meta = metadata[screenshot_url]
-            self.assertEqual(
-                screenshot_meta["alt_text"],
-                "اسپینوزور مینی | سفارش چاپ سه‌بعدی در 3DPrintHub",
-            )
-            self.assertEqual(
-                screenshot_meta["title"],
-                "اسپینوزور مینی | سفارش چاپ سه‌بعدی در 3DPrintHub",
-            )
+            self.assertEqual(screenshot_meta["alt_text"], "اسپینوزور مینی | سفارش چاپ سه‌بعدی در 3DPrintHub")
+            self.assertEqual(screenshot_meta["title"], "اسپینوزور مینی | سفارش چاپ سه‌بعدی در 3DPrintHub")
             self.assertFalse(screenshot_meta["metadata_ready"])
-            self.assertFalse(
-                str(screenshot_meta.get("final_local_file") or "")
-            )
-
+            self.assertFalse(str(screenshot_meta.get("final_local_file") or ""))
             page.load_product(product_id)
             refreshed_item = page.image_grid.item_for_url(screenshot_url)
-            self.assertEqual(
-                refreshed_item["alt_text"],
-                "اسپینوزور مینی | سفارش چاپ سه‌بعدی در 3DPrintHub",
-            )
-            self.assertEqual(
-                refreshed_item["seo_title"],
-                "اسپینوزور مینی | سفارش چاپ سه‌بعدی در 3DPrintHub",
-            )
+            self.assertEqual(refreshed_item["alt_text"], "اسپینوزور مینی | سفارش چاپ سه‌بعدی در 3DPrintHub")
+            self.assertEqual(refreshed_item["seo_title"], "اسپینوزور مینی | سفارش چاپ سه‌بعدی در 3DPrintHub")
         finally:
             page.close()
 
@@ -1121,18 +1388,11 @@ class Phase493I47QtWorkspaceImageBulkAITests(unittest.TestCase):
                 for item in json.loads(row["image_metadata_json"])
             }
             self.assertIn(source_url, metadata)
-            self.assertIn(screenshot_url, metadata)
             self.assertTrue(metadata[source_url]["metadata_ready"])
+            self.assertIn(screenshot_url, metadata)
             self.assertFalse(metadata[screenshot_url]["metadata_ready"])
-            self.assertTrue(
-                str(metadata[screenshot_url].get("seo_filename") or "").endswith(
-                    ".webp"
-                )
-            )
-            self.assertEqual(
-                metadata[screenshot_url]["alt_text"],
-                page._product_image_seo_values()["alt_text"],
-            )
+            self.assertTrue(str(metadata[screenshot_url].get("seo_filename") or "").endswith(".webp"))
+            self.assertEqual(metadata[screenshot_url]["alt_text"], page._product_image_seo_values()["alt_text"])
         finally:
             page.close()
 

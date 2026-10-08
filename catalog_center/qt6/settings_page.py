@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from PySide6.QtCore import Qt
@@ -585,6 +586,9 @@ class SettingsPage(QWidget):
             return str(data).strip()
         return self.image_model.currentText().strip()
 
+    def _selected_image_provider_tag(self) -> str:
+        return str(self.image_model.currentData(Qt.ItemDataRole.UserRole + 1) or "").strip()
+
     def _render_image_endpoints(self) -> None:
         current = str(self.db.setting("social_image_model", "") or "").strip()
         self.image_model.blockSignals(True)
@@ -592,12 +596,21 @@ class SettingsPage(QWidget):
         for item in self._image_endpoints:
             model_id = str(item.get("model") or "").strip()
             if model_id:
-                cost = item.get("cost_usd")
-                cost_text = "رایگان" if cost == 0 else (f"${cost:g}/image" if isinstance(cost, (int, float)) and cost != float("inf") else "هزینه نامشخص")
-                self.image_model.addItem(f"{model_id} — {cost_text}", model_id)
+                cost_text = self._image_cost_text(item)
+                self.image_model.addItem(f"{model_id} • {item.get('provider_tag') or 'endpoint'} — {cost_text}", model_id)
+                self.image_model.setItemData(
+                    self.image_model.count() - 1,
+                    str(item.get("provider_tag") or ""),
+                    Qt.ItemDataRole.UserRole + 1,
+                )
         selected = current or (self._image_endpoints[0].get("model") if self._image_endpoints else "")
         if selected:
-            index = self.image_model.findData(selected)
+            saved_tag = str(self.db.setting("social_image_provider_tag", "") or "")
+            index = next((i for i in range(self.image_model.count())
+                          if self.image_model.itemData(i) == selected
+                          and self.image_model.itemData(i, Qt.ItemDataRole.UserRole + 1) == saved_tag), -1)
+            if index < 0:
+                index = self.image_model.findData(selected)
             if index >= 0:
                 self.image_model.setCurrentIndex(index)
             else:
@@ -607,13 +620,49 @@ class SettingsPage(QWidget):
 
     def _image_model_changed(self) -> None:
         model_id = self._selected_image_model_id()
-        item = next((candidate for candidate in self._image_endpoints if candidate.get("model") == model_id), None)
+        provider_tag = self._selected_image_provider_tag()
+        item = next((candidate for candidate in self._image_endpoints
+                     if candidate.get("model") == model_id and candidate.get("provider_tag") == provider_tag), None)
+        if item is None:
+            item = next((candidate for candidate in self._image_endpoints if candidate.get("model") == model_id), None)
         if item is None:
             return
-        cost = item.get("cost_usd")
-        cost_text = "رایگان" if cost == 0 else (f"${cost:g}/image" if isinstance(cost, (int, float)) and cost != float("inf") else "هزینه نامشخص")
+        cost_text = self._image_cost_text(item)
+        estimated = item.get("estimated_cost_usd")
+        estimate_text = f" • جمع تخمینی با ۲ مرجع: حدود ${estimated:g} / تصویر" if estimated is not None else ""
+        input_cost = item.get("input_cost_usd")
+        input_unit = str(item.get("input_cost_unit") or "unknown")
+        if input_cost is None:
+            input_text = "هزینه ورودی تصویر اعلام نشده"
+        elif input_cost == 0:
+            input_text = f"ورودی تصویر: رایگان / {input_unit}"
+        else:
+            input_text = f"ورودی تصویر: ${input_cost:g} / {input_unit}"
         params = ", ".join(sorted(str(key) for key in (item.get("supported_parameters") or {}) if key in {"input_references", "aspect_ratio", "size", "output_format", "quality"}))
-        self.image_endpoint_detail.setText(f"{item.get('provider') or 'OpenRouter'} • {cost_text} • پارامترها: {params or 'تأیید نشده'}")
+        values = (item.get("supported_parameters") or {}).get("aspect_ratio", {}).get("values") or []
+        ratios = ", ".join(str(value) for value in values)
+        self.image_endpoint_detail.setText(
+            f"{item.get('provider') or 'OpenRouter'} • {cost_text} • پارامترها: {params or 'تأیید نشده'}"
+            f" • نسبت‌های پشتیبانی‌شده: {ratios or 'اعلام نشده'}"
+            f" • {input_text}{estimate_text} • نرخ توکن و نرخ هر تصویر مستقیماً قابل‌مقایسه نیستند."
+        )
+
+    @staticmethod
+    def _image_cost_text(item: dict[str, Any]) -> str:
+        cost = item.get("cost_usd")
+        unit = str(item.get("cost_unit") or "unknown").strip().lower()
+        if not isinstance(cost, (int, float)) or cost == float("inf"):
+            return "هزینه خروجی نامشخص"
+        if cost == 0:
+            return f"رایگان / {unit} خروجی"
+        if unit == "image":
+            estimated = item.get("estimated_cost_usd")
+            if estimated is not None:
+                return f"${estimated:g} تخمینی با ۲ مرجع (خروجی ${cost:g}) / تصویر"
+            return f"${cost:g} / تصویر خروجی؛ ورودی مرجع نامشخص"
+        if unit == "token":
+            return f"${cost:g} / توکن خروجی (هزینه نهایی متغیر)"
+        return f"${cost:g} / واحد {unit}"
 
     def _discover_image_models(self) -> None:
         key = get_provider_key("openrouter")
@@ -642,11 +691,27 @@ class SettingsPage(QWidget):
             return
         self.db.set_setting("social_image_provider", "openrouter")
         self.db.set_setting("social_image_model", model)
-        item = next((candidate for candidate in self._image_endpoints if candidate.get("model") == model), None)
+        provider_tag = self._selected_image_provider_tag()
+        item = next((candidate for candidate in self._image_endpoints
+                     if candidate.get("model") == model and candidate.get("provider_tag") == provider_tag), None)
         if item is not None:
-            self.db.set_setting("social_image_provider_slug", str(item.get("provider") or ""))
-            self.db.set_setting("social_image_cost_usd", str(item.get("cost_usd") or 0))
-        self.image_ai_status.setText(f"✅ Image Model مستقل ذخیره شد: {model} • هنوز تولید/ارسال فعال نیست.")
+            self.db.set_setting("social_image_provider_slug", str(item.get("provider_slug") or ""))
+            self.db.set_setting("social_image_provider_tag", str(item.get("provider_tag") or ""))
+            cost = item.get("cost_usd")
+            self.db.set_setting("social_image_cost_usd", "" if cost == float("inf") else str(cost))
+            self.db.set_setting("social_image_cost_unit", str(item.get("cost_unit") or "unknown"))
+            input_cost = item.get("input_cost_usd")
+            self.db.set_setting("social_image_input_cost_usd", "" if input_cost is None else str(input_cost))
+            self.db.set_setting("social_image_input_cost_unit", str(item.get("input_cost_unit") or "unknown"))
+            estimate = item.get("estimated_cost_usd")
+            self.db.set_setting("social_image_estimated_cost_usd", "" if estimate is None else str(estimate))
+            self.db.set_setting(
+                "social_image_supported_parameters_json",
+                json.dumps(item.get("supported_parameters") or {}, ensure_ascii=False, sort_keys=True),
+            )
+        self.image_ai_status.setText(
+            f"✅ Image Model/Provider مستقل ذخیره شد: {model} • {provider_tag} • انتشار Instagram همچنان جداگانه قفل است."
+        )
 
     def _refresh_provider_status(self) -> None:
         code = str(self.provider.currentData() or "")

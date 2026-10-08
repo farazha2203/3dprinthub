@@ -66,6 +66,8 @@ def selected_source_urls(row: dict[str, Any]) -> list[str]:
         for value in _json_list(row.get("selected_images_json"))
         if str(value or "").strip()
     ]
+    screenshot_urls = image_pipeline.source_screenshot_media_urls(row)
+    selected = [value for value in selected if value not in screenshot_urls]
     outside = [value for value in selected if value not in canonical_set]
     if outside:
         raise RuntimeError(
@@ -166,10 +168,12 @@ def current_product_local_media(row: dict[str, Any]) -> list[dict[str, Any]]:
     the current Product ``local_dir``, and finalized SHA evidence is verified.
     Historical/refetch sibling folders are never accepted.
     """
+    screenshot_urls = image_pipeline.source_screenshot_media_urls(row)
     current = [
         str(value or "").strip()
         for value in _json_list(row.get("images_json"))
         if str(value or "").strip()
+        and str(value or "").strip() not in screenshot_urls
     ]
     current = list(dict.fromkeys(current))
     if not current:
@@ -504,9 +508,14 @@ def media_truth_snapshot(
     if row_obj is None:
         raise RuntimeError("محصول پیدا نشد.")
     row = dict(row_obj)
+    evidence_urls = image_pipeline.source_screenshot_media_urls(row)
     canonical = [str(value or "").strip() for value in _json_list(row.get("images_json")) if str(value or "").strip()]
     selected = [str(value or "").strip() for value in _json_list(row.get("selected_images_json")) if str(value or "").strip()]
     primary = str(row.get("primary_image_url") or "").strip()
+    canonical = [value for value in canonical if value not in evidence_urls]
+    selected = [value for value in selected if value not in evidence_urls]
+    if primary in evidence_urls:
+        primary = ""
     local_items = image_core.current_local_items(int(product_id))
     site_media = normalized_site_media(server, site_url)
     outside = [value for value in selected if value not in set(canonical)]

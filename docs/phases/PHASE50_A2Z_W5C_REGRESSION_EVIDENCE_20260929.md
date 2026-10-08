@@ -1,5 +1,58 @@
 # W5C full-suite manifest and baseline comparison — 2026-09-29
 
+## 2026-10-04 — Product photo identity (Build 2026.10.04.2)
+
+- Status: `LOCAL_TESTED / VERIFYONLY_PASS / VISIBLE_UI_PENDING`; checkout `D:\projects\3DPrintHub-a2z-a2r-converge`, branch `wip/phase50-a2z-w5-manual-product-20260927`, base HEAD/upstream `46497ccad3219300aea05a830c625086d79f789b`; no commit/push.
+- Root cause: a legacy fixed-name acquisition screenshot was promoted/renamed as Product media; Stage-3 gallery reconstruction and Feed resolver independently read raw canonical image identities and bypassed earlier filtering.
+- Fix: preserve the explicit operator Screenshot-to-Product feature and its timestamped gallery item. Exclude only the legacy acquisition-evidence identity from the affected gallery/publish resolution. No canonical identity rewrite or evidence-file deletion.
+- Verification after restoring the operator Screenshot feature: targeted suite `32/32 PASS` (22 capture/flow, 8 gallery/screenshot, 1 Site-media gate, 1 twenty-image Product Wizard display/reopen); compileall, diff-check and Qt VerifyOnly on fresh temporary empty Catalog pass. Read-only Product #964 Gallery/Site/Feed resolver identity and SHA parity passes. Foreground visual selection/delete/reopen is pending; no canonical Catalog, Host, Production or Instagram mutation.
+
+## 2026-10-03 — Product gallery identity correction (Build 2026.10.03.2)
+
+- Status: `LOCAL_TESTED / QT_VERIFYONLY_PASS / VISIBLE_UI_PENDING`; same forward checkout/branch as W5C; base HEAD/upstream `46497ccad3219300aea05a830c625086d79f789b`; no commit/push.
+- Root cause: when exact Product URL mappings were available, the gallery still appended unreferenced numbered downloader-cache files as selectable `local://` identities. Those ghost cards could shift operator selection/deletion away from the persisted image identity. Corrected cards to come from persisted Product image identities and exact URL→final-file resolution; persisted same-Product local-display aliases remain validated.
+- Regression mutates numbered cache bytes after finalization, proves each visible card path equals the exact publish path, removes one remote URL identity, and confirms only the sibling remains after reload. Gallery/media tests `33/33 PASS`; image recovery tests `11/11 PASS`; compileall, isolated Qt VerifyOnly, SQLite quick_check/integrity_check PASS.
+- A disposable Temp Catalog used during candidate startup differs logically from its registered backup (Product #1075 image fields and Product #862 stage state); preserved for audit and no longer an acceptance baseline. No canonical Catalog, Host, Production, or Instagram action. Next: visible card/select/delete/reopen smoke on a fresh isolated Catalog. W5C/Desktop and GitHub gates remain open.
+
+## 2026-09-30 — Restore automatic Story and explicit resend behavior (Build 2026.09.30.4)
+
+- Cause: Build .3's AI Popup set `require_link_sticker=True`, unintentionally requiring Buffer mobile notification for every Story; exact-asset receipt dedupe also prevented intentional repeat publication.
+- Correction: Popup now explicitly selects the prior automatic Story publisher even when a manual Sticker setting is stored; native Sticker notification remains separate. An intentional send after completion creates a fresh Buffer post even for the same Product/image; active-worker guard prevents concurrent duplicate clicks.
+- Test: Story/Post/Buffer/UI `40 passed, 1 imported helper deselected`, including repeat publication and automatic readiness with no active mobile device.
+- Verification: compileall, diff-check, isolated Qt VerifyOnly and clone/backup quick/integrity checks pass. Read-only audit attributes clone delta to four Product #862 `product_history` events (one view and three Story previews); Product rows, AI revisions and sync receipts unchanged, no send receipt. No real Story/Post, canonical Catalog write, Host, Production, commit or push.
+- Remaining: visible Desktop Popup smoke/close-reopen; Computer Use currently exposes `apps: []`; then W5C and exact GitHub SHA gate.
+
+## 2026-09-30 — Story delivery truth and native Link Sticker handoff (Build 2026.09.30.3)
+
+- Status: `LOCAL_TESTED / FOREGROUND_ACCEPTANCE_BLOCKED / GITHUB_GATE_PENDING`; base HEAD/upstream `46497ccad3219300aea05a830c625086d79f789b`, dirty W5 candidate preserved; no commit/push.
+- Defect proven: prior receipt keyed by Site ACK suppressed a different AI Story creative and was reported as success. Product #862 receipt #539 was old; selected revision #11 had no matching send receipt.
+- Fix: exact Story asset/strategy/tracking-URL dedupe; duplicate is not fresh publish. Link Sticker Story uses Buffer notification and exact URL reminder, then operator must finish Sticker → Link → paste URL → Share in Instagram. Notification remains pending; receipt reconciliation never reposts and requires Buffer `markedAsPublished` and external-link evidence.
+- Buffer read-only readiness: `hasActiveMemberDevice=false`; therefore the new notification flow is intentionally blocked until a mobile device and push notifications are connected. No real Story/Post or notification was sent.
+- Verification: `53 passed, 1 imported helper deselected`; `compileall`, `git diff --check`, isolated Qt VerifyOnly (`QT6_FOUNDATION_VERIFY=OK`, `QT6_42B2_FULL_PARITY_VERIFY=OK`), isolated Catalog and backup quick/integrity checks PASS. Backup SHA256 `5CC5D7BE95DA8FFCFFB28DAC7E06803E789F04ED299957DD2515DE9041B2E381`; post-VerifyOnly clone SHA256 `470f67ef9c12b3fa3587407355341611d22660faffa9186ae8d2ad06a8810744`. Canonical Catalog untouched.
+- Computer Use returned no native apps/windows; Remote Desktop Commander provides process/file only. Foreground Popup and close/reopen acceptance remains pending. No Host/Production delta, commit or deployment.
+- Next exact: connect Buffer mobile device and verify readiness; obtain targetable desktop, inspect Build `.3` Story/Post Popup, then (only after separate action-time approval) do one controlled notification/manual Link Sticker completion/reconciliation. Complete W5C/Desktop acceptance and exact GitHub SHA gate. Do not close W5C or claim a live link before these gates.
+
+## 2026-09-30 — Popup send handoff / queued-status correction (IN_PROGRESS)
+
+- Build candidate: v8.9.11 / `2026.09.30.2`; forward branch remains `wip/phase50-a2z-w5-manual-product-20260927`; base HEAD `46497ccad3219300aea05a830c625086d79f789b`, pre-existing dirty W5 files preserved.
+- AI Story/Post popup now has a send button enabled only for real AI-generated, approved, selected revisions. Callback routes `post` to feed and `story` to Story using only the revision Product ID and the existing guarded workflow.
+- Buffer `sending` now increments `submitted`, not `published`; only `sent`/explicit live confirmation increments `published`. Read-only runtime evidence included one Story published receipt and one Post receipt in `sending`; no provider error receipt was found, so the Post was not declared failed or successful.
+- Focused Popup/Instagram/Buffer regression 50/50 PASS; py_compile, diff-check, isolated Qt VerifyOnly and isolated Catalog/backup integrity PASS. No real send, canonical Catalog write, Host or Production operation.
+- Computer Use returned no native apps/windows after launching the candidate against the isolated Catalog, so visual Build/Popup verification remains pending. Do not click Send or deploy.
+- Recheck on 2026-09-30: Remote Desktop Commander device is online and confirms a running Qt process, but has no screenshot/window-control capability; Computer Use again returns `apps: []`. Focused 50-test suite was rerun and passed; local HEAD still equals upstream base, candidate remains uncommitted.
+- Next: obtain targetable foreground desktop and verify both popup send buttons; then continue W5C/Desktop gate without real publication.
+
+Status: `IMPLEMENTED / FOCUSED_TESTED / W5C_DESKTOP_PENDING`.
+
+## 2026-09-30 — Image AI / premium Story continuation (IN_PROGRESS)
+
+- Owner request: restyle 1/2/3/6, preserve favorites #4 lifestyle and #5 surreal, and ensure Generate actually calls OpenRouter Image API rather than Mock.
+- Candidate Build 2026.09.30.1; current forward HEAD remains 46497ccad3219300aea05a830c625086d79f789b with uncommitted work. Real request sends product and official logo reference, pinned provider, style/aspect and factual Persian copy/optional explicit discount. Result is an unapproved SQLite BLOB.
+- Discovery-only: 22 compatible endpoints. Seedream 5 Lite / seed estimated ~$0.035/image including two free refs is currently cheapest fixed-rate compatible; Qwen Image 3 / alibaba ~$0.036. No image generation executed.
+- Focused regression 45/45; py_compile/diff-check PASS. Persian typography and visual image quality remain unverified.
+- Isolated Catalog checks: quick_check and integrity_check OK; path/hash are in CURRENT_STATE/PATHS. Canonical Catalog was not written. Native UI process was launched but Computer Use inventory did not expose a targetable window; no visual Popup acceptance claimed.
+- Next: native Popup acceptance and isolated endpoint save; stop at explicit $0.035 estimate pending action-time billing approval. Then one controlled image, verify BLOB/Preview/reopen/idempotency, Qt VerifyOnly and exact-SHA GitHub gate. Existing full-suite baseline remains 12 failures + 14 errors parent-proven; W5C/Desktop not accepted. No Instagram/Host/Production/deploy.
+
 Status: `MANIFEST_CAPTURED / ONE REGRESSION FIXED / BASELINE DEBT DISPOSITIONED / FINAL GATES PENDING`.
 
 ## Run identity

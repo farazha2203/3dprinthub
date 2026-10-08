@@ -254,6 +254,170 @@ def strict_local_image(row, url: str) -> str:
     return strict_source_local_image(row, url)
 
 
+def _source_screenshot_fingerprints(row):
+    data = dict(row) if not isinstance(row, dict) else row
+    local_raw = str(_row_value(data, "local_dir", "") or "").strip()
+    if not local_raw:
+        return []
+    try:
+        local_dir = Path(local_raw).resolve()
+    except OSError:
+        return []
+    evidence_paths: list[Path] = []
+    raw_evidence = str(_row_value(data, "source_page_screenshot_path", "") or "").strip()
+    if raw_evidence:
+        raw_path = Path(raw_evidence)
+        # The operator's explicit Product Screenshot feature deliberately saves
+        # a timestamped image in images/ and adds it to the Product gallery.
+        # Keep that supported media path out of the legacy acquisition-evidence
+        # classifier; only the fixed-name crawler capture is evidence-only.
+        if (
+            raw_path.parent.name.casefold() == "images"
+            and re.fullmatch(
+                r"source-page-screenshot-\d{8}-\d{6}\.(?:png|jpe?g|webp)",
+                raw_path.name,
+                flags=re.IGNORECASE,
+            )
+        ):
+            raw_evidence = ""
+        if not raw_evidence:
+            raw_path = None
+    if raw_evidence:
+        raw_path = Path(raw_evidence)
+        evidence_paths.append(raw_path)
+        name = raw_path.name
+        if name and Path(name).name == name:
+            evidence_paths.extend((local_dir / "source_originals" / name, local_dir / "images" / name))
+    capture_root = local_dir / "source_page_capture_manual"
+    if capture_root.is_dir():
+        try:
+            evidence_paths.extend(capture_root.glob("*/source-page-screenshot.png"))
+            evidence_paths.extend(capture_root.glob("*/source-page-screenshot*.png"))
+        except OSError:
+            pass
+    fingerprints = []
+    seen_paths: set[str] = set()
+    for candidate in evidence_paths:
+        try:
+            candidate = candidate.resolve()
+            candidate.relative_to(local_dir)
+            key = str(candidate).casefold()
+            if key in seen_paths or not candidate.is_file():
+                continue
+            seen_paths.add(key)
+            fingerprints.append((candidate, _sha256(candidate), _visual_fingerprint(candidate)))
+        except (OSError, ValueError):
+            continue
+    return fingerprints
+
+
+def is_source_screenshot_file(row, path: str | Path) -> bool:
+    """Return true only for a named or provenance-matched source screenshot."""
+    candidate = Path(path)
+    is_timestamped_operator_capture = bool(re.fullmatch(
+        r"source-page-screenshot-\d{8}-\d{6}\.(?:png|jpe?g|webp)",
+        candidate.name,
+        flags=re.IGNORECASE,
+    ))
+    if candidate.name.casefold().startswith("source-page-screenshot") and not is_timestamped_operator_capture:
+        return True
+    try:
+        candidate = candidate.resolve()
+        candidate.relative_to(Path(str(_row_value(row, "local_dir", "") or "")).resolve())
+        digest = _sha256(candidate)
+        visual = _visual_fingerprint(candidate)
+    except (OSError, ValueError):
+        return False
+    return any(
+        digest == evidence_sha or _looks_like_same_image(visual, evidence_visual)
+        for _evidence_path, evidence_sha, evidence_visual in _source_screenshot_fingerprints(row)
+    )
+
+
+def source_screenshot_media_urls(row) -> set[str]:
+    """Identify legacy page screenshots that were incorrectly promoted to Product media.
+
+    Older acquisition code appended a browser screenshot to ``images_json`` and
+    later SEO-finalized it like a product photo. The evidence file is sometimes
+    moved to ``source_originals`` during that finalization, so checking its name
+    alone is insufficient. Match the persisted evidence path to the media by
+    exact bytes or the conservative, same-dimensions visual fingerprint already
+    used by the image deduplicator.
+    """
+    data = dict(row) if not isinstance(row, dict) else row
+    local_dir = Path(str(_row_value(data, "local_dir", "") or "")).resolve()
+    fingerprints = _source_screenshot_fingerprints(data)
+
+    output: set[str] = set()
+    entries: list[str] = []
+    for field in ("images_json", "selected_images_json"):
+        for raw in _json_list(_row_value(data, field, "[]")):
+            value = str(raw.get("url") or raw.get("source_url") or "").strip() if isinstance(raw, dict) else str(raw or "").strip()
+            if value and value not in entries:
+                entries.append(value)
+    primary = str(_row_value(data, "primary_image_url", "") or "").strip()
+    if primary and primary not in entries:
+        entries.append(primary)
+    for raw in _json_list(_row_value(data, IMAGE_METADATA_COLUMN, "[]")):
+        if isinstance(raw, dict):
+            value = str(raw.get("source_url") or raw.get("url") or "").strip()
+            if value and value not in entries:
+                entries.append(value)
+
+    metadata = {
+        str(item.get("source_url") or item.get("url") or "").strip(): item
+        for item in _json_list(_row_value(data, IMAGE_METADATA_COLUMN, "[]"))
+        if isinstance(item, dict)
+    }
+    for value in entries:
+        basename = value.split("?", 1)[0].replace("\\", "/").rsplit("/", 1)[-1].casefold()
+        is_timestamped_operator_capture = bool(re.fullmatch(
+            r"source-page-screenshot-\d{8}-\d{6}\.(?:png|jpe?g|webp)",
+            basename,
+            flags=re.IGNORECASE,
+        ))
+        if basename.startswith("source-page-screenshot") and not is_timestamped_operator_capture:
+            output.add(value)
+            continue
+        if not fingerprints:
+            continue
+        item = metadata.get(value) or {}
+        paths = [
+            str(item.get("source_local_file") or "").strip(),
+            str(item.get("original_local_file") or "").strip(),
+            str(item.get("final_local_file") or "").strip(),
+            strict_source_local_image(data, value),
+            strict_local_image(data, value),
+        ]
+        candidate_paths: set[Path] = set()
+        for raw_path in paths:
+            if not raw_path:
+                continue
+            try:
+                path = Path(raw_path).resolve()
+                path.relative_to(local_dir)
+                if path.is_file():
+                    candidate_paths.add(path)
+            except (OSError, ValueError):
+                continue
+        matched = False
+        for path in candidate_paths:
+            try:
+                digest = _sha256(path)
+                visual = _visual_fingerprint(path)
+            except OSError:
+                continue
+            if any(
+                digest == evidence_sha or _looks_like_same_image(visual, evidence_visual)
+                for _evidence_path, evidence_sha, evidence_visual in fingerprints
+            ):
+                matched = True
+                break
+        if matched:
+            output.add(value)
+    return output
+
+
 def strict_existing_image_mapping(local_dir: Path, all_urls: list[str]) -> dict[str, Path]:
     local_dir = Path(local_dir)
     row = {"local_dir": str(local_dir)}
@@ -502,7 +666,8 @@ def _persist_derived_image_state(db, product_id: int, values: dict) -> None:
     The Stage lock protects operator/AI edits. SEO file regeneration is derived
     state from already-approved image selection + current product metadata, so
     it must be able to refresh signatures after later Content/Source stages
-    change. Only the explicit derived-image whitelist may bypass the lock guard.
+    change. Source evidence is filtered at the media boundary, but canonical
+    Product identities are not silently rewritten by this derived-state path.
     """
     payload = dict(values or {})
     unknown = set(payload) - DERIVED_IMAGE_STATE_FIELDS
@@ -591,6 +756,14 @@ def finalize_selected_images(
     if row is None:
         raise RuntimeError(f"Product {product_id} not found")
     raw_selected = _json_list(_row_value(row, "selected_images_json", "[]"))
+    screenshot_urls = source_screenshot_media_urls(row)
+    raw_selected = [
+        raw for raw in raw_selected
+        if (
+            str(raw.get("url") or raw.get("source_url") or "").strip()
+            if isinstance(raw, dict) else str(raw or "").strip()
+        ) not in screenshot_urls
+    ]
     if image_limit is None:
         selected = cap_unique_urls(raw_selected)
         effective_limit = int(MAX_SOURCE_IMAGES)
@@ -693,6 +866,8 @@ def finalize_selected_images(
         raise RuntimeError("هیچ تصویر یکتای معتبری برای نهایی‌سازی باقی نماند.")
 
     primary = str(_row_value(row, "primary_image_url", "") or "")
+    if primary in screenshot_urls:
+        primary = ""
     if primary not in kept_urls:
         primary = kept_urls[0]
     if primary in kept_urls and kept_urls[0] != primary:
