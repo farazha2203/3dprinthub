@@ -2453,3 +2453,11 @@ Root Cause: different default selection and pricing authority at the HTML/JSON-L
 Solution: select first positively priced/orderable material, sales/print profile and color by persisted sort orders, preserve explicit variant URL, and use one memoized live variant.price_breakdown per request for both HTML and Google Product/Offer. No invented ratings, zero prices, shipping or DB edits.
 Local test notes: system Python lacked allauth, so the verified project venv is mandatory; its test suite defaults SECURE_SSL_REDIRECT=1, so run local tests with SECURE_SSL_REDIRECT=0. Inventory-less color fixtures must not be mistaken for orderable real spools.
 Prevention: assert native selected option, visible default amount, Offer amount IRR conversion and existing checkout/variant orderability regressions together; no production deployment without cPanel quota and verified backup/rollback.
+
+
+### ERR-50-046 — Default-Offer deploy quota parser failed closed (2026-10-09)
+Symptoms: guarded deployment bootstrap fetched exact approved GitHub commit, then the new runner printed CPANEL_QUOTA_UNVERIFIED before attempting source/DB backup or touching Production Source.
+Verified state: Host branch release/phase50-a2j-hero-20260915 and source HEAD 8e9f395b93f6a31802b951a71fcabbc8171985af unchanged/clean; read-only cPanel StatsBar still reports _count='1977', _max='2000' MB.
+Root cause: accidental double-backslash escapes in the Python raw-string regex embedded in the new local Bash deploy runner; regex matched literal backslash-s instead of YAML leading spaces. Similar escaping affected the planned post-deploy default-price smoke regex.
+Solution: replace numeric YAML and HTML capture patterns with explicit spaces and [0-9] character classes; run local parser/smoke syntax gates, commit/push the correction and never rerun the failed runner or mutate Host Source before the new exact GitHub SHA passes strict preflight.
+Prevention: test embedded Bash heredoc Python against actual cPanel/YAML output shape and a real rendered Product HTML fixture, not only bash -n. Fail closed on unverified quota; no protected cleanup to free quota.

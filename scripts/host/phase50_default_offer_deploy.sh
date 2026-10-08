@@ -37,8 +37,8 @@ stats=subprocess.run(
     ["uapi","StatsBar","get_stats","display=diskusage"],
     capture_output=True, text=True, check=True, timeout=30,
 ).stdout
-used=re.search(r"(?m)^\\s*_count:\\s*'?(\\d+)", stats)
-limit=re.search(r"(?m)^\\s*_max:\\s*'?(\\d+)", stats)
+used=re.search(r"(?m)^ *_count: *'?([0-9]+)", stats)
+limit=re.search(r"(?m)^ *_max: *'?([0-9]+)", stats)
 if not used or not limit:
     raise SystemExit("CPANEL_QUOTA_UNVERIFIED")
 free=int(limit.group(1))-int(used.group(1))
@@ -59,7 +59,7 @@ printf '===== PRODUCT SNIPPET RELEASE DELTA =====\n'
 cat "$TMP_DELTA"
 while IFS= read -r changed; do
   case "$changed" in
-    store/phase50_public_offer.py|store/views.py|store/templatetags/store_seo.py|store/test_phase5.py|templates/store/product_detail.html|scripts/host/phase50_default_offer_deploy.sh|docs/CURRENT_STATE.md|docs/ROADMAP.md|docs/CHANGELOG.md|docs/ERRORS.md|docs/REQUESTS.md|docs/phases/PHASE50_A2T_GOOGLE_POST_READINESS.md|docs/DEPLOYMENT.md|docs/PATHS.md|docs/HOST_CONSTRAINTS.md) ;;
+    store/phase50_public_offer.py|store/views.py|store/templatetags/store_seo.py|store/test_phase5.py|templates/store/product_detail.html|scripts/host/phase50_default_offer_deploy.sh|scripts/host/test_phase50_default_offer_runner.py|docs/CURRENT_STATE.md|docs/ROADMAP.md|docs/CHANGELOG.md|docs/ERRORS.md|docs/REQUESTS.md|docs/phases/PHASE50_A2T_GOOGLE_POST_READINESS.md|docs/DEPLOYMENT.md|docs/PATHS.md|docs/HOST_CONSTRAINTS.md) ;;
     *) fail "unexpected_delta:$changed" ;;
   esac
 done < "$TMP_DELTA"
@@ -157,14 +157,14 @@ for slug in slugs:
         and int(item["offers"]["price"]) > 0
         for item in variants
     ), (slug, "invalid_variant_offer")
-    default = re.search(r'data-default-variant-id="(\\d+)"', html)
+    default = re.search(r'data-default-variant-id="([0-9]+)"', html)
     if default:
         option = re.search(
-            r'<option\\s+value="' + re.escape(default.group(1)) + r'"\\s+selected\\b([^>]*)>',
+            r'<option[ ]+value="' + re.escape(default.group(1)) + r'"[ ]+selected([^>]*)>',
             html, re.S,
         )
         assert option, (slug, "default_native_option_mismatch")
-        unit = re.search(r'data-total="(\\d+)"', option.group(0))
+        unit = re.search(r'data-total="([0-9]+)"', option.group(0))
         assert unit and int(unit.group(1)) > 0, (slug, "default_price_missing")
         assert int(variants[0]["offers"]["price"]) == int(unit.group(1))*10, (
             slug, "first_google_offer_differs_from_client_price",
