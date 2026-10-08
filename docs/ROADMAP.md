@@ -906,3 +906,9 @@ Status: LOCAL_IMPLEMENTED / RELEASE_GATE_PENDING.
 - cPanel storage quota requires read-only available-space and integrity-checked backup gate before source promotion; do not delete retained backup/customer data.
 
 REQ-50-040 CLOSEOUT 2026-10-09: PRODUCTION_VERIFIED at runtime SHA 2b567c9485ec5b2950d2c2644eb8d19ab425fdea, 41/41 regression PASS and six/six independent public Offer parity smoke PASS. Only Search Console external revalidation pending; ongoing Host quota risk ~99%.
+
+### REQ-50-041 — Homepage Hero invalid Product snippet closure
+Status: LOCAL_IMPLEMENTED / RELEASE_GATE_PENDING.
+Root cause: six homepage Slicebox promotional HTML cards advertised incomplete Product microdata; previous Store ProductGroup/Offer fix did not cover the homepage.
+Preserve 3D slider and active slide membership/media/SEO/copy/links and real Store commerce. Patch only Hero microdata markers and obsolete SSR regression; assert Homepage zero Product rich-result items while each of six Store pages keeps valid JSON-LD priced Offers.
+Required: focused/full related local tests, checks/no migration drift, commit/push GitHub exact SHA, cPanel account quota (> safe scoped backup reserve), fresh checksum-verified scoped source/env/full MySQL rollback, exact-SHA Host deploy and public six-link/six-Offer smoke. Search Console Live Test/Validate Fix is external final acceptance.

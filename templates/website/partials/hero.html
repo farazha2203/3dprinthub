@@ -12,8 +12,11 @@
       <ul id="sb-slider" class="sb-slider">
         {% for slide in homepage_hero_slides %}
           {% with product=slide.asset.product %}
-            <li{% if product %} itemscope itemtype="https://schema.org/Product"{% endif %}>
-              <a href="{{ slide.target_url }}" aria-label="مشاهده {{ slide.effective_title }}"{% if product %} itemprop="url"{% endif %}>
+            {# A home-page Hero is a visual navigation list, NOT a Product detail.
+               Product rich-result markup lives on the individual Store pages,
+               where real per-Variant Offers are present. #}
+            <li>
+              <a href="{{ slide.target_url }}" aria-label="مشاهده {{ slide.effective_title }}">
                 <img
                   src="{{ slide.effective_image_url }}"
                   alt="{{ slide.effective_alt_text }}"
@@ -21,22 +24,21 @@
                   height="1080"
                   loading="eager"
                   decoding="async"
-                  {% if product %}itemprop="image"{% endif %}
                   {% if forloop.first %}fetchpriority="high"{% endif %}
                 >
               </a>
               <div class="sb-description">
                 {% if product %}
-                  <a class="p50k-slicebox__product-copy" href="{{ slide.target_url }}" itemprop="url">
+                  <a class="p50k-slicebox__product-copy" href="{{ slide.target_url }}">
                     {% if product.seo_focus_keyword %}
                       <span class="p50k-slicebox__keyword">{{ product.seo_focus_keyword }}</span>
                     {% endif %}
                     <h3>
-                      <span itemprop="name">
+                      <span>
                         {% if product.meta_title %}{{ product.meta_title }}{% else %}{{ slide.effective_title }}{% endif %}
                       </span>
                     </h3>
-                    <p itemprop="description">{{ product.meta_description|default:product.short_description }}</p>
+                    <p>{{ product.meta_description|default:product.short_description }}</p>
                     <span class="p50k-slicebox__cta">مشاهده محصول و ثبت سفارش</span>
                   </a>
                 {% else %}

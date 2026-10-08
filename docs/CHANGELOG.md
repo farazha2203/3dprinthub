@@ -1255,3 +1255,9 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - Deployment is gated on test results, GitHub exact SHA, verified Host current state and cPanel quota/backup safety.
 
 REQ-50-040 RELEASED 2026-10-09: GitHub-first guarded rollout to verified Production SHA 2b567c9485ec5b2950d2c2644eb8d19ab425fdea. Exact source/DB rollback checksums PASS, MySQL gzip PASS, Passenger restart, public Google Default Offer parity 6/6 PASS, Host clean. ERR-50-046 quota-parser failed closed on first bootstrap; corrected with offline regression before released SHA. cPanel quota 99%; no cleanup of retained data.
+
+## 2026-10-09 — REQ-50-041 homepage Hero Product structured-data correction
+- Remove invalid Product microdata scope/properties solely from Homepage Slicebox marketing slides. Keep images, titles, descriptions, SEO text, links, controls, 3D vendor assets and canonical URLs unchanged.
+- Existing Store Product/Variant JSON-LD with verified IRR Offers from REQ-50-040 remains the Google pricing authority; do not place cloned Offer/Rating data in homepage snippets.
+- Update existing Slicebox SEO contract and add rendered six-slide regression for complete SSR links and zero Product microdata.
+- Add strict exact-SHA GitHub-to-Host guarded rollout with quota preflight, scoped source + protected env + fresh full MySQL gzip rollback and six-URL public verification, per ERR-49-213.
