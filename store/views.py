@@ -103,6 +103,19 @@ def product_detail_view(request, slug):
         .select_related("material", "quality", "color")
         .order_by("quality__sort_order", "material__sort_order")
     )
+    requested_variant = request.GET.get("variant", "").strip()
+    selected_variant_id = None
+    if requested_variant:
+        selected_variant = next(
+            (
+                variant
+                for variant in variants
+                if str(variant.code).strip() == requested_variant
+            ),
+            None,
+        )
+        if selected_variant is not None:
+            selected_variant_id = int(selected_variant.id)
     comments = product.comments.filter(is_approved=True).select_related("user")
     reviews = product.reviews.filter(is_approved=True).select_related("user")
     is_liked = request.user.is_authenticated and ProductLike.objects.filter(product=product, user=request.user).exists()
@@ -110,6 +123,7 @@ def product_detail_view(request, slug):
     context = {
         "product": product,
         "variants": variants,
+        "selected_variant_id": selected_variant_id,
         "comments": comments,
         "reviews": reviews,
         "comment_form": ProductCommentForm(),

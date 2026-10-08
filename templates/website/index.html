@@ -1,4 +1,4 @@
-﻿{% load static %}
+﻿{% load static store_seo %}
 
 <!DOCTYPE html>
 <html lang="fa" dir="rtl" data-customer-theme="{{ customer_theme|default:'original' }}" data-theme-prompt="{{ customer_theme_prompt|yesno:'1,0' }}" data-theme-endpoint="{{ customer_theme_endpoint }}" data-authenticated="{% if request.user.is_authenticated %}1{% else %}0{% endif %}">
@@ -16,13 +16,15 @@
     <meta name="description" content="{% if settings %}{{ settings.meta_description }}{% else %}خدمات طراحی سه‌بعدی، چاپ سه‌بعدی صنعتی، مهندسی معکوس و ساخت قطعات سفارشی.{% endif %}">
     <meta name="keywords" content="چاپ سه بعدی, چاپ سه‌بعدی صنعتی, طراحی قطعه صنعتی, مهندسی معکوس, ساخت قطعه سفارشی, PET-CF, PA12-CF, PPS-CF, PC-FR, TPU, جیگ و فیکسچر">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="robots" content="{% if seo_settings and not seo_settings.allow_search_indexing %}noindex,nofollow{% else %}index,follow{% endif %}">
+    {% if seo_settings.google_site_verification %}<meta name="google-site-verification" content="{{ seo_settings.google_site_verification }}">{% endif %}
 
     <meta property="og:title" content="3DprintHub.ir | طراحی و ساخت قطعات صنعتی">
     <meta property="og:description" content="طراحی، ساخت، چاپ سه‌بعدی صنعتی و مهندسی معکوس قطعات.">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://3dprinthub.ir">
+    <meta property="og:url" content="{% if seo_settings and seo_settings.site_url %}{{ seo_settings.site_url }}{% else %}https://3dprinthub.ir{% endif %}">
 
-    <link rel="canonical" href="https://3dprinthub.ir">
+    <link rel="canonical" href="{% if seo_settings and seo_settings.site_url %}{{ seo_settings.site_url }}{% else %}https://3dprinthub.ir{% endif %}">
     <link rel="icon" type="image/png" href="{% static 'img/brand/3dprinthublogo.png' %}">
     <link rel="apple-touch-icon" href="{% static 'img/brand/3dprinthublogo.png' %}">
     <meta name="theme-color" content="#FF9800">
@@ -43,23 +45,8 @@
     }
     </style>
 
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "ProfessionalService",
-      "name": "3DprintHub.ir",
-      "url": "https://3dprinthub.ir",
-      "description": "طراحی، چاپ سه‌بعدی صنعتی، مهندسی معکوس و ساخت قطعات سفارشی",
-      "areaServed": "IR",
-      "serviceType": [
-        "طراحی سه‌بعدی",
-        "چاپ سه‌بعدی صنعتی",
-        "مهندسی معکوس",
-        "ساخت قطعات سفارشی",
-        "ساخت جیگ و فیکسچر"
-      ]
-    }
-    </script>
+    {% organization_schema_json seo_settings request as organization_schema %}
+    <script type="application/ld+json">{{ organization_schema }}</script>
     <link rel="stylesheet" href="{% static 'css/brand-theme-preview.css' %}">
 
     <!-- Phase 49.2A: public external ready-model catalog/schema intentionally removed. -->
