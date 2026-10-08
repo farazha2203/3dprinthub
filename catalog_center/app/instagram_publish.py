@@ -10,6 +10,7 @@ from urllib import request as urllib_request
 
 from .secure_secrets import get_secret
 from .social_content_policy import POLICY_VERSION, build_alt_texts, build_caption
+from .social_revision_identity import same_site_revision
 
 
 @dataclass(frozen=True)
@@ -64,7 +65,7 @@ def same_public_revision_already_published(db, product_id: int, fingerprint: str
             previous = json.loads(receipt["payload_json"] or "{}")
         except Exception:
             previous = {}
-        if str(previous.get("site_ack_fingerprint") or "") == fingerprint:
+        if same_site_revision(str(previous.get("site_ack_fingerprint") or ""), fingerprint):
             return True
     return False
 
@@ -201,7 +202,7 @@ def publish_product(db, product_id: int, cfg: InstagramConfig, *, site_url: str)
             previous = json.loads(receipt["payload_json"] or "{}")
         except Exception:
             previous = {}
-        if str(previous.get("site_ack_fingerprint") or "") == fingerprint:
+        if same_site_revision(str(previous.get("site_ack_fingerprint") or ""), fingerprint):
             raise RuntimeError("این نسخه عمومی محصول قبلاً روی Instagram منتشر شده است.")
 
     token = get_secret("instagram_access_token")
