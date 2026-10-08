@@ -2,11 +2,12 @@ import json
 from decimal import Decimal
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, override_settings
 from store.models import Category, PricingSetting, PrintQuality, Product, ProductReview, ProductVariant
 from store.templatetags.store_seo import organization_schema_json, product_schema_json
 from website.models import Material, SEOSettings
 
+@override_settings(SECURE_SSL_REDIRECT=False)
 class ProductSchemaTests(TestCase):
     def setUp(self):
         PricingSetting.objects.create(default_hourly_rate=100000,default_labor_percent=Decimal("30"))
@@ -54,6 +55,7 @@ class ProductSchemaTests(TestCase):
 
     def test_zero_price_variant_is_not_advertised_as_merchant_offer(self):
         self.variant.cached_unit_price=0
+        self.variant.price_breakdown = lambda: {"unit_price": 0}
         request=RequestFactory().get("/store/product/gear/",HTTP_HOST="testserver")
         data=json.loads(str(product_schema_json(self.product,[self.variant],request,self.seo)))
 
@@ -146,12 +148,14 @@ class ProductSchemaTests(TestCase):
 
     def test_unknown_price_never_creates_incomplete_product_or_fake_offer(self):
         self.variant.cached_unit_price = 0
+        self.variant.price_breakdown = lambda: {"unit_price": 0}
         request = RequestFactory().get("/store/product/gear/", HTTP_HOST="testserver")
         data = json.loads(str(product_schema_json(self.product, [self.variant], request, self.seo)))
         self.assertEqual([item["@type"] for item in data["@graph"]], ["BreadcrumbList"])
 
     def test_approved_genuine_review_allows_review_only_product(self):
         self.variant.cached_unit_price = 0
+        self.variant.price_breakdown = lambda: {"unit_price": 0}
         user = User.objects.create_user(username="real_customer", password="test-pass")
         ProductReview.objects.create(
             product=self.product,
@@ -167,3 +171,125 @@ class ProductSchemaTests(TestCase):
         self.assertNotIn("offers", product)
         self.assertEqual(product["aggregateRating"]["reviewCount"], 1)
         self.assertEqual(product["review"][0]["reviewRating"]["ratingValue"], 4)
+
+    def test_default_price_and_google_offer_use_same_first_orderable_variant(self):
+        import re
+
+        response = self.client.get(self.product.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        body = response.content.decode()
+        self.assertIn(f'data-default-variant-id="{self.variant.id}"', body)
+        self.assertIn(f'<option value="{self.variant.id}" selected', body)
+        self.assertIn(f'data-total="{self.variant.price_breakdown()["unit_price"]}"', body)
+        schemas = [
+            json.loads(source)
+            for source in re.findall(r'<script type="application/ld[+]json">(.*?)</script>', body, re.S)
+        ]
+        family = next(
+            item
+            for schema in schemas
+            for item in schema.get("@graph", [])
+            if item.get("@type") == "ProductGroup"
+        )
+        self.assertEqual(
+            family["hasVariant"][0]["offers"]["price"],
+            self.variant.price_breakdown()["unit_price"] * 10,
+        )
+
+    def test_first_filament_then_profile_then_real_first_color_is_default(self):
+        from unittest.mock import patch
+        from store.phase39_models import MaterialColorOption
+
+        self.variant.material.sort_order = 90
+        self.variant.material.save(update_fields=["sort_order"])
+        preferred = Material.objects.create(
+            name="PLA-FIRST", price_per_kg=1000000, sort_order=1,
+            strength=1, heat_resistance=1, flexibility=1,
+            chemical_resistance=1, printability=1, main_usage="test", sample_parts="test",
+        )
+        later_color = MaterialColorOption.objects.create(
+            material=preferred, name="Red", code="red", sort_order=20
+        )
+        earlier_color = MaterialColorOption.objects.create(
+            material=preferred, name="Blue", code="blue", sort_order=10
+        )
+        later = ProductVariant.objects.create(
+            product=self.product, material=preferred, quality=self.variant.quality,
+            color=later_color, code="P-1-PLA-LATER", sales_profile_sort_order=10,
+            material_weight_grams=Decimal("12"), final_weight_grams=Decimal("12"),
+            print_time_minutes=60,
+        )
+        earlier = ProductVariant.objects.create(
+            product=self.product, material=preferred, quality=self.variant.quality,
+            color=earlier_color, code="P-1-PLA-FIRST", sales_profile_sort_order=10,
+            material_weight_grams=Decimal("12"), final_weight_grams=Decimal("12"),
+            print_time_minutes=60,
+        )
+        # Selection-order test only: real color-stock orderability is covered
+        # by the separate fallback test and remains enforced in production.
+        with patch("store.phase50_public_offer.variant_is_orderable", return_value=True):
+            response = self.client.get(self.product.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        body = response.content.decode()
+        self.assertIn(f'data-default-variant-id="{earlier.id}"', body)
+        self.assertIn(f'<option value="{earlier.id}" selected', body)
+        self.assertNotIn(f'data-default-variant-id="{later.id}"', body)
+
+    def test_no_unavailable_or_unpriced_default_but_query_override_works(self):
+        other_material = Material.objects.create(
+            name="PETG-FALLBACK", price_per_kg=1000000, sort_order=50,
+            strength=1, heat_resistance=1, flexibility=1,
+            chemical_resistance=1, printability=1, main_usage="test", sample_parts="test",
+        )
+        fallback = ProductVariant.objects.create(
+            product=self.product, material=other_material, quality=self.variant.quality,
+            code="P-1-FALLBACK", material_weight_grams=Decimal("10"),
+            final_weight_grams=Decimal("10"), print_time_minutes=60,
+        )
+        self.variant.stock_status = "out_of_stock"
+        self.variant.save(update_fields=["stock_status"])
+        response = self.client.get(self.product.get_absolute_url())
+        self.assertIn(
+            f'data-default-variant-id="{fallback.id}"',
+            response.content.decode(),
+        )
+        # Google must prefer the same first orderable Offer, and mark the
+        # skipped variant unavailable without inventing stock.
+        import re
+        body = response.content.decode()
+        graphs = [
+            json.loads(source) for source in re.findall(
+                r'<script type="application/ld[+]json">(.*?)</script>', body, re.S
+            )
+        ]
+        family = next(
+            node for graph in graphs for node in graph.get("@graph", [])
+            if node.get("@type") == "ProductGroup"
+        )
+        self.assertEqual(
+            family["hasVariant"][0]["sku"], fallback.code
+        )
+        self.assertEqual(
+            next(node for node in family["hasVariant"]
+                 if node["sku"] == self.variant.code)["offers"]["availability"],
+            "https://schema.org/OutOfStock",
+        )
+        self.variant.stock_status = "made_to_order"
+        self.variant.save(update_fields=["stock_status"])
+        response = self.client.get(
+            self.product.get_absolute_url(), {"variant": fallback.code}
+        )
+        self.assertIn(
+            f'<option value="{fallback.id}" selected',
+            response.content.decode(),
+        )
+
+    def test_google_offer_uses_current_customer_price_not_stale_cached_price(self):
+        self.variant.cached_unit_price = 1
+        self.variant.price_breakdown = lambda: {"unit_price": 270000}
+        request = RequestFactory().get("/store/product/gear/", HTTP_HOST="testserver")
+        data = json.loads(str(product_schema_json(self.product, [self.variant], request, self.seo)))
+        self.assertEqual(
+            data["@graph"][0]["hasVariant"][0]["offers"]["price"],
+            2700000,
+        )

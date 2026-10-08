@@ -2444,3 +2444,12 @@ Prevention: define allowlists from verified actual baseline-to-target delta, inc
 - Verified old release documentation-only delta and expanded only those 3 paths in the allowlist; Bash syntax and exact diff-path checks PASS. Corrected runner was committed to GitHub before execution.
 - Protected rollout on Production SHA `8e9f395b93f6a31802b951a71fcabbc8171985af` succeeded; pre-deploy source+MySQL backup checksum verified; Host clean; independent public 6/6 PASS.
 - New prevention: check cPanel quota headroom before Git fetch or backup; do not delete customer/backups blindly. Check full Production-baseline-to-GitHub-target diff when constructing guarded allowlist.
+
+
+### ERR-50-045 — Default public product price and Google variant Offer divergence (2026-10-09)
+Environment: isolated Windows Google Product snippets release worktree; owner Search Console follow-up.
+Symptoms: root Product URL did not preselect a real Variant; Product Schema used cached_unit_price but the customer HTML native selector used dynamic price_breakdown; Store ProductGroup could therefore advertise a stale value or an arbitrary initial option.
+Root Cause: different default selection and pricing authority at the HTML/JSON-LD integration boundary. No Production defect attribution claimed without Google recrawl evidence.
+Solution: select first positively priced/orderable material, sales/print profile and color by persisted sort orders, preserve explicit variant URL, and use one memoized live variant.price_breakdown per request for both HTML and Google Product/Offer. No invented ratings, zero prices, shipping or DB edits.
+Local test notes: system Python lacked allauth, so the verified project venv is mandatory; its test suite defaults SECURE_SSL_REDIRECT=1, so run local tests with SECURE_SSL_REDIRECT=0. Inventory-less color fixtures must not be mistaken for orderable real spools.
+Prevention: assert native selected option, visible default amount, Offer amount IRR conversion and existing checkout/variant orderability regressions together; no production deployment without cPanel quota and verified backup/rollback.

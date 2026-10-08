@@ -1245,3 +1245,11 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - Resolved cPanel account quota-blocked Git fetch safely by purging 82.2MB disposable pip cache only; preserved backups, media, DB and other user data.
 - Addressed initial deployment-script allowlist gate by auditing 42 added lines across 3 historical documentation-only files and committing minimal allowlist amendment. No DB migration or Product record modification.
 - Search Console Google-side `Validate Fix` and eventual recrawl are still external and not yet attested.
+
+
+## 2026-10-09 — Product default-price and Google Offer parity
+- Isolated local Product-snippet release worktree: select the first orderable and positively priced material -> sales/print profile -> real color, with deterministic tie-breaks, preserving ?variant preselection.
+- Render a server-side base price with exact material/profile/color identity on Product Detail; leave configurable Variant selection and cart pricing intact.
+- Reuse one live Variant price calculation for HTML selector and Google ProductGroup Product/Offer JSON-LD; ignore stale cached price when quoting public pricing. Prices in JSON-LD are actual Toman x10 in IRR.
+- Preserve fixed-price products, unknown-price/no-review markup and genuine customer reviews; no new migrations.
+- Deployment is gated on test results, GitHub exact SHA, verified Host current state and cPanel quota/backup safety.

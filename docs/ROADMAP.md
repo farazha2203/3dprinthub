@@ -896,3 +896,11 @@ Status: `PRODUCTION VERIFIED / CRAWL ENABLED / SEARCH CONSOLE SUBMISSION NEXT`.
 - [x] Public smoke all six affected Products with individual nonzero variant Offers, no invalid ProductGroup AggregateOffer; independently rechecked 6/6.
 - [ ] Owner's authenticated Search Console URL Inspection/Rich Results live test and `Validate Fix`, then Google re-crawl confirmation.
 - [ ] Increase 2,000MB cPanel account quota or undertake separately authorized retention-aware cleanup; quota report remains ~98%.
+
+
+## REQ-50-040 — Google default product Offer parity (2026-10-09)
+Status: LOCAL_IMPLEMENTED / RELEASE_GATE_PENDING.
+- Deterministic first orderable filament -> sales/print profile -> color, not lowest price; public price comes from the existing variant calculator.
+- Base Product page price and ProductGroup Variant Offer share the same amount, correct Toman/IRR units; user selected variants override the default.
+- Relevant local regressions, exact GitHub release, rollback + Production SEO verification required before PRODUCTION_VERIFIED.
+- cPanel storage quota requires read-only available-space and integrity-checked backup gate before source promotion; do not delete retained backup/customer data.

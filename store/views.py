@@ -98,13 +98,36 @@ def product_detail_view(request, slug):
     product = get_object_or_404(_product_queryset(), slug=slug)
     Product.objects.filter(pk=product.pk).update(view_count=F("view_count") + 1)
 
+    # Customer's default price: first filament -> first print/sales profile
+    # -> first color. Use one stable ordering for HTML and Google JSON-LD.
+    from .phase50_public_offer import first_orderable_variant, public_variant_price
+
     variants = list(
         product.variants.filter(is_active=True)
         .select_related("material", "quality", "color")
-        .order_by("quality__sort_order", "material__sort_order")
+        .order_by(
+            "material__sort_order", "material_id",
+            "sales_profile_sort_order", "color__sort_order", "color_id",
+            "quality__sort_order", "id",
+        )
     )
+    # A real first color precedes the unconfigured/NULL legacy color.
+    # This stable final tie-break also avoids database-specific NULL ordering.
+    variants.sort(key=lambda item: (
+        item.material.sort_order, item.material_id,
+        item.sales_profile_sort_order,
+        item.color_id is None,
+        item.color.sort_order if item.color_id else 0,
+        item.color_id or 0,
+        item.quality.sort_order, item.pk,
+    ))
+    # Cache all customer-visible prices once for page, JSON-LD and native form.
+    # In particular, do not re-run the pricing engine for 48-64 variants.
+    for variant in variants:
+        public_variant_price(variant)
+    default_variant = first_orderable_variant(product, variants)
     requested_variant = request.GET.get("variant", "").strip()
-    selected_variant_id = None
+    selected_variant_id = int(default_variant.id) if default_variant else None
     if requested_variant:
         selected_variant = next(
             (
@@ -123,6 +146,7 @@ def product_detail_view(request, slug):
     context = {
         "product": product,
         "variants": variants,
+        "default_variant": default_variant,
         "selected_variant_id": selected_variant_id,
         "comments": comments,
         "reviews": reviews,

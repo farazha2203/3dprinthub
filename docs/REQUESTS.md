@@ -1068,3 +1068,6 @@ Status: LOCAL_TESTED (41 related Django tests PASS); Production deploy and Googl
 Date: 2026-10-08
 Requested six Google error URLs repaired in shared SEO JSON-LD while keeping only factual prices/ratings. RELEASED exact SHA `8e9f395b93f6a31802b951a71fcabbc8171985af` after source/MySQL protected rollback and 41/41 local tests.
 Production public validation: all six URLs HTTP 200, positive variant IRR Offers, correctly represented ProductGroup without AggregateOffer, independent 6/6 checks PASS. Product/Media/Migrations untouched. External Google `Validate Fix` and Google recrawl remain pending authorized Search Console access.
+
+### REQ-50-040 — Owner-defined default product price / Google parity (2026-10-09)
+The owner requires the default advertised price to come from the first *orderable* filament/material, first print/sales profile, then first color, using the existing persisted sort orders. The price seen in the default Product page and Google ProductGroup hasVariant Offer must be computed from the same real Variant price breakdown, Toman for the customer and IRR (x10) for Google. Preserve explicitly chosen ?variant, inventory/orderability, all other active variants, fixed-price mode, real reviews and checkout authority. No fabricated price/rating, DB rewrite, media or Windows publisher mutation.
