@@ -835,3 +835,26 @@ Status: `LOCAL_TESTED / GITHUB PROMOTION NEXT`. The existing managed Django Hero
 - [ ] Guarded GitHub-first Production deploy + public/readiness verification.
 - [ ] Same-identity Product #536 republish with public Product video HTTP verification and image/variant/pricing parity preserved.
 - [ ] Duplicate-safe Instagram Feed/Story acceptance only after Site receipt and only if current revision has no existing social receipt.
+
+## 2026-10-08 — Phase50.A2T Google Search release
+
+Status: `PRODUCTION VERIFIED / CRAWL ENABLED / SEARCH CONSOLE SUBMISSION NEXT`.
+
+- [x] Verify current Host baseline, clean worktree, MySQL identity and empty migration plan.
+- [x] Harden robots output and preserve private/transactional disallows.
+- [x] Add Home to current root sitemap and keep retired catalog routes out.
+- [x] Add Store Product image sitemap without private model-file leakage.
+- [x] Make global crawl toggle also control rendered public meta robots.
+- [x] Canonicalize/noindex Store query/filter/sort duplicates.
+- [x] Harden ProductGroup/Product variant schema and direct variant preselection.
+- [x] Remove zero-price Offers, unknown-as-free shipping, unverified return-policy markup and obsolete SearchAction.
+- [x] Pass focused/current related Local release gates.
+- [x] Commit/push exact GitHub release and prove Local=Remote.
+- [x] Create verified source/environment/MySQL rollback and deploy ff-only from GitHub.
+- [x] Create second verified rollback immediately before enabling public crawling.
+- [x] Enable `SEOSettings.allow_search_indexing` on Production.
+- [x] Verify Production robots/sitemaps/canonicals/meta robots/Product JSON-LD/direct variant behavior.
+- [ ] Verify/connect Google Search Console property ownership.
+- [ ] Submit `/sitemap.xml` and optionally `/sitemap-images.xml` in Search Console.
+- [ ] URL Inspection: Home, Store, representative Product and direct variant.
+- [ ] Record indexing/merchant enhancement findings; fix only evidence-backed issues.

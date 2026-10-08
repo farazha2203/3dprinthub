@@ -1209,3 +1209,15 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - Release Local gate: 12/12 tests PASS, Django check PASS with known warnings, no migration drift, compile/diff-check PASS.
 - Added `phase50_a2r_video_media_deploy.sh` with exact baseline/target/allowlist/readiness guards and quota-aware scoped source/env + full MySQL rollback verification.
 - Production remains unchanged until release candidate is committed/pushed and the guarded runner passes through the dedicated project router.
+
+## 2026-10-08 — Google Search publication and indexability release
+
+- Added Production-safe Google crawl controls: current robots rules, Home-inclusive sitemap and Product image sitemap.
+- Store faceted query URLs now use `noindex,follow` with clean canonical URLs once public indexing is enabled.
+- Product variant structured data now uses real directly loadable `?variant=<code>` URLs and server-side Variant preselection.
+- Product schema no longer emits zero-price variant Offers, unknown shipping as free, a default/unverified merchant return policy, or obsolete SearchAction markup.
+- Shared Home Organization/WebSite schema now follows configured site identity.
+- Release `2b85a9c0d5d4a79219182bc9b986a5a81e70ed50` deployed ff-only from GitHub after verified source/environment/MySQL rollback.
+- A second verified rollback was taken immediately before the Production indexing switch. `allow_search_indexing` was then changed from false to true.
+- Production verification: robots 200 and open, root sitemap 89 URLs with no private leak, image sitemap 47 Product URLs/96 images, Home/Store/Product indexable, filters noindex+canonical, sample Product/variant structured-data checks PASS.
+- Search Console ownership/submission remains external and unverified; no indexing guarantee is claimed.

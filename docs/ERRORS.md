@@ -2374,3 +2374,43 @@ Resolved and Production verified; do not treat as open without fresh evidence.
 - Pillow `Image.getdata()` deprecation.
 - Google membership credential warning when intentionally unset in CI.
 - Social preview enhancement: dedicated `twitter:title`, `twitter:description`, `twitter:image` and `og:image:alt` remain open; core meta/OG/canonical/schema/sitemap are present.
+
+## ERR-50-038 — Isolated release worktree had no private .env
+**Date:** 2026-10-08
+**Observed:** the first Django test attempt in the clean A2T release worktree stopped before tests because `DJANGO_SECRET_KEY` was absent.
+
+**Root cause:** the selective release worktree intentionally does not copy the private project `.env`; non-debug settings fail closed without a secret.
+
+**Resolution:** do not copy Production or primary-worktree secrets. Run isolated Local tests with `DJANGO_DEBUG=1`, which activates the repository's explicit unsafe-development-only key path. The same release was later verified on Production using the real protected environment.
+
+**Prevention:** clean worktree tests must use documented CI/development-only environment values; never solve an isolated test secret error by copying Production secrets into another checkout.
+
+## ERR-50-039 — Stale mobile Hero asset-version assertion in broad regression
+**Date:** 2026-10-08
+**Observed:** `test_mobile_caption_is_compact_and_description_is_hidden` expected Slicebox asset query version `50.8.0`, but the release tree contains `50.10.0`.
+
+**Root cause:** stale test expectation. The exact untouched Production baseline `2b48a593...` reproduces the same failure before any A2T SEO delta.
+
+**Resolution:** do not regress the accepted Hero to satisfy a stale literal asset-version test. A2T release acceptance used the current Slicebox contract suite and all SEO/schema-related tests; 55/55 current related tests pass.
+
+**Prevention:** asset-cache version assertions must follow the owning Hero phase or test behavior rather than pin an obsolete literal version indefinitely. Prove suspected baseline failures against the exact pre-change commit before editing unrelated source.
+
+## ERR-50-040 — PowerShell verification variable collided with built-in HOME
+**Date:** 2026-10-08
+**Observed:** one post-toggle verification script attempted to assign `$home`, which is case-insensitively the read-only PowerShell `$HOME` variable. The Home check in that command did not run, while the remaining checks completed.
+
+**Resolution:** reran only the failed Home verification with a distinct `$homeResp` variable. Home returned HTTP 200, `index,follow` and apex canonical.
+
+**Prevention:** Windows verification scripts must not reuse automatic/read-only PowerShell variable names. A failed verifier step is rerun only after changing the actual cause.
+
+
+## ERR-50-041 — A2T read-only verifier context/quoting pitfalls
+**Date:** 2026-10-08
+
+**Observed:** two follow-up read-only verification commands failed without mutating Production: `git bundle verify` was first invoked while the shell was inside the backup directory rather than a Git repository, and one `manage.py shell -c` probe lost nested quotes through the Windows-to-Host command wrapper and raised `SyntaxError`.
+
+**Root cause:** verifier execution context and multi-layer shell quoting, not application/runtime failure.
+
+**Resolution:** rerun bundle verification from `/home/sfkilvrs/3dprinthub` while passing the absolute bundle path; it returned `SOURCE_CURRENT_BUNDLE=PASS`. Do not repeat the broken Django shell quoting form; public Home verification was used instead to confirm no `google-site-verification` meta is currently rendered, while the already-successful Host probe confirmed `allow_search_indexing=True`.
+
+**Prevention:** Host verification commands that require repository context must `cd` to the repository explicitly. Avoid deeply nested quoted one-liners through the PowerShell→router→Bash chain; prefer repository scripts, simple single-purpose probes, or public read-only HTTP evidence.

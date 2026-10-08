@@ -262,3 +262,11 @@ Restart alone is not verification; follow with runtime verifier + HTTP/static/da
 - MySQL conditional unique-constraint warnings are known; do not infer a new migration failure from those warnings alone.
 
 Never assume Local Windows/SQLite behavior is valid on Production MySQL/Passenger.
+
+## 2026-10-08 — Current Production verification override
+
+Current verified Production Source is `2b85a9c0d5d4a79219182bc9b986a5a81e70ed50`; Host worktree is clean, Python is 3.12.13, database vendor/name are MySQL / `sfkilvrs_EmiAdmin_3dprinthub`, and the A2T release had zero planned migrations.
+
+The visible Host branch label remains `release/phase50-a2j-hero-20260915` even though its historical remote branch head is not the live source lineage. This reinforces existing ERR-50-007: never derive Production target truth from the Host branch label or stale remote-tracking refs. Always use exact Host HEAD + `git ls-remote` target + explicit `FETCH_HEAD` + ancestry + ff-only promotion.
+
+No new Host limitation was introduced by A2T. Existing CKEditor4, in-memory realtime and MySQL conditional-constraint warnings remain separate known debt.

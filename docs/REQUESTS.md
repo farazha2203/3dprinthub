@@ -1033,3 +1033,20 @@ Implemented and verified: 66 active inventory rows, 64 unique selectable Filamen
 Date: 2026-09-23
 Status: `ACTIVE`.
 Owner requests direct authorized Windows filesystem/shell work instead of GUI Remote Desktop whenever available, and asks long phases to be split into short independently testable/committable checkpoints to reduce timeout loss. All GitHub-first, backup, reverse-tunnel, no-direct-Production-edit and verification gates remain mandatory.
+
+## REQ-50-038 — Publish 3DPrintHub for Google Search
+Date: 2026-10-08
+Status: `SITE RELEASED + PUBLIC CRAWL ENABLED / SEARCH CONSOLE GATE REMAINS`.
+
+Owner requested exact review and implementation of Google publication readiness, including robots.txt, schema and sitemap behavior.
+
+Acceptance achieved on Production:
+- safe public robots policy with transactional/private exclusions;
+- valid root and image sitemaps;
+- Home/Store/Product canonical + robots behavior;
+- ProductGroup/Product variant JSON-LD backed only by real Product/Variant/pricing/media data;
+- no zero-price Offer, fabricated free shipping or unverified return-policy claim;
+- direct Variant URLs preselect the real Variant;
+- public crawl switch enabled only after two verified rollback boundaries and exact GitHub-first deployment.
+
+Remaining acceptance is external: connect/verify the Google Search Console property, submit the sitemap and inspect representative URLs. Search Console access is not inferred from an empty meta-verification setting.

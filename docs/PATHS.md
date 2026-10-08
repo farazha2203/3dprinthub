@@ -225,3 +225,19 @@ This cPanel environment did not provide a reliable `/dev/fd` path for Bash proce
 - Dirty Local/Host worktree: STOP/INSPECT; no reset/delete shortcut.
 - Before Production migration verify exact project root, branch, commit, Python venv, DB vendor/name, backup target and rollback.
 - JSON/API smoke payloads are data, not executable source; use `python - <args>` and explicit `json.load` when verifying endpoint responses.
+
+## 2026-10-08 — Current A2T Google release paths/state override
+
+This section supersedes older Production-HEAD examples above; historical entries remain audit evidence.
+
+- Primary development root: `D:\projects\3DPrintHub`.
+- Clean A2T release worktree: `D:\projects\3DPrintHub-release-a2t-20261008`.
+- Release branch: `release/phase50-a2t-google-indexing-20261008`.
+- Released runtime source: `2b85a9c0d5d4a79219182bc9b986a5a81e70ed50`.
+- Production root: `/home/sfkilvrs/3dprinthub`.
+- Production branch label remains `release/phase50-a2j-hero-20260915`; do not use its stale remote-tracking name as source authority. Exact live GitHub target must be resolved with `git ls-remote` and explicit `FETCH_HEAD` per ERR-50-007.
+- Dedicated Host access remains the registered 3DPrintHub reverse route through Windows loopback `127.0.0.1:22024`.
+- A2T deploy runner: `scripts/host/phase50_a2t_google_indexing_deploy.sh`.
+- Pre-deploy rollback: `/home/sfkilvrs/3dprinthub-deploy-backups/20261008-112619-phase50-a2t-google-indexing`.
+- Pre-index-toggle rollback: `/home/sfkilvrs/3dprinthub-deploy-backups/20261008-112838-pre-google-indexing-toggle`.
+- Public Google endpoints: `https://3dprinthub.ir/robots.txt`, `https://3dprinthub.ir/sitemap.xml`, `https://3dprinthub.ir/sitemap-images.xml`.

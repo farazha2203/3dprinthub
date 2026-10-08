@@ -1521,3 +1521,47 @@ Windows A2R is GitHub-updated through `03808add798da6629c73d4c9bdba71b322a52a14`
 The first isolated-worktree test attempt reproduced existing `ERR-49-192` because no private `.env` is present; no test ran. The documented fix was applied: CI-only test secret/debug/allowed-hosts/test Bridge token and temporary media roots, with no Production secret copied. The rerun passed.
 
 Production mutation at this checkpoint: NO. Exact next task: commit/push `release/phase50-a2r-video-social-20260923`, verify Local=Remote, then execute only `scripts/host/phase50_a2r_video_media_deploy.sh <exact-sha>` through the dedicated 3DPrintHub project router. After deployment, verify public runtime and then republish Product #536 same identity to introduce its canonical motion media.
+
+## 2026-10-08 — Phase50.A2T Google Search publication PRODUCTION VERIFIED
+
+Status: `PRODUCTION_DEPLOYED / GOOGLE CRAWL ENABLED / SEARCH CONSOLE EXTERNAL GATE`.
+
+Verified release lineage:
+- Production pre-release HEAD: `2b48a593ace2e9a3703fa0f52b4c3c13b2751cf9`.
+- GitHub release branch: `release/phase50-a2t-google-indexing-20261008`.
+- deployed exact Source: `2b85a9c0d5d4a79219182bc9b986a5a81e70ed50`.
+- Host worktree: clean; deployment was ff-only from verified GitHub `FETCH_HEAD` through the dedicated 3DPrintHub reverse tunnel.
+- no migration; Production MySQL remains `sfkilvrs_EmiAdmin_3dprinthub`.
+
+Completed:
+- current `robots.txt`, root sitemap, Product image sitemap, canonical/noindex handling and Product/ProductGroup variant schema hardened;
+- Home added to root sitemap; retired Ready Models sitemap remains excluded;
+- filter/search/sort Store URLs are `noindex,follow` with clean canonical;
+- direct `?variant=<code>` URLs preselect the matching real Variant;
+- zero-price merchant Offers, unknown-as-free shipping, unverified return policy and obsolete SearchAction claims are excluded;
+- global SEO kill switch is honored by public templates.
+
+Local/release verification:
+- focused Google/schema: `22/22 PASS`;
+- current related release suite: `55/55 PASS`;
+- Python compile, Django check, no migration drift and diff-check: PASS.
+- one broader mobile-Hero assertion expecting static `v=50.8.0` was reproduced on untouched Production baseline `2b48a593...`, where current Hero is already `v=50.10.0`; it is stale baseline debt, not an A2T regression.
+
+Rollback evidence:
+- pre-deploy: `/home/sfkilvrs/3dprinthub-deploy-backups/20261008-112619-phase50-a2t-google-indexing`;
+- pre-index-toggle: `/home/sfkilvrs/3dprinthub-deploy-backups/20261008-112838-pre-google-indexing-toggle`;
+- both include verified source/environment evidence and valid checksum-verified MySQL gzip backups.
+
+Production after enable:
+- `SEOSettings.allow_search_indexing=True`;
+- `/robots.txt` HTTP 200, public crawl allowed, private/transactional disallows present, both sitemap URLs advertised;
+- root sitemap: valid XML, 89 URLs, private leak count 0;
+- image sitemap: valid XML, 47 Product URLs / 96 image URLs;
+- Home and Store: HTTP 200, `index,follow`;
+- filtered Store sample: `noindex,follow` + clean Store canonical;
+- Product sample: HTTP 200, `index,follow`, self-canonical, valid ProductGroup JSON-LD, direct variant URLs, no zero-price Offer/unverified return policy/obsolete SearchAction;
+- direct variant sample URL: HTTP 200 and correct server-side Variant preselection.
+
+Current external blocker: Search Console property access has not yet been connected/verified. The project setting for `google-site-verification` is empty, so no Search Console ownership or sitemap submission is claimed. Exact next step is Search Console property verification/access → submit root sitemap → URL Inspection on Home/Store/Product/direct variant → record coverage/enhancement results.
+
+Canonical phase: `docs/phases/PHASE50_A2T_GOOGLE_POST_READINESS.md`.

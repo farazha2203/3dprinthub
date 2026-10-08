@@ -38,3 +38,21 @@ Deployment is ff-only from fetched GitHub source, followed by Django checks, `co
 Store Product deletion is intentionally separate from source deployment. After the new runtime is live, `scripts/host/phase50_store_reset_prepare.py` plus the authenticated Store Reset endpoint require a fresh real MySQL gzip dump, exact live-count manifest, and checksum-identical Product media backup before deletion is allowed.
 
 Never upload permanent source directly over FTP/FTPS and never bypass GitHub-first promotion. Reverse management uses only the dedicated 3DPrintHub `PrintHubTunnel`; other project tunnels must not be modified.
+
+## 2026-10-08 — Phase50.A2T Google Search guarded deployment
+
+Production was verified clean at `2b48a593ace2e9a3703fa0f52b4c3c13b2751cf9` before this release. Target branch: `release/phase50-a2t-google-indexing-20261008`; deployed target: `2b85a9c0d5d4a79219182bc9b986a5a81e70ed50`.
+
+Runner: `scripts/host/phase50_a2t_google_indexing_deploy.sh`.
+
+The runner requires exact baseline, clean Host worktree, correct repository, exact MySQL identity, empty migration plan, exact live GitHub target SHA, explicit branch fetch and fast-forward ancestry. Its allowlist is limited to the A2T Google files and rejects migrations, dependency/settings/environment changes.
+
+Before promotion it creates and verifies a Git bundle, protected environment copy and real MySQL gzip backup. Promotion is `git merge --ff-only` from the exact fetched GitHub commit, followed by compile/check/no-drift, collectstatic, Passenger restart and public pre-indexing smoke. It deliberately does not enable indexing.
+
+Verified deployment rollback:
+`/home/sfkilvrs/3dprinthub-deploy-backups/20261008-112619-phase50-a2t-google-indexing`.
+
+A second independent rollback boundary was then created and verified before the only stateful Google publication action:
+`/home/sfkilvrs/3dprinthub-deploy-backups/20261008-112838-pre-google-indexing-toggle`.
+
+After DB identity/head/worktree checks, `SEOSettings.allow_search_indexing` was transactionally changed from false to true and the public endpoints were reverified. Search Console submission remains separate from source deployment and requires verified Google property access.
