@@ -49,3 +49,9 @@ Sitemap audit baseline:
 6. Raise cPanel storage allocation or perform separately approved, retention-aware safe cleanup while preserving verified rollback; 4 MB remaining is unsafe for even a fresh full MySQL gzip backup + Git transfer.
 
 Next exact gate: commit/push tested A2U source and docs from isolated branch to verified GitHub release (no Host mutation). Wait for cPanel quota ≥ documented fresh backup/deploy reserve before exact-SHA guarded Production deploy. Then re-run live public crawl and Google validation; do not prematurely mark PRODUCTION_VERIFIED.
+
+## 2026-10-09 — GitHub-only release closure
+- Exact tested source pushed to GitHub branch release/phase50-a2t-google-indexing-20261008: `6751ab85350683e080bfd54b19cb7d4224d72d55`; local branch/worktree clean at same source SHA.
+- Final after standard-library-only test parser correction: broad 62/62 Django tests PASS, Python compile/Django system check/no migration drift/diff-check PASS.
+- Production remains on earlier verified source `c4cf19504081b8ccc9ed9cbeed392d44745a24ba`. No attempt to fetch/deploy/write DB made in A2U: official cPanel quota 1996/2000MB cannot safely guarantee fresh source/.env/full MySQL rollback and operational headroom. Existing valid backups preserved.
+- Status `GITHUB_UPDATED / PRODUCTION_BLOCKED_QUOTA`; external Search Console evidence and verified post-deploy sitemap target remain pending. Next: quota expansion or separately authorized retention-aware remediation; run exact-SHA safe deployment, audit 63 indexable sitemap URLs if inventory unchanged, confirm original Product price/variant schema and no new rich-result errors.

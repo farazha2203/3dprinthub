@@ -928,3 +928,5 @@ Status: LOCAL_TESTED / GITHUB_RELEASE_NEXT / PRODUCTION_BLOCKED_BY_4_MB_CPANEl_H
 - [ ] Get Search Console Performance/Page Indexing data and measured Lighthouse/CrUX CWV for real SEO competitiveness, not invented scores.
 - [ ] Select genuine share images for 42 pages, product editorial/content review.
 Parallel earlier Phase50.A2R Video/Site/Instagram acceptance remains pending as documented; do not post duplicate Feed/Story or republish a Product without exact Site receipt and approval gates.
+
+A2U GITHUB_UPDATED checkpoint 2026-10-09: tested exact source SHA `6751ab85350683e080bfd54b19cb7d4224d72d55` pushed to GitHub release branch (Local=GitHub, clean), 62/62 regression PASS. Production unchanged at c4cf1950 because official account quota 1996/2000 MB; no database/source rollback capacity for a safe Host deploy. Update prior unchecked GitHub task to PASS by this later closure checkpoint; remaining blocked gate is Host capacity and fresh protected rollback, then SEO live re-crawl/owner Search Console. Do not delete protected backups.
