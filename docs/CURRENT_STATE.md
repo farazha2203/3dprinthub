@@ -1576,3 +1576,12 @@ Search Console ownership was checked read-only before any Google-side mutation. 
 Status: `PRODUCTION_VERIFIED / CRAWL_ENABLED / SEARCH_CONSOLE_ACCESS_REQUIRED`.
 
 No sitemap submission, URL Inspection, request-indexing, DNS change, source change or Production DB change was performed in this continuation. Exact next task is authenticated Search Console property access/ownership; after that, submit `/sitemap.xml`, inspect Home/Store/Product/direct-variant, and record Google indexing/enhancement evidence.
+
+
+## 2026-10-08 — A2T external auth path reverified / still BLOCKED_EXTERNAL
+
+Continuation reconstructed state instead of retrying Google-side actions. Local release branch remains clean and GitHub-equal at `b880e4312757dab193e5cb3b993cebb10ec15971`; the dedicated 3DPrintHub reverse tunnel is healthy and Production remains clean at runtime `2b85a9c0d5d4a79219182bc9b986a5a81e70ed50`.
+
+Production has Google OAuth client credentials only for the existing Django-allauth login integration. Repository settings confirm its scopes are exactly `profile` and `email`; this does not authorize Search Console APIs. No Search Console-specific credential/session was found. The remaining A2T gate is therefore real, not a crash/timeout artifact.
+
+Exact next safe action remains authenticated Search Console access/property ownership. Because that predecessor gate is unfinished, continuation must not auto-start a successor Phase50 slice. Production/source/DB mutation in this continuation: NO.

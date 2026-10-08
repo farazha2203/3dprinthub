@@ -870,3 +870,11 @@ Status: `PRODUCTION VERIFIED / CRAWL ENABLED / SEARCH CONSOLE SUBMISSION NEXT`.
 - [ ] Submit `/sitemap.xml`; submit image sitemap separately only if useful after property access.
 - [ ] URL Inspection for Home, Store, representative Product and direct Variant URL.
 - [ ] Record Page Indexing / Product enhancement findings and create only evidence-backed fixes.
+
+
+### 2026-10-08 — A2T auth-boundary verification
+- [x] Recheck whether existing Production Google OAuth credentials can authorize Search Console.
+- [x] Confirm existing OAuth is Django-allauth sign-in only with `profile` + `email` scopes.
+- [x] Confirm no Search Console-specific credential/session is available in the verified project execution context.
+- [ ] Obtain authenticated Search Console property access/ownership.
+- [ ] Only then submit sitemap and run URL Inspection; do not start a successor phase while this predecessor gate remains unfinished.

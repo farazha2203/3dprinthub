@@ -121,3 +121,10 @@ Read-only ownership evidence was rechecked before attempting any Google-side act
 Conclusion: the Site is technically crawlable/indexable, but Search Console ownership/access still cannot be truthfully asserted from available authenticated tools. No Search Console property was created, no sitemap was submitted through Search Console, and no URL Inspection/request-indexing action was claimed.
 
 Exact next external gate: connect an authenticated Google Search Console property for the domain/URL-prefix, then verify ownership, submit the root sitemap, inspect representative canonical URLs, and record coverage/enhancement results. No source or Production mutation is justified until that external evidence exists.
+
+
+## 2026-10-08 — Auth path verification after continuation
+
+The external gate was rechecked rather than blindly retried. Production does contain configured `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET`, but repository settings prove these credentials belong to the existing Django-allauth sign-in flow and request only `profile` + `email` scopes. They are not evidence of Search Console authorization and must not be reused or treated as Search Console access without a separate Google consent/scoping flow.
+
+No repository credential/file for Search Console was found, and no authenticated Search Console connector/session is currently available to this execution context. Therefore the predecessor gate is still genuinely unfinished; automatic successor-phase start is not permitted by the continuation rule. No Production/source/DB mutation was performed.

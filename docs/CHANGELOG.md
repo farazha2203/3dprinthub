@@ -1227,3 +1227,8 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - Reverified A2T release/GitHub/Host state without changing Production.
 - Confirmed no public HTML meta ownership token, no apex `google-site-verification` TXT record on either authoritative DNS server, and no root Google ownership HTML file.
 - Search Console submission remains blocked only on authenticated property access/ownership; no Google-side submission or inspection is claimed.
+
+
+## 2026-10-08 — A2T Search Console auth boundary clarified
+- Verified that Production Google OAuth credentials are limited to the existing Django-allauth `profile`/`email` login flow and do not establish Search Console authorization.
+- No Search Console-specific credential/session was found; the external ownership/access gate remains the exact blocker with no Production mutation.
