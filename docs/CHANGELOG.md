@@ -1238,3 +1238,10 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - Standalone fixed-price Product emits a direct Offer in IRR only if the actual fixed selling price is positive; unknown-price items never emit fabricated offers or fake reviews.
 - Added exact regression coverage for variant/fixed/unknown-price/approved-review contracts (41 selected tests PASS).
 - No pricing, product records, SQL migration, image pipeline or checkout behavior changed. GitHub/Production promotion pending.
+
+## 2026-10-08 — Google Product snippets released and Production verified
+- Published exact SHA `8e9f395b93f6a31802b951a71fcabbc8171985af` via GitHub-first, dedicated Host reverse tunnel, verified pre-deploy source+MySQL rollback and Passenger restart.
+- 41/41 selected Local tests PASS; 6/6 reported Product URLs externally HTTP 200 with valid individual Variant IRR Offers and no redundant ProductGroup AggregateOffer. Exact Production Git SHA clean.
+- Resolved cPanel account quota-blocked Git fetch safely by purging 82.2MB disposable pip cache only; preserved backups, media, DB and other user data.
+- Addressed initial deployment-script allowlist gate by auditing 42 added lines across 3 historical documentation-only files and committing minimal allowlist amendment. No DB migration or Product record modification.
+- Search Console Google-side `Validate Fix` and eventual recrawl are still external and not yet attested.

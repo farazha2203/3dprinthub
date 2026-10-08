@@ -887,3 +887,12 @@ Status: `PRODUCTION VERIFIED / CRAWL ENABLED / SEARCH CONSOLE SUBMISSION NEXT`.
 - [ ] Promote exact reviewed SHA to GitHub release and deploy with rollback from dedicated 3DPrintHub tunnel.
 - [ ] Verify public JSON-LD for all six URL paths and cache/bot-visible behavior.
 - [ ] Request re-crawl/Validate Fix in owner's authenticated Google Search Console; only Google can close the external enhancement status.
+
+### REQ-50-039 closure — 2026-10-08
+- [x] 41/41 Local regression gates, syntax and no-migration-drift checks.
+- [x] Exact SHA commit/push; audited documentation delta; verified 3DPrintHub-only tunnel.
+- [x] Source and MySQL checksum-verified pre-deploy rollback.
+- [x] GitHub-only exact SHA Production deploy `8e9f395b93f6a31802b951a71fcabbc8171985af`; clean Host.
+- [x] Public smoke all six affected Products with individual nonzero variant Offers, no invalid ProductGroup AggregateOffer; independently rechecked 6/6.
+- [ ] Owner's authenticated Search Console URL Inspection/Rich Results live test and `Validate Fix`, then Google re-crawl confirmation.
+- [ ] Increase 2,000MB cPanel account quota or undertake separately authorized retention-aware cleanup; quota report remains ~98%.

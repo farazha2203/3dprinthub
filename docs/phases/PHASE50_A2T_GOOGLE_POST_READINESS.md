@@ -134,3 +134,13 @@ Six public Product URLs were flagged by Google Search Console with missing offer
 Implemented local ProductGroup/hasVariant cleanup and explicit fixed-price/unknown-price/review-only rich-result gates, without modifying Store business pricing, inventory, Product data or Google Auth.
 Validation: 41 relevant Django tests PASS; Python compile, Django check (known warnings), no migration drift and diff-check PASS. Rollback/Production deploy pending exact GitHub release proof.
 Search Console external access remains unconnected to this execution environment; the owner may have authenticated UI access as proven by the supplied Search Console report. Request Google Validate Fix only after the live six-URL smoke gate passes.
+
+## 2026-10-08 — Product snippets REQ-50-039 Production release closure
+Status: `PRODUCTION_VERIFIED / SEARCH_CONSOLE_VALIDATE_FIX_PENDING`.
+- Site-runtime source exact SHA `8e9f395b93f6a31802b951a71fcabbc8171985af`; unchanged real variant pricing/checkout/media/DB.
+- Verified Local 41/41; runner Bash/embedded Python checks; no schema migrations; exact GitHub target.
+- Dedicated Host tunnel healthy; predeploy source bundle/environment and MySQL gzip rollback checksums PASS in `/home/sfkilvrs/3dprinthub-deploy-backups/20261008-203110-product-snippet`.
+- Controlled GitHub fast-forward, collectstatic, Passenger restart and Product smoke `PRODUCT_SNIPPET_DEPLOY=PASS`; Host clean.
+- All six Google-reported Product URLs independently HTTP 200, 48/64 individual variants each carrying positive IRR Offer; invalid AggregateOffer removed. No fabricated Review/Rating/Offer.
+- ERR-50-043 cPanel 2GB account-level storage quota was exceeded despite 509GB free server filesystem; resolved fetch by only purging 82.2MB disposable pip cache; quota still ~98%. ERR-50-044 allowlist accounted for three previously approved documentation-only release paths, after exact read-only audit.
+- No authenticated Search Console operation has been performed. Next: in owner's verified property URL Inspection Live Test, then Product snippets `Validate Fix`/request re-crawl and confirm Google re-evaluation. Independently address constrained cPanel quota under protected backup-retention policy.

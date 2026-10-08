@@ -241,3 +241,10 @@ This section supersedes older Production-HEAD examples above; historical entries
 - Pre-deploy rollback: `/home/sfkilvrs/3dprinthub-deploy-backups/20261008-112619-phase50-a2t-google-indexing`.
 - Pre-index-toggle rollback: `/home/sfkilvrs/3dprinthub-deploy-backups/20261008-112838-pre-google-indexing-toggle`.
 - Public Google endpoints: `https://3dprinthub.ir/robots.txt`, `https://3dprinthub.ir/sitemap.xml`, `https://3dprinthub.ir/sitemap-images.xml`.
+
+## 2026-10-08 — Product Schema release canonical verified runtime
+- Production root remains `/home/sfkilvrs/3dprinthub`; live code SHA `8e9f395b93f6a31802b951a71fcabbc8171985af`.
+- GitHub release branch `release/phase50-a2t-google-indexing-20261008` (runtime SHA as above; future documentation-only HEAD can be ahead without a new runtime deployment).
+- Isolated Local fix worktree `D:\projects\.worktrees\3dprinthub\product-snippet-20261008`, branch `fix/phase50-product-snippet-20261008`; original `D:\projects\3DPrintHub` WIP untouched.
+- Verified Host rollback `/home/sfkilvrs/3dprinthub-deploy-backups/20261008-203110-product-snippet`.
+- Project-specific Windows↔Host remote bridge: `127.0.0.1:22024`, through `D:\projects\.chatgpt-gateway\project-host.ps1 -Project 3dprinthub` only.

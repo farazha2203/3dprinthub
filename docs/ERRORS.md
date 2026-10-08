@@ -2438,3 +2438,9 @@ Observed: Product snippet Host runner pre-mutation rejected `unexpected_delta:do
 Root cause: new runner compared actual Production HEAD `2b85a9c0` to newer release head, whose already approved docs-only commits also added `docs/DEPLOYMENT.md`, `docs/PATHS.md`, `docs/HOST_CONSTRAINTS.md` (42 added lines total). The first allowlist omitted these three inert documentation paths.
 Resolution: reviewed exact target-vs-Production `git diff`; extended allowlist only for these three documented historical paths. No runtime file, migration, dependency, settings, environment or data permissions expanded.
 Prevention: define allowlists from verified actual baseline-to-target delta, including any intervening docs-only commits; never loosen runtime surface acceptance generically. Do not retry failed runner until corrected code is committed/pushed.
+
+### ERR-50-043 / ERR-50-044 closure — 2026-10-08
+- Quota condition changed and reverified with cPanel StatsBar, not filesystem `df`; GitHub fetch exact `8e9f395b...` succeeded after regenerable `pip cache purge`.
+- Verified old release documentation-only delta and expanded only those 3 paths in the allowlist; Bash syntax and exact diff-path checks PASS. Corrected runner was committed to GitHub before execution.
+- Protected rollout on Production SHA `8e9f395b93f6a31802b951a71fcabbc8171985af` succeeded; pre-deploy source+MySQL backup checksum verified; Host clean; independent public 6/6 PASS.
+- New prevention: check cPanel quota headroom before Git fetch or backup; do not delete customer/backups blindly. Check full Production-baseline-to-GitHub-target diff when constructing guarded allowlist.

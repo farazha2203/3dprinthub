@@ -56,3 +56,9 @@ A second independent rollback boundary was then created and verified before the 
 `/home/sfkilvrs/3dprinthub-deploy-backups/20261008-112838-pre-google-indexing-toggle`.
 
 After DB identity/head/worktree checks, `SEOSettings.allow_search_indexing` was transactionally changed from false to true and the public endpoints were reverified. Search Console submission remains separate from source deployment and requires verified Google property access.
+
+## 2026-10-08 — Product snippets guarded deploy (verified)
+The no-migration SEO-only release is `8e9f395b93f6a31802b951a71fcabbc8171985af` on GitHub release branch `release/phase50-a2t-google-indexing-20261008`. Production HEAD is the same exact commit and clean despite historical Host branch label `release/phase50-a2j-hero-20260915`.
+Deploy runner from target Git object: `scripts/host/phase50_product_snippet_deploy.sh`; it verifies exact clean source, actual GitHub target, ff-only ancestry, source/document path allowlist, DB vendor/name, zero pending migrations; creates validated git bundle and MySQL gzip backup, then ff-only merges exact fetched SHA, checks, collectstatic, Passenger restart and six public Product JSON-LD smoke tests.
+Verified backup `/home/sfkilvrs/3dprinthub-deploy-backups/20261008-203110-product-snippet` (source bundle + protected env copy + compressed MySQL with checksums), prior HEAD `2b85a9c0d5d4a79219182bc9b986a5a81e70ed50`.
+Terminal `PRODUCT_SNIPPET_DEPLOY=PASS`, independent 6/6 public PASS, no DB migration. Account disk quota only 2000MB and last reported 1961MB used; future Deploy requires quota headroom and rollback preparation. Google Search Console issue resolution requires authenticated validation/re-crawl separately.

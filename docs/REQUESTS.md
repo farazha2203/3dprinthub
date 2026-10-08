@@ -1063,3 +1063,8 @@ Date: 2026-10-08
 Owner supplied Search Console Product snippets evidence for #152, #301, #670, #967, #971 and #973: "Either offers, review, or aggregateRating should be specified". Owner explicitly requested correction.
 Scope: shared store Product JSON-LD, no Product price/data edits and no invented reviews/ratings/offers. Use exact verified values and Google ProductGroup/hasVariant conventions; preserve existing site publishing and transactions.
 Status: LOCAL_TESTED (41 related Django tests PASS); Production deploy and Google's re-crawl/Validate Fix not yet confirmed.
+
+### REQ-50-039 — Product snippets owner request: Production acceptance
+Date: 2026-10-08
+Requested six Google error URLs repaired in shared SEO JSON-LD while keeping only factual prices/ratings. RELEASED exact SHA `8e9f395b93f6a31802b951a71fcabbc8171985af` after source/MySQL protected rollback and 41/41 local tests.
+Production public validation: all six URLs HTTP 200, positive variant IRR Offers, correctly represented ProductGroup without AggregateOffer, independent 6/6 checks PASS. Product/Media/Migrations untouched. External Google `Validate Fix` and Google recrawl remain pending authorized Search Console access.
