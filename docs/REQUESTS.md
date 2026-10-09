@@ -1462,3 +1462,66 @@ Completed with reversible cleanup: current runtime/source, canonical Git anchor/
 REQ-50-046: user requested continuation of A2R through actual Windows Desktop application. W5 shortcut source verified, localized rev1/rev2 Buffer/Instagram idempotency patch LOCAL_TESTED on active runtime, no historical rev1 Feed/Story replay. Next GitHub-only selective code release, then bounded Desktop foreground and lineage reconciliation. Product #536 site media already working and Product remains review, not auto-postable.
 
 REQ-50-046 continuation closure 2026-10-09: actual Desktop Windows W5 source patch, 68 distinct social regressions PASS, local GitHub code SHA b3c89f46, actual Qt VerifyOnly+launch PASS and active pythonw commandline references correct W5 path. Historical #536 video Site HTTP200 and old social rev1 receipts remain untouched. Next W5C GUI evidence + GitHub lineage convergence, not automatic rev2 posts.
+## REQ-50-034 — Direct command execution and shorter phase checkpoints
+Date: 2026-09-23
+Status: `ACTIVE`.
+Owner requests direct authorized Windows filesystem/shell work instead of GUI Remote Desktop whenever available, and asks long phases to be split into short independently testable/committable checkpoints to reduce timeout loss. All GitHub-first, backup, reverse-tunnel, no-direct-Production-edit and verification gates remain mandatory.
+
+## REQ-50-038 — Publish 3DPrintHub for Google Search
+Date: 2026-10-08
+Status: `SITE RELEASED + PUBLIC CRAWL ENABLED / SEARCH CONSOLE GATE REMAINS`.
+
+Owner requested exact review and implementation of Google publication readiness, including robots.txt, schema and sitemap behavior.
+
+Acceptance achieved on Production:
+- safe public robots policy with transactional/private exclusions;
+- valid root and image sitemaps;
+- Home/Store/Product canonical + robots behavior;
+- ProductGroup/Product variant JSON-LD backed only by real Product/Variant/pricing/media data;
+- no zero-price Offer, fabricated free shipping or unverified return-policy claim;
+- direct Variant URLs preselect the real Variant;
+- public crawl switch enabled only after two verified rollback boundaries and exact GitHub-first deployment.
+
+Remaining acceptance is external: connect/verify the Google Search Console property, submit the sitemap and inspect representative URLs. Search Console access is not inferred from an empty meta-verification setting.
+
+
+### REQ-50-038 continuation — Search Console external gate
+Date: 2026-10-08
+Status: `PUBLICATION READY / AUTHENTICATED SEARCH CONSOLE ACCESS REQUIRED`.
+
+The Google-facing site implementation is live and crawl-enabled. Ownership preflight found no public meta/DNS/root-file ownership evidence for `3dprinthub.ir`; therefore sitemap submission and URL Inspection remain intentionally unclaimed until authenticated Search Console property access is connected and verified.
+
+### REQ-50-039 — Google Product snippets: six live Product errors
+Date: 2026-10-08
+Owner supplied Search Console Product snippets evidence for #152, #301, #670, #967, #971 and #973: "Either offers, review, or aggregateRating should be specified". Owner explicitly requested correction.
+Scope: shared store Product JSON-LD, no Product price/data edits and no invented reviews/ratings/offers. Use exact verified values and Google ProductGroup/hasVariant conventions; preserve existing site publishing and transactions.
+Status: LOCAL_TESTED (41 related Django tests PASS); Production deploy and Google's re-crawl/Validate Fix not yet confirmed.
+
+### REQ-50-039 — Product snippets owner request: Production acceptance
+Date: 2026-10-08
+Requested six Google error URLs repaired in shared SEO JSON-LD while keeping only factual prices/ratings. RELEASED exact SHA `8e9f395b93f6a31802b951a71fcabbc8171985af` after source/MySQL protected rollback and 41/41 local tests.
+Production public validation: all six URLs HTTP 200, positive variant IRR Offers, correctly represented ProductGroup without AggregateOffer, independent 6/6 checks PASS. Product/Media/Migrations untouched. External Google `Validate Fix` and Google recrawl remain pending authorized Search Console access.
+
+### REQ-50-040 — Owner-defined default product price / Google parity (2026-10-09)
+The owner requires the default advertised price to come from the first *orderable* filament/material, first print/sales profile, then first color, using the existing persisted sort orders. The price seen in the default Product page and Google ProductGroup hasVariant Offer must be computed from the same real Variant price breakdown, Toman for the customer and IRR (x10) for Google. Preserve explicitly chosen ?variant, inventory/orderability, all other active variants, fixed-price mode, real reviews and checkout authority. No fabricated price/rating, DB rewrite, media or Windows publisher mutation.
+
+REQ-50-040 PRODUCTION_VERIFIED 2026-10-09: first real orderable filament/material, print profile, color drives canonical page default price and first Google variant Offer, 41/41 regression PASS, six/six public price parity PASS, deployed exact approved SHA 2b567c9485ec5b2950d2c2644eb8d19ab425fdea with integrity-verified rollback. Owner external Google Search Console Validate Fix still pending.
+
+### REQ-50-041 — Homepage Hero's six invalid Google Product snippets (2026-10-09)
+Owner supplied Search Console URL Inspection for canonical https://3dprinthub.ir/ and rendered HTML from the tested homepage. Google's crawler at 2026-10-09 00:25:25 identified six Product items with missing offers/review/aggregateRating. Unlike REQ-50-039/040, these Product items originate exclusively in the HOME Slicebox HTML microdata, not individual Store ProductGroup/Offer JSON-LD. Requested outcome: keep all six promotional slides, titles, alt texts, images, links, 3D transitions and Store pricing, but stop declaring the listing/homepage teaser cards as independently eligible Product rich results. Product variants retain actual per-Variant Offers on their respective Store detail pages. No fake prices, reviews or ratings. Google recrawl/Validate Fix remains an owner-authenticated external action.
+
+REQ-50-041 status PRODUCTION_VERIFIED (2026-10-09): official Google homepage six-invalid-Product root cause corrected at runtime c4cf19504081b8ccc9ed9cbeed392d44745a24ba. All six Slicebox promos retained as normal HTML content+links; rich ProductGroup/Offer schema remains on their respective Store pages. Local 53/53 PASS, independent Production homepage and six Store smoke PASS, verified source/env/full MySQL rollback. Google Search Console Live Test/Validate Fix is still owner-side pending.
+
+### REQ-50-042 — Continue remaining phases and measure SEO strength (2026-10-09)
+Owner confirmed previous homepage Google fix and authorized continuation plus SEO audit. Results: all 89 sitemap URLs reachable, 47 Product URL; structural Product/Offer/canonical/readiness healthy. Weaknesses: 26 empty Category pages indexed, 25 missing category meta descriptions, 8 repeated external Category snippets, 42 missing OG images, Home Twitter card gap. Actual Google traffic/rank/Core Web Vitals not supplied, so no fabricated SEO score.
+Immediate bounded corrective slice Phase50.A2U: Category metadata uniqueness and indexation/sitemap truth; audited, implemented and 62 relevant Django tests PASS on isolated Local. New public read-only SEO audit utility and Phase doc tracked. No Product/price/Instagram/Windows Publisher/DB change. Next: GitHub push, stop before Production until cPanel quota expansion + fresh rollback can be verified, then public SEO and Search Console validation. Continue Phase50.A2R after safe release gating.
+
+REQ-50-042 intermediate delivery: `GITHUB_UPDATED` exact `6751ab85350683e080bfd54b19cb7d4224d72d55`; A2U Local 62/62 PASS. No Production promotion (Host 1996/2000MB), so owner should not request Google recrawl specifically for category metadata until a fresh, safe deploy is verified. Last homepage six-Product fix remains independently deployed at c4cf1950.
+
+REQ-50-043 — Owner-authorized non-destructive backup/media dedup and obsolete Trash cleanup, 2026-10-09: avoid upgrading cPanel quota; protect active Product images, original imported assets, financial/customer data and recoverable backups. Delivered verified hardlink dedup of 4 identical 46.8MB old backup media archive copies while keeping every backup path, checksum and distinct DB snapshot, and deleted 2 verified obsolete >30d-old Phase48 trash backup dirs. Latest accepted and Oct9 rollback intact. cPanel quota display stale; fsynced 24MiB real-account write test PASS; future Host deploy must use guarded exact-SHA fresh-backup gate and not assume UI cache is current. Next: deploy approved A2U SEO only after writing/validating new full MySQL backup, re-crawl public pages, independently resume A2R.
+
+REQ-50-042 and REQ-50-043 closure (2026-10-09): owner cleanup request executed with safe exact-content dedup and dated Trash backups, latest rollback preserved; A2U SEO category metadata/indexability deployed exact approved GitHub `0277018726cf02e565ba83eb724cfbf8acc523fb` and independently verified live (63/63, 47 Products preserved, 3 empty category noindex, 2 nonempty category index, 0 SEO crawl issues). Phase50.A2U=PRODUCTION_VERIFIED. Next A2R Video/Instagram remains strict Site-first + no duplicate social posts, requiring actual Site ACK/social receipts.
+
+REQ-50-044 (2026-10-09): A2R continuation. Product #536 actual local GIF SHA/bytes and Site rev2 public GIF HTTP200 verified. Historical Buffer Feed/Story sent receipts belong to Site revision1; no new external publication attempted. LOCAL_TESTED idempotency improvement matches positive Site Product identity/revision instead of raw ACK serialization alone, 5 new and 34 related regression PASS. Preserve Windows WIP and existing Product data; reconcile current provider state before any rev2 Instagram action.
+
+REQ-50-047 — Owner "اجرا قانون ادامه" after Windows A2R: run latest Windows v8.9.11 and Production SEO source-lineage convergence with no downgrade, preserve Store/Product/Slider/Social WIP, validate Django/Qt/Gallery, record separate GitHub merge; then W5C real visual acceptance and following W6 source Video/Reel. Execution 2026-10-09: isolated merge LOCAL_TESTED with 124 PASS, 8 conflicts safely reconciled. GitHub merge pending at documentation checkpoint, Host remains 02770187.

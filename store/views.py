@@ -46,12 +46,19 @@ def _product_queryset():
 def product_list_view(request, slug=None):
     products = _product_queryset()
     current_category = None
+    category_has_indexable_products = True
 
     if slug:
         current_category = get_object_or_404(Category, slug=slug, is_active=True)
         category_ids = [current_category.id]
         category_ids.extend(current_category.children.filter(is_active=True).values_list("id", flat=True))
         products = products.filter(category_id__in=category_ids)
+        # Google recommends noindex on empty ecommerce categories. Only
+        # public/indexable products count; search/filter queries are separate.
+        category_has_indexable_products = Product.objects.filter(
+            is_active=True, robots_index=True, category__is_active=True,
+            category_id__in=category_ids,
+        ).exists()
 
     query = request.GET.get("q", "").strip()
     section = request.GET.get("section", "").strip()
@@ -85,6 +92,7 @@ def product_list_view(request, slug=None):
         "materials": Material.objects.filter(is_active=True),
         "qualities": PrintQuality.objects.filter(is_active=True),
         "current_category": current_category,
+        "category_has_indexable_products": category_has_indexable_products,
         "current_sort": sort,
         "query": query,
         "section": section,
@@ -98,11 +106,47 @@ def product_detail_view(request, slug):
     product = get_object_or_404(_product_queryset(), slug=slug)
     Product.objects.filter(pk=product.pk).update(view_count=F("view_count") + 1)
 
+    # Customer's default price: first filament -> first print/sales profile
+    # -> first color. Use one stable ordering for HTML and Google JSON-LD.
+    from .phase50_public_offer import first_orderable_variant, public_variant_price
+
     variants = list(
         product.variants.filter(is_active=True)
         .select_related("material", "quality", "color")
-        .order_by("quality__sort_order", "material__sort_order")
+        .order_by(
+            "material__sort_order", "material_id",
+            "sales_profile_sort_order", "color__sort_order", "color_id",
+            "quality__sort_order", "id",
+        )
     )
+    # A real first color precedes the unconfigured/NULL legacy color.
+    # This stable final tie-break also avoids database-specific NULL ordering.
+    variants.sort(key=lambda item: (
+        item.material.sort_order, item.material_id,
+        item.sales_profile_sort_order,
+        item.color_id is None,
+        item.color.sort_order if item.color_id else 0,
+        item.color_id or 0,
+        item.quality.sort_order, item.pk,
+    ))
+    # Cache all customer-visible prices once for page, JSON-LD and native form.
+    # In particular, do not re-run the pricing engine for 48-64 variants.
+    for variant in variants:
+        public_variant_price(variant)
+    default_variant = first_orderable_variant(product, variants)
+    requested_variant = request.GET.get("variant", "").strip()
+    selected_variant_id = int(default_variant.id) if default_variant else None
+    if requested_variant:
+        selected_variant = next(
+            (
+                variant
+                for variant in variants
+                if str(variant.code).strip() == requested_variant
+            ),
+            None,
+        )
+        if selected_variant is not None:
+            selected_variant_id = int(selected_variant.id)
     comments = product.comments.filter(is_approved=True).select_related("user")
     reviews = product.reviews.filter(is_approved=True).select_related("user")
     is_liked = request.user.is_authenticated and ProductLike.objects.filter(product=product, user=request.user).exists()
@@ -110,6 +154,8 @@ def product_detail_view(request, slug):
     context = {
         "product": product,
         "variants": variants,
+        "default_variant": default_variant,
+        "selected_variant_id": selected_variant_id,
         "comments": comments,
         "reviews": reviews,
         "comment_form": ProductCommentForm(),

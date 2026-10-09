@@ -333,3 +333,32 @@ Rollback/backups root: `D:\projects\3dprinthub-backups`; cleanup rollback eviden
 Desktop shortcut: `C:\Users\Emad-PC\Desktop\3DPrintHub Catalog Center.lnk` -> PowerShell -> `D:\projects\3DPrintHub-a2z-a2r-converge\catalog_center\RUN_QT.ps1`.
 
 Historical runtime/release/Slicebox/Social worktree folders removed on 2026-10-08 are no longer valid execution paths. Recreate from Git branches/rollback evidence only if explicitly needed.
+## 2026-10-08 — Current A2T Google release paths/state override
+
+This section supersedes older Production-HEAD examples above; historical entries remain audit evidence.
+
+- Primary development root: `D:\projects\3DPrintHub`.
+- Clean A2T release worktree: `D:\projects\3DPrintHub-release-a2t-20261008`.
+- Release branch: `release/phase50-a2t-google-indexing-20261008`.
+- Released runtime source: `2b85a9c0d5d4a79219182bc9b986a5a81e70ed50`.
+- Production root: `/home/sfkilvrs/3dprinthub`.
+- Production branch label remains `release/phase50-a2j-hero-20260915`; do not use its stale remote-tracking name as source authority. Exact live GitHub target must be resolved with `git ls-remote` and explicit `FETCH_HEAD` per ERR-50-007.
+- Dedicated Host access remains the registered 3DPrintHub reverse route through Windows loopback `127.0.0.1:22024`.
+- A2T deploy runner: `scripts/host/phase50_a2t_google_indexing_deploy.sh`.
+- Pre-deploy rollback: `/home/sfkilvrs/3dprinthub-deploy-backups/20261008-112619-phase50-a2t-google-indexing`.
+- Pre-index-toggle rollback: `/home/sfkilvrs/3dprinthub-deploy-backups/20261008-112838-pre-google-indexing-toggle`.
+- Public Google endpoints: `https://3dprinthub.ir/robots.txt`, `https://3dprinthub.ir/sitemap.xml`, `https://3dprinthub.ir/sitemap-images.xml`.
+
+## 2026-10-08 — Product Schema release canonical verified runtime
+- Production root remains `/home/sfkilvrs/3dprinthub`; live code SHA `8e9f395b93f6a31802b951a71fcabbc8171985af`.
+- GitHub release branch `release/phase50-a2t-google-indexing-20261008` (runtime SHA as above; future documentation-only HEAD can be ahead without a new runtime deployment).
+- Isolated Local fix worktree `D:\projects\.worktrees\3dprinthub\product-snippet-20261008`, branch `fix/phase50-product-snippet-20261008`; original `D:\projects\3DPrintHub` WIP untouched.
+- Verified Host rollback `/home/sfkilvrs/3dprinthub-deploy-backups/20261008-203110-product-snippet`.
+- Project-specific Windows↔Host remote bridge: `127.0.0.1:22024`, through `D:\projects\.chatgpt-gateway\project-host.ps1 -Project 3dprinthub` only.
+
+## 2026-10-09 safe A2Z/A2U lineage convergence paths
+- Active owner shortcut source preserved: `D:\projects\3DPrintHub-a2z-a2r-converge` / `wip/phase50-a2z-w5-manual-product-20260927` / GitHub `8a8b23bc78b52e145c2b77702bac76ae15a88720`.
+- New isolated merger (not active Desktop launcher): `D:\projects\.worktrees\3dprinthub\phase50-lineage-20261009`; merge branch `merge/phase50-a2z-a2u-lineage-20261009`.
+- Release GitHub tip merged: `0a68496f438d0db36aec471e3aa219f99dbe24ee` (deployed clean Site source ancestor `0277018726cf02e565ba83eb724cfbf8acc523fb`).
+- Protected fresh Catalog online backup: `D:\projects\3dprinthub-backups\phase50-a2r-social-identity-20261009\catalog-before-a2r-social.sqlite3` (1222283264B, SHA256 c87fb9cc64d74d93760d5191b6b172a9a419ce3059c01425b197346bf033f6bd).
+- Actual Production existing rollback retained: `/home/sfkilvrs/3dprinthub-deploy-backups/20261009-020911-phase50-a2u-seo`. Official project gateway unchanged, no Production mutation in this source convergence.

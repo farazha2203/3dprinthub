@@ -120,3 +120,6 @@ The earlier document count `12 failures / 16 errors` is not reproduced by this c
 - GitHub gate passed: commit `83945715bbe50fb2588fc01abb68be363f308fe5`, Local=GitHub exact SHA.
 - Next: final foreground Desktop acceptance on this SHA with isolated Catalog. Do not mark W5C/Desktop ACCEPTED before that gate.
 - Following phase: final Desktop acceptance. Real Instagram send and deploy remain disabled.
+
+## 2026-10-09 — Post-latest SEO lineage merge gallery gate
+In isolated merged branch `merge/phase50-a2z-a2u-lineage-20261009`, selected-media truth `test_phase50_a2z_o2e_media_truth.py` 14/14 PASS and official Qt VerifyOnly (foundation/full parity/operator launcher) PASS. The owner Desktop shortcut remains on original accepted W5 source; no UI select/delete clicks on a disposable Catalog were possible with available current desktop interface. **W5C VISUAL ACCEPTANCE REMAINS OPEN**, notwithstanding headless tests. Retain documented rollback clone, do not delete any Product image or claim manual card selection/reopen success. Next: targetable GUI + disposable verified Catalog clone, then confirm exact visible card/files selected/published, one scoped delete/reload, no unintended media/DB change. Following: W6 Video/Reel.

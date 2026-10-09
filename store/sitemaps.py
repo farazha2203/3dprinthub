@@ -3,15 +3,31 @@ from django.urls import reverse
 from .models import Category, Product, ServicePage
 class StaticViewSitemap(Sitemap):
     priority=0.8; changefreq="weekly"
-    def items(self): return ["store:product_list"]
+    def items(self): return ["website:home", "store:product_list"]
     def location(self,item): return reverse(item)
 class ProductSitemap(Sitemap):
     priority=0.9; changefreq="weekly"
     def items(self): return Product.objects.filter(is_active=True,robots_index=True)
     def lastmod(self,obj): return obj.updated_at
 class CategorySitemap(Sitemap):
-    priority=0.75; changefreq="weekly"
-    def items(self): return Category.objects.filter(is_active=True,robots_index=True)
+    priority = 0.75
+    changefreq = "weekly"
+
+    def items(self):
+        # Sitemap and robots must agree: empty product categories should not
+        # be submitted for indexing. A parent can be indexed when an active
+        # direct child contains indexable products.
+        eligible_category_ids = set()
+        public_products = Product.objects.filter(
+            is_active=True, robots_index=True, category__is_active=True
+        ).values_list("category_id", "category__parent_id")
+        for category_id, parent_id in public_products:
+            eligible_category_ids.add(category_id)
+            if parent_id:
+                eligible_category_ids.add(parent_id)
+        return Category.objects.filter(
+            is_active=True, robots_index=True, id__in=eligible_category_ids
+        )
 class ServicePageSitemap(Sitemap):
     priority=0.85; changefreq="monthly"
     def items(self): return ServicePage.objects.filter(is_active=True,robots_index=True)

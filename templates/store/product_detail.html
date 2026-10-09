@@ -54,6 +54,14 @@
             <div class="text-orange-500 font-bold text-sm">{{ product.category.name }}</div>
             <h1 class="text-2xl md:text-3xl font-black mt-2 leading-snug phase493f-product-title">{{ product.title }}</h1>
             <p class="text-slate-600 leading-7 mt-3 text-sm md:text-base phase493f-product-summary">{{ product.short_description }}</p>
+            {% if default_variant %}
+            <div class="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 mt-4 text-slate-700" data-default-product-price data-default-variant-id="{{ default_variant.id }}">
+                <div class="text-xs text-orange-700 font-bold mb-1">قیمت پایه با اولین فیلامنت، پروفایل چاپ و رنگ قابل سفارش</div>
+                <strong class="text-orange-700 text-lg">{{ default_variant.public_unit_price|intcomma }} تومان</strong>
+                <div class="text-xs text-slate-600 mt-1">{{ default_variant.material.name }}{% if default_variant.color %} — {{ default_variant.color.name }}{% endif %} — {{ default_variant.sales_profile_name|default:default_variant.quality.name }}</div>
+                <p class="text-xs text-slate-500 mt-1">با تغییر گزینه‌ها، قیمت واقعی انتخاب شما محاسبه و نمایش داده می‌شود؛ ارسال در تسویه جداست.</p>
+            </div>
+            {% endif %}
 
             {% if not variants %}
             {% if product.catalog_profile %}
@@ -112,8 +120,8 @@
                 <label for="variant-select" class="block font-black mb-2">انتخاب پروفایل و مشخصات سفارش</label>
                 <select id="variant-select" class="form-input">
                     <option value="">انتخاب کنید</option>
-                    {% for variant in variants %}{% with price=variant.price_breakdown %}
-                    <option value="{{ variant.id }}"
+                    {% for variant in variants %}{% with price=variant.public_price_breakdown %}
+                    <option value="{{ variant.id }}" {% if variant.id == selected_variant_id %}selected{% endif %}
                         data-pricing-strategy="{{ price.pricing_strategy|default:'legacy' }}"
                         data-material="{{ variant.material.name }}"
                         data-quality="{{ variant.quality.name }}"

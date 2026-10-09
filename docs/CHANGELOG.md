@@ -1931,3 +1931,76 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 2026-10-09 A2R actual shortcut LOCAL_TESTED: semantic positive Product/revision matching for Feed duplicate and Buffer provider reconciliation; no operator Story-repeat regression. New5 + Buffer34 + Instagram29 tests PASS; actual W5 Qt launcher VerifyOnly PASS. SQLite rollback c87fb9cc64d74d93760d5191b6b172a9a419ce3059c01425b197346bf033f6bd retained; no external Buffer POST or Site deploy.
 
 A2R Windows accepted code checkpoint 2026-10-09: GitHub exact b3c89f46be14f8c7ec45fc07108c040cd597778f, active Windows shortcut source updated and actual Qt launcher process started (Qt full parity PASS). No new EXE packaging claim, no Product DB/Host changes, no Buffer Post/Story mutation. Production remains 0277018726cf02e565ba83eb724cfbf8acc523fb; explicit merge/release phase needed for future site change.
+## 2026-09-23 — A2R Product motion media selective Server release
+- Based a new release candidate on exact clean Production `e03bdd2b...`, not the stale remote A2J branch head.
+- Selectively ported only the Server receiver video persistence, Product Detail motion-media rendering and dedicated regression from Windows A2R commit `03808add...`.
+- Release Local gate: 12/12 tests PASS, Django check PASS with known warnings, no migration drift, compile/diff-check PASS.
+- Added `phase50_a2r_video_media_deploy.sh` with exact baseline/target/allowlist/readiness guards and quota-aware scoped source/env + full MySQL rollback verification.
+- Production remains unchanged until release candidate is committed/pushed and the guarded runner passes through the dedicated project router.
+
+## 2026-10-08 — Google Search publication and indexability release
+
+- Added Production-safe Google crawl controls: current robots rules, Home-inclusive sitemap and Product image sitemap.
+- Store faceted query URLs now use `noindex,follow` with clean canonical URLs once public indexing is enabled.
+- Product variant structured data now uses real directly loadable `?variant=<code>` URLs and server-side Variant preselection.
+- Product schema no longer emits zero-price variant Offers, unknown shipping as free, a default/unverified merchant return policy, or obsolete SearchAction markup.
+- Shared Home Organization/WebSite schema now follows configured site identity.
+- Release `2b85a9c0d5d4a79219182bc9b986a5a81e70ed50` deployed ff-only from GitHub after verified source/environment/MySQL rollback.
+- A second verified rollback was taken immediately before the Production indexing switch. `allow_search_indexing` was then changed from false to true.
+- Production verification: robots 200 and open, root sitemap 89 URLs with no private leak, image sitemap 47 Product URLs/96 images, Home/Store/Product indexable, filters noindex+canonical, sample Product/variant structured-data checks PASS.
+- Search Console ownership/submission remains external and unverified; no indexing guarantee is claimed.
+
+
+## 2026-10-08 — Search Console ownership preflight
+- Reverified A2T release/GitHub/Host state without changing Production.
+- Confirmed no public HTML meta ownership token, no apex `google-site-verification` TXT record on either authoritative DNS server, and no root Google ownership HTML file.
+- Search Console submission remains blocked only on authenticated property access/ownership; no Google-side submission or inspection is claimed.
+
+
+## 2026-10-08 — A2T Search Console auth boundary clarified
+- Verified that Production Google OAuth credentials are limited to the existing Django-allauth `profile`/`email` login flow and do not establish Search Console authorization.
+- No Search Console-specific credential/session was found; the external ownership/access gate remains the exact blocker with no Production mutation.
+
+## 2026-10-08 — Product snippets Google compliance follow-up (local)
+- Corrected Store ProductGroup JSON-LD: variant-family Offers remain on each real Product variant, while misleading AggregateOffer derived from profile-price ranges is removed.
+- Standalone fixed-price Product emits a direct Offer in IRR only if the actual fixed selling price is positive; unknown-price items never emit fabricated offers or fake reviews.
+- Added exact regression coverage for variant/fixed/unknown-price/approved-review contracts (41 selected tests PASS).
+- No pricing, product records, SQL migration, image pipeline or checkout behavior changed. GitHub/Production promotion pending.
+
+## 2026-10-08 — Google Product snippets released and Production verified
+- Published exact SHA `8e9f395b93f6a31802b951a71fcabbc8171985af` via GitHub-first, dedicated Host reverse tunnel, verified pre-deploy source+MySQL rollback and Passenger restart.
+- 41/41 selected Local tests PASS; 6/6 reported Product URLs externally HTTP 200 with valid individual Variant IRR Offers and no redundant ProductGroup AggregateOffer. Exact Production Git SHA clean.
+- Resolved cPanel account quota-blocked Git fetch safely by purging 82.2MB disposable pip cache only; preserved backups, media, DB and other user data.
+- Addressed initial deployment-script allowlist gate by auditing 42 added lines across 3 historical documentation-only files and committing minimal allowlist amendment. No DB migration or Product record modification.
+- Search Console Google-side `Validate Fix` and eventual recrawl are still external and not yet attested.
+
+
+## 2026-10-09 — Product default-price and Google Offer parity
+- Isolated local Product-snippet release worktree: select the first orderable and positively priced material -> sales/print profile -> real color, with deterministic tie-breaks, preserving ?variant preselection.
+- Render a server-side base price with exact material/profile/color identity on Product Detail; leave configurable Variant selection and cart pricing intact.
+- Reuse one live Variant price calculation for HTML selector and Google ProductGroup Product/Offer JSON-LD; ignore stale cached price when quoting public pricing. Prices in JSON-LD are actual Toman x10 in IRR.
+- Preserve fixed-price products, unknown-price/no-review markup and genuine customer reviews; no new migrations.
+- Deployment is gated on test results, GitHub exact SHA, verified Host current state and cPanel quota/backup safety.
+
+REQ-50-040 RELEASED 2026-10-09: GitHub-first guarded rollout to verified Production SHA 2b567c9485ec5b2950d2c2644eb8d19ab425fdea. Exact source/DB rollback checksums PASS, MySQL gzip PASS, Passenger restart, public Google Default Offer parity 6/6 PASS, Host clean. ERR-50-046 quota-parser failed closed on first bootstrap; corrected with offline regression before released SHA. cPanel quota 99%; no cleanup of retained data.
+
+## 2026-10-09 — REQ-50-041 homepage Hero Product structured-data correction
+- Remove invalid Product microdata scope/properties solely from Homepage Slicebox marketing slides. Keep images, titles, descriptions, SEO text, links, controls, 3D vendor assets and canonical URLs unchanged.
+- Existing Store Product/Variant JSON-LD with verified IRR Offers from REQ-50-040 remains the Google pricing authority; do not place cloned Offer/Rating data in homepage snippets.
+- Update existing Slicebox SEO contract and add rendered six-slide regression for complete SSR links and zero Product microdata.
+- Add strict exact-SHA GitHub-to-Host guarded rollout with quota preflight, scoped source + protected env + fresh full MySQL gzip rollback and six-URL public verification, per ERR-49-213.
+
+REQ-50-041 PRODUCTION_RELEASED (2026-10-09) at exact c4cf19504081b8ccc9ed9cbeed392d44745a24ba. Removed six invalid Product microdata scopes from Home Hero with no visual/SEO text/media/link/Variant/price changes. 53/53 Local regression PASS. Full fresh MySQL gzip + prior Hero HTML + protected env rollback checksum PASS. Initial post-restart smoke observed stale HTML (ERR-50-048); independent public retry after workers stabilized: zero Product scopes on homepage, all six Hero links and Store ProductGroups PASS. No second deploy/DB/source rewrite. Host cPanel quota still ~100%; Google Search Console external revalidation pending.
+
+## 2026-10-09 — Phase50.A2U SEO audit / category indexability (LOCAL_TESTED)
+Public read-only sitemap crawler added (3 simultaneous GET max) and run on all 89 live URLs. Existing technical SEO passed crawl access and Product Offer checks; discovered 25 missing category snippets, one eight-category duplicate-description cluster, 26 empty but sitemap-indexed categories, 42 missing og:image and one absent Twitter card. Added category name-grounded, bounded meta+OpenGraph description fallbacks that preserve explicit editorial metadata; added SEO noindex/sitemap exclusion for empty categories with automatic restoration when an indexable Product appears. No content/price/DB/migration/Windows Catalog/Production modification. Focused 29/29 and broad 62/62 regression, syntax/check/no-migration PASS. Host cPanel ~1996/2000MB, guarded Production release pending verified backup headroom.
+
+A2U GITHUB CHECKPOINT `6751ab85350683e080bfd54b19cb7d4224d72d55` (2026-10-09): 62/62 final Django regressions PASS; compile/check/no-migration/diff PASS. Local and GitHub code match; Host stays at `c4cf1950` due 1996/2000 MB account quota, intentionally not deployed. This is not a Production SEO improvement claim.
+
+Phase50.A2U owner-authorized safe Host quota recovery 2026-10-09: four 46,832,890-byte duplicate old media backup archive copies deduplicated as hardlinks (preserve all archive paths and checksums, unique MySQL DB dumps), physical backup root 501,992→319,036 KiB. Removed only two >30-day-old backups already in cPanel Trash; Trash 107,532→74,108 KiB; preserved active Media, DB, latest verified backup and older historical recovery copy. Official StatsBar cached 1996/2000 but fsynced 24MiB real quota probe PASS, temp removed. Created guarded exact GitHub SHA A2U deployment runner and offline self-test. No Production Source updated by cleanup.
+
+2026-10-09 Phase50.A2U PRODUCTION RELEASE: exact runtime SHA `0277018726cf02e565ba83eb724cfbf8acc523fb`, GitHub-first clean Host ff-only, no migration. Fresh A2U scoped source/protected env/full MySQL gzip snapshot independently hash+gzip validated. After quota-safe cleanup, guarded 48/32MiB actual write-reserve PASS. SEO sitemap 89→63 valid indexable URLs (47 Products unchanged, 7 eligible categories), live complete 63/63 HTTP200 and zero audit issues/duplicate snippets; 3 empty category noindex+2 populated category index verified. Remaining 16 nonempty og:image gaps, Home Twitter card gap. No active Product images, orders, Host secrets or duplicate social posts touched.
+
+Phase50.A2R Windows Social deterministic receipt fix (2026-10-09) LOCAL_TESTED: decoded real Product #536 source manifest + Site ACK and verified existing 12,778,636-byte local GIF and public 200 image/gif video; corrected prior 'missing' classification (ERR-50-051). Found previous Instagram Feed/Story sent receipts apply to Site Product #48 revision1 whereas current Site is revision2. Added shared positive Product ID + positive Site revision matching for Buffer/Direct Instagram Feed and Buffer Story dedup; preserve exact old raw ACK match for compatibility, reject invalid/cross-product. Five new + 34 existing related regressions PASS, compile PASS. No new Instagram publish, canonical Catalog DB write, Production deploy or migration.
+
+2026-10-09 Phase50.A2Z/A2U isolated merger LOCAL_TESTED: latest active W5 Windows head 8a8b23bc plus full GitHub Release SEO tip 0a68496f combined in clean temporary worktree; seven Docs union-preserving merges and one intentional exclusion of older permanent Story lock; test fixture aligned with current new Feed contract. 124 distinct tests PASS, Django check/migration no drift, Qt VerifyOnly PASS. No Catalog, Production DB/Media, Host deploy, Instagram post or Story mutation.

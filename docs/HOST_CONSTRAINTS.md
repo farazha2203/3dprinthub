@@ -282,3 +282,23 @@ Restart alone is not verification; follow with runtime verifier + HTTP/static/da
 - MySQL conditional unique-constraint warnings are known; do not infer a new migration failure from those warnings alone.
 
 Never assume Local Windows/SQLite behavior is valid on Production MySQL/Passenger.
+
+## 2026-10-08 — Current Production verification override
+
+Current verified Production Source is `2b85a9c0d5d4a79219182bc9b986a5a81e70ed50`; Host worktree is clean, Python is 3.12.13, database vendor/name are MySQL / `sfkilvrs_EmiAdmin_3dprinthub`, and the A2T release had zero planned migrations.
+
+The visible Host branch label remains `release/phase50-a2j-hero-20260915` even though its historical remote branch head is not the live source lineage. This reinforces existing ERR-50-007: never derive Production target truth from the Host branch label or stale remote-tracking refs. Always use exact Host HEAD + `git ls-remote` target + explicit `FETCH_HEAD` + ancestry + ff-only promotion.
+
+No new Host limitation was introduced by A2T. Existing CKEditor4, in-memory realtime and MySQL conditional-constraint warnings remain separate known debt.
+
+## 2026-10-08 — cPanel account-level 2GB disk quota, independent of host filesystem
+Source: authenticated Production `uapi --output=json StatsBar get_stats display=diskusage`.
+Account cap 2000 MB. During Product schema release, account used 2040 MB, exceeding quota; Git loose-object creation failed despite 509GB filesystem free and 15% inode use. Only verified disposable pip cache (82.2MB) was purged via installed venv pip; quota then measured 1961/2000MB (~98%). Original Product media/DB/source backups/.trash remain preserved.
+For all future deploys, require cPanel account quota headroom for fetch + verified source/env/MySQL backups, not just `df`; `quota` binary isn't available and `uapi DiskUsage get_disk_usage` module is missing; use `StatsBar get_stats display=diskusage`. Current headroom is narrow; pursue quota expansion or explicitly approved retention strategy rather than blind backup deletion.
+
+## 2026-10-09 — Phase50.A2U updated cPanel quota safety gate
+Latest authenticated 3DPrintHub dedicated reverse tunnel read-only: Host clean runtime c4cf19504081b8ccc9ed9cbeed392d44745a24ba, official cPanel account StatsBar used 1996 MB out of 2000 MB (~99.8%); **only 4 MB remain**. Previous protected full MySQL backup was approximately 3.75 MB gzipped, plus Git transfer/source/env/Passenger operational writes and safety margin. Do not claim safe Production deploy solely because a single DB dump might barely fit. Upgrade account quota or obtain explicit approval for retention-aware removal of checksum-proven redundant backups; never delete current milestone backups, customer data/media, application files, private secrets or valid rollback just to pass a quota gate. New Phase50.A2U changes remain GitHub/Local until headroom and fresh rollback are verified.
+
+## 2026-10-09 — Verified quota cleanup and StatsBar refresh limitation
+3DPrintHub authorized dedicated tunnel audited official account cPanel 1996/2000 MB (cached UI count). Verified physical backup root fell 501,992→319,036 KiB using four byte-identical 46,832,890-byte media archive hardlinks on the same filesystem; every original archive path, checksum, unique DB/source snapshots and Oct9 rollback remain available. cPanel Trash reduced 107,532→74,108 KiB deleting two specifically verified >30-day-old discarded Phase48 backup directories; later original backup and full recent Oct9 rollback retained. Absolutely no active `MEDIA_ROOT`, Product image, imported Product media, DB or Host source changed.
+Official cPanel docs: Disk Usage can report stale values after deletion; account user `sfkilvrs` lacks privileges for the deprecated `cpapi2 --user` disk-usage cache refresh (setuids failed). An actual 24MiB fsynced write under `/home/sfkilvrs/3dprinthub-deploy-backups` PASS and temp file removed proves available writable space despite stale StatsBar _count; not proof of a new hosting quota limit. Dedicated A2U guarded Host deploy runner uses both official quota identity (must be 2000MB) and a 48MiB + 32MiB real fsynced temporary quota reserve before/after GitHub fetch; fail-closed if reserve cannot be established. No `df`-only deployment, no live source editing; fresh scoped source/env/full MySQL checksum-verifiable rollback required.

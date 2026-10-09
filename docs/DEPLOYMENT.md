@@ -31,3 +31,27 @@ Deployment is ff-only from fetched GitHub source, followed by Django checks, `co
 Store Product deletion is intentionally separate from source deployment. After the new runtime is live, `scripts/host/phase50_store_reset_prepare.py` plus the authenticated Store Reset endpoint require a fresh real MySQL gzip dump, exact live-count manifest, and checksum-identical Product media backup before deletion is allowed.
 
 Never upload permanent source directly over FTP/FTPS and never bypass GitHub-first promotion. Reverse management uses only the dedicated 3DPrintHub `PrintHubTunnel`; other project tunnels must not be modified.
+
+## 2026-10-08 — Phase50.A2T Google Search guarded deployment
+
+Production was verified clean at `2b48a593ace2e9a3703fa0f52b4c3c13b2751cf9` before this release. Target branch: `release/phase50-a2t-google-indexing-20261008`; deployed target: `2b85a9c0d5d4a79219182bc9b986a5a81e70ed50`.
+
+Runner: `scripts/host/phase50_a2t_google_indexing_deploy.sh`.
+
+The runner requires exact baseline, clean Host worktree, correct repository, exact MySQL identity, empty migration plan, exact live GitHub target SHA, explicit branch fetch and fast-forward ancestry. Its allowlist is limited to the A2T Google files and rejects migrations, dependency/settings/environment changes.
+
+Before promotion it creates and verifies a Git bundle, protected environment copy and real MySQL gzip backup. Promotion is `git merge --ff-only` from the exact fetched GitHub commit, followed by compile/check/no-drift, collectstatic, Passenger restart and public pre-indexing smoke. It deliberately does not enable indexing.
+
+Verified deployment rollback:
+`/home/sfkilvrs/3dprinthub-deploy-backups/20261008-112619-phase50-a2t-google-indexing`.
+
+A second independent rollback boundary was then created and verified before the only stateful Google publication action:
+`/home/sfkilvrs/3dprinthub-deploy-backups/20261008-112838-pre-google-indexing-toggle`.
+
+After DB identity/head/worktree checks, `SEOSettings.allow_search_indexing` was transactionally changed from false to true and the public endpoints were reverified. Search Console submission remains separate from source deployment and requires verified Google property access.
+
+## 2026-10-08 — Product snippets guarded deploy (verified)
+The no-migration SEO-only release is `8e9f395b93f6a31802b951a71fcabbc8171985af` on GitHub release branch `release/phase50-a2t-google-indexing-20261008`. Production HEAD is the same exact commit and clean despite historical Host branch label `release/phase50-a2j-hero-20260915`.
+Deploy runner from target Git object: `scripts/host/phase50_product_snippet_deploy.sh`; it verifies exact clean source, actual GitHub target, ff-only ancestry, source/document path allowlist, DB vendor/name, zero pending migrations; creates validated git bundle and MySQL gzip backup, then ff-only merges exact fetched SHA, checks, collectstatic, Passenger restart and six public Product JSON-LD smoke tests.
+Verified backup `/home/sfkilvrs/3dprinthub-deploy-backups/20261008-203110-product-snippet` (source bundle + protected env copy + compressed MySQL with checksums), prior HEAD `2b85a9c0d5d4a79219182bc9b986a5a81e70ed50`.
+Terminal `PRODUCT_SNIPPET_DEPLOY=PASS`, independent 6/6 public PASS, no DB migration. Account disk quota only 2000MB and last reported 1961MB used; future Deploy requires quota headroom and rollback preparation. Google Search Console issue resolution requires authenticated validation/re-crawl separately.

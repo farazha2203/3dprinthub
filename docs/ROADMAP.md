@@ -1608,3 +1608,130 @@ Immediately next: final foreground Desktop acceptance on the exact GitHub SHA. F
 2026-10-09 A2R actual Desktop: shortcut resolved to W5 v8.9.11 source, not older canonical branch. Verified SQLite backup, source helper integration only in Buffer Feed and provider reconciliation plus Direct Instagram checks; explicit operator Story-repetition preserved. New5, Buffer34, Instagram29 tests and Qt VerifyOnly PASS. Next selective GitHub commit/push, exact shortcut-launch smoke and W5C gallery visual acceptance; divergent Production/Windows lineage remains a separate blocker before any broad Site deploy. Following phase W6 video/Reel.
 
 2026-10-09 ACTUAL Windows A2R GITHUB_UPDATED/launcher smoke PASS: b3c89f46be14f8c7ec45fc07108c040cd597778f deployed into desktop-shortcut source only. 5+34+29 scoped tests, Qt VerifyOnly PASS, real source-process pythonw confirmed. No Story posted. Remaining W5C gallery UI acceptance and latest Windows/Production lineage convergence before broad Host deployment; following phase W6 Video/Reel, separate changed-revision Social only after Product review/receipts and exact Site authority.
+## 2026-09-23 - Phase50.A2R Product motion media release
+- [x] Windows Catalog/Product video acquisition and social manifest tested and GitHub-updated through `03808add...`.
+- [x] Verify real Product #536 motion media in canonical Catalog SQLite.
+- [x] Audit actual Production Host/HEAD/worktree/runtime through dedicated 3DPrintHub router.
+- [x] Build selective Server release from exact Production SHA `e03bdd2b...`; do not merge divergent Windows WIP wholesale.
+- [x] Server focused/related Local release regression 12/12 + check/no-drift/compile/diff-check PASS.
+- [x] Add quota-aware guarded no-migration deploy runner with scoped runtime/env + full MySQL rollback evidence.
+- [ ] Commit/push release candidate and prove Local=Remote.
+- [ ] Guarded GitHub-first Production deploy + public/readiness verification.
+- [ ] Same-identity Product #536 republish with public Product video HTTP verification and image/variant/pricing parity preserved.
+- [ ] Duplicate-safe Instagram Feed/Story acceptance only after Site receipt and only if current revision has no existing social receipt.
+
+## 2026-10-08 — Phase50.A2T Google Search release
+
+Status: `PRODUCTION VERIFIED / CRAWL ENABLED / SEARCH CONSOLE SUBMISSION NEXT`.
+
+- [x] Verify current Host baseline, clean worktree, MySQL identity and empty migration plan.
+- [x] Harden robots output and preserve private/transactional disallows.
+- [x] Add Home to current root sitemap and keep retired catalog routes out.
+- [x] Add Store Product image sitemap without private model-file leakage.
+- [x] Make global crawl toggle also control rendered public meta robots.
+- [x] Canonicalize/noindex Store query/filter/sort duplicates.
+- [x] Harden ProductGroup/Product variant schema and direct variant preselection.
+- [x] Remove zero-price Offers, unknown-as-free shipping, unverified return-policy markup and obsolete SearchAction.
+- [x] Pass focused/current related Local release gates.
+- [x] Commit/push exact GitHub release and prove Local=Remote.
+- [x] Create verified source/environment/MySQL rollback and deploy ff-only from GitHub.
+- [x] Create second verified rollback immediately before enabling public crawling.
+- [x] Enable `SEOSettings.allow_search_indexing` on Production.
+- [x] Verify Production robots/sitemaps/canonicals/meta robots/Product JSON-LD/direct variant behavior.
+- [ ] Verify/connect Google Search Console property ownership.
+- [ ] Submit `/sitemap.xml` and optionally `/sitemap-images.xml` in Search Console.
+- [ ] URL Inspection: Home, Store, representative Product and direct variant.
+- [ ] Record indexing/merchant enhancement findings; fix only evidence-backed issues.
+
+
+### 2026-10-08 — A2T external Google ownership gate
+- [x] Reverify clean release checkout, GitHub equality and healthy dedicated Host tunnel.
+- [x] Reverify Production runtime HEAD/worktree after crawl enable.
+- [x] Check public HTML meta verification evidence.
+- [x] Query both authoritative DNS servers for Search Console TXT ownership evidence.
+- [x] Check verified public document root for Google HTML ownership file.
+- [ ] Connect/verify authenticated Search Console property for `3dprinthub.ir` or its approved URL-prefix property.
+- [ ] Submit `/sitemap.xml`; submit image sitemap separately only if useful after property access.
+- [ ] URL Inspection for Home, Store, representative Product and direct Variant URL.
+- [ ] Record Page Indexing / Product enhancement findings and create only evidence-backed fixes.
+
+
+### 2026-10-08 — A2T auth-boundary verification
+- [x] Recheck whether existing Production Google OAuth credentials can authorize Search Console.
+- [x] Confirm existing OAuth is Django-allauth sign-in only with `profile` + `email` scopes.
+- [x] Confirm no Search Console-specific credential/session is available in the verified project execution context.
+- [ ] Obtain authenticated Search Console property access/ownership.
+- [ ] Only then submit sitemap and run URL Inspection; do not start a successor phase while this predecessor gate remains unfinished.
+
+### 2026-10-08 — REQ-50-039 Product rich-result follow-up
+- [x] Reproduce owner-reported six Product snippets errors from Search Console evidence.
+- [x] Read-only verify all six current ProductGroup, Variant Offer price and canonical URL representations.
+- [x] Align variant-family Schema with Google's documented ProductGroup/hasVariant model and avoid fabricated values.
+- [x] Local focused + storefront/Search Console regression 41/41 PASS; no migration drift.
+- [ ] Promote exact reviewed SHA to GitHub release and deploy with rollback from dedicated 3DPrintHub tunnel.
+- [ ] Verify public JSON-LD for all six URL paths and cache/bot-visible behavior.
+- [ ] Request re-crawl/Validate Fix in owner's authenticated Google Search Console; only Google can close the external enhancement status.
+
+### REQ-50-039 closure — 2026-10-08
+- [x] 41/41 Local regression gates, syntax and no-migration-drift checks.
+- [x] Exact SHA commit/push; audited documentation delta; verified 3DPrintHub-only tunnel.
+- [x] Source and MySQL checksum-verified pre-deploy rollback.
+- [x] GitHub-only exact SHA Production deploy `8e9f395b93f6a31802b951a71fcabbc8171985af`; clean Host.
+- [x] Public smoke all six affected Products with individual nonzero variant Offers, no invalid ProductGroup AggregateOffer; independently rechecked 6/6.
+- [ ] Owner's authenticated Search Console URL Inspection/Rich Results live test and `Validate Fix`, then Google re-crawl confirmation.
+- [ ] Increase 2,000MB cPanel account quota or undertake separately authorized retention-aware cleanup; quota report remains ~98%.
+
+
+## REQ-50-040 — Google default product Offer parity (2026-10-09)
+Status: LOCAL_IMPLEMENTED / RELEASE_GATE_PENDING.
+- Deterministic first orderable filament -> sales/print profile -> color, not lowest price; public price comes from the existing variant calculator.
+- Base Product page price and ProductGroup Variant Offer share the same amount, correct Toman/IRR units; user selected variants override the default.
+- Relevant local regressions, exact GitHub release, rollback + Production SEO verification required before PRODUCTION_VERIFIED.
+- cPanel storage quota requires read-only available-space and integrity-checked backup gate before source promotion; do not delete retained backup/customer data.
+
+REQ-50-040 CLOSEOUT 2026-10-09: PRODUCTION_VERIFIED at runtime SHA 2b567c9485ec5b2950d2c2644eb8d19ab425fdea, 41/41 regression PASS and six/six independent public Offer parity smoke PASS. Only Search Console external revalidation pending; ongoing Host quota risk ~99%.
+
+### REQ-50-041 — Homepage Hero invalid Product snippet closure
+Status: LOCAL_IMPLEMENTED / RELEASE_GATE_PENDING.
+Root cause: six homepage Slicebox promotional HTML cards advertised incomplete Product microdata; previous Store ProductGroup/Offer fix did not cover the homepage.
+Preserve 3D slider and active slide membership/media/SEO/copy/links and real Store commerce. Patch only Hero microdata markers and obsolete SSR regression; assert Homepage zero Product rich-result items while each of six Store pages keeps valid JSON-LD priced Offers.
+Required: focused/full related local tests, checks/no migration drift, commit/push GitHub exact SHA, cPanel account quota (> safe scoped backup reserve), fresh checksum-verified scoped source/env/full MySQL rollback, exact-SHA Host deploy and public six-link/six-Offer smoke. Search Console Live Test/Validate Fix is external final acceptance.
+
+REQ-50-041 CLOSEOUT 2026-10-09: **PRODUCTION_VERIFIED**, exact runtime `c4cf19504081b8ccc9ed9cbeed392d44745a24ba`; root homepage Hero six incomplete Product scopes removed; 53/53 Local Hero/Store regressions PASS, public Homepage 0 Product microdata and all 6 Store ProductGroup links live PASS. Source/env/full DB scoped rollback checksums verified; ERR-50-048 transient immediate Passenger response handled with independent post-stabilization read-only smoke (no redeploy). Outstanding external owner Search Console Live Test/Validate Fix. Host 1994/2000 MB quota remains urgent.
+
+## 2026-10-09 — Phase50.A2U SEO technical audit and category quality
+Status: LOCAL_TESTED / GITHUB_RELEASE_NEXT / PRODUCTION_BLOCKED_BY_4_MB_CPANEl_HEADROOM. Full plan and live audit in docs/phases/PHASE50_A2U_SEO_CATEGORY_INDEXABILITY_AUDIT.md.
+- [x] Read root AGENTS and full relevant current docs / prior errors, verify local/release and Host.
+- [x] Crawl all 89 sitemap URLs; 89/89 HTTP 200; identify 26 empty categories, 25 missing meta descriptions, 8 duplicate snippets, 42 missing OG images and Home Twitter gap.
+- [x] Apply unique Category meta/OG fallback without changing editorial DB fields.
+- [x] Keep empty category URLs accessible but noindex, and remove empty categories from sitemap, automatically restore with real public Product.
+- [x] PASS focused 29/29 and broad 62/62 Django regressions, compile, check, zero migration drift and diff.
+- [ ] Commit/push exact isolated tested code/docs to GitHub.
+- [ ] Raise cPanel quota / verify fresh full MySQL backup reserve before any Host deploy (current 1996/2000 MB).
+- [ ] Exact-GitHub SHA guarded deploy then independent full live crawl and Search Console URL Inspection.
+- [ ] Get Search Console Performance/Page Indexing data and measured Lighthouse/CrUX CWV for real SEO competitiveness, not invented scores.
+- [ ] Select genuine share images for 42 pages, product editorial/content review.
+Parallel earlier Phase50.A2R Video/Site/Instagram acceptance remains pending as documented; do not post duplicate Feed/Story or republish a Product without exact Site receipt and approval gates.
+
+A2U GITHUB_UPDATED checkpoint 2026-10-09: tested exact source SHA `6751ab85350683e080bfd54b19cb7d4224d72d55` pushed to GitHub release branch (Local=GitHub, clean), 62/62 regression PASS. Production unchanged at c4cf1950 because official account quota 1996/2000 MB; no database/source rollback capacity for a safe Host deploy. Update prior unchecked GitHub task to PASS by this later closure checkpoint; remaining blocked gate is Host capacity and fresh protected rollback, then SEO live re-crawl/owner Search Console. Do not delete protected backups.
+
+Phase50.A2U owner-approved quota recovery checkpoint 2026-10-09: four verified identical historical media archives hardlink-deduplicated safely; two old trashed Phase48 backup dirs removed under owner authority. Exact old unique MySQL backup histories, current media, accepted backup and latest Oct9 rollback retained. Physical disk freed >200,000 KiB; official cPanel StatsBar shows delayed 1996/2000MB while temporary 24MiB fsynced write reserve PASS. Dedicated fresh guarded A2U deployment runner + offline parser/safety tests LOCAL_TESTED, pending GitHub SHA release, Host exact fast-forward and final SEO smoke. See ERR-50-050 / docs/HOST_CONSTRAINTS.md. Do NOT delete live Product images to free space.
+
+A2U final closeout 2026-10-09: **PRODUCTION_VERIFIED** with exact GitHub-first deployed runtime SHA `0277018726cf02e565ba83eb724cfbf8acc523fb`; official dedicated tunnel, clean Host, verified scoped source/env/full MySQL 3,755,642-byte rollback + SHA256/gzip, Django check/no migration. Actual account fsynced write reserve 48MiB pre-fetch and 32MiB post-fetch despite stale cPanel StatsBar 1996/2000MB. Re-crawled all 63 current sitemap URLs: 63 HTTP200, all 47 Products preserved, 7 populated categories, zero parser/canonical/meta/sitemap issues, zero duplicate title/description; 3 sampled empty category URLs HTTP200+noindex, 2 real populated category URLs index,follow. Prior 25 missing category SEO descriptions and 26 empty-indexed category exposure corrected in Production without DB edits. Pending: Search Console external indexing metrics, 16 OG image deficiencies, Home Twitter card and Phase50.A2R video/Site/social receipt acceptance. Current Product media and historical backups preserved. This final closeout supersedes preceding pending/blocked A2U checkpoints.
+
+Phase50.A2R read-only reconciliation 2026-10-09: canonical Catalog Product #536 verified at Site revision 2 / latest Site `updated` receipt 2026-09-23; one selected MakerWorld animated GIF URL but no persisted local video bytes/SHA/path. Local sync_receipts have historical Instagram Feed `instagram_published` and Story `instagram_story_published` (plus earlier Story failure); no blind repost. A2R next gates: exact selected GIF real acquisition and authorized Site public video verification, then reconcile current Site revision+receipts to prevent duplicate Instagram Feed/Story. Preserve intentional Windows WIP; no A2R source/DB/post mutation yet.
+
+A2R 2026-10-09 positive Site-motion-media verification: Product #536 local GIF 12,778,636 bytes SHA256 `6f980225...`; ACK and current Site Product page prove image/gif HTTP200 and actual inline render. Current Site Product #48 revision 2, historical Buffer Feed and Story both sent for revision 1, so no blind repeat of either; provider verification/current revision campaign decision pending. LOCAL_TESTED social idempotency hardening guards against raw ACK serialization drift same Site revision and retains eligibility for genuine new revision: Buffer/Direct Instagram/Story, 5 new + 34 maintained tests PASS. Preserve canonical dirty Windows WIP and full Catalog SQLite. Integration/actual Windows application acceptance/Buffer provider read-only gate remain; do NOT claim new rev2 Instagram external post.
+
+A2R revision-idempotency GitHub release checkpoint `1e0e00b34dd368e4aba275a443f42843dac0c74f` verified (Local=GitHub); clean isolated worktree. Windows-only code NOT deployed to Host or canonical installed Windows publisher. Before any external Instagram mutation: fresh Site revision truth + provider read-only receipts, verified media/ALT/links and no duplicate revision2 post. Current Site Production remains `02770187`.
+
+## 2026-10-09 — A2Z/A2U source lineage convergence
+- [x] Read AGENTS, master reconciliation/roadmap, PATHS, ERRORS, host constraints and W5C active evidence; verify actual GitHub Windows W5 and Production runtime.
+- [x] Create isolated merge worktree without changing active Desktop source; merge approved latest Google SEO release lineage and W5 v8.9.11 without Product/Host changes.
+- [x] Resolve seven Docs conflicts preserving history; reject obsolete permanent Story lock to retain deliberate operator Story resend in newest Buffer.
+- [x] Align stale incoming test to current Feed receipt contract; local revision 10/10, Buffer 34/34, Instagram 29/29, Django 37/37, Gallery 14/14 PASS. Qt VerifyOnly/check/no migration drift/diff check PASS.
+- [ ] Final two-parent Git commit/push + GitHub ancestry and clean worktree verification.
+- [ ] Native W5C visual gallery selection/delete/reopen with disposable clone, exact media identity and rollback.
+- [ ] Future Windows selected-head cutover only after active owner UI confirmation. Production source stays 02770187 unless separate controlled release requires change.
+- [ ] Next W6 Product Video/Reel / changed social revision (provider and owner approval, never duplicate old receipts).
+Details `docs/phases/PHASE50_A2Z_A2U_LINEAGE_CONVERGENCE_20261009.md`. No external social action and no Host deploy in this phase.

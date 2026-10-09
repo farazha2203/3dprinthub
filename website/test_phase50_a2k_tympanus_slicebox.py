@@ -1,5 +1,7 @@
 from pathlib import Path
+from types import SimpleNamespace
 
+from django.template.loader import render_to_string
 from django.test import SimpleTestCase
 
 
@@ -87,11 +89,47 @@ class Phase50A2KTympanusSliceboxContractTests(SimpleTestCase):
             "product.short_description",
             "product.seo_focus_keyword",
             "p50k-slicebox__product-copy",
-            'itemtype="https://schema.org/Product"',
-            'itemprop="description"',
         ):
             self.assertIn(token, template)
         self.assertIn('href="{{ slide.target_url }}"', template)
+        # A homepage is a navigation/marketing page, not a Product rich-result
+        # detail page. Structured Product + Offer belongs to the Store page.
+        self.assertNotIn('itemscope', template)
+        self.assertNotIn('itemtype="https://schema.org/Product"', template)
+        self.assertNotIn('itemprop=', template)
+
+    def test_six_hero_slides_render_as_links_without_six_invalid_products(self):
+        slides = []
+        for number in range(6):
+            product = SimpleNamespace(
+                meta_title=f"Sample product {number}",
+                meta_description=f"Sample description {number}",
+                short_description=f"Short description {number}",
+                seo_focus_keyword=f"SEO term {number}",
+            )
+            slides.append(SimpleNamespace(
+                asset=SimpleNamespace(product=product),
+                target_url=f"/store/product/example-{number}/",
+                effective_title=f"Sample product {number}",
+                effective_alt_text=f"Photo {number}",
+                effective_image_url=f"/media/example-{number}.webp",
+                effective_description=f"Description {number}",
+            ))
+        html = render_to_string(
+            "website/partials/hero.html",
+            {"homepage_hero_slides": slides},
+        )
+        self.assertEqual(html.count('<li>'), 6)
+        for number in range(6):
+            self.assertIn(f'/store/product/example-{number}/', html)
+            self.assertIn(f'Sample product {number}', html)
+            self.assertIn(f'/media/example-{number}.webp', html)
+        self.assertIn('id="sb-slider"', html)
+        self.assertIn('id="nav-arrows"', html)
+        self.assertIn('id="nav-dots"', html)
+        self.assertNotIn('itemscope', html)
+        self.assertNotIn('itemtype=', html)
+        self.assertNotIn('itemprop=', html)
 
     def test_superseded_runtime_assets_are_deleted(self):
         self.assertFalse((ROOT / "static/css/phase50-a2j-slicebox-hero.css").exists())

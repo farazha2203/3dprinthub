@@ -3381,3 +3381,130 @@ Symptom: first idempotency guard was integrated/tested on canonical older D:\pro
 Root cause: assuming the canonical repository checkout was the running Windows application without verifying the .lnk target and current active branch. Additional first Qt wrapper invocation returned a remote transport timeout without output; read-only process check showed no lingering Qt, and changed-condition direct qt_launch.py --verify-only then official RUN_QT.ps1 -VerifyOnly passed.
 Correct fix: read actual .lnk via WScript.Shell, verify W5 branch GitHub HEAD and target files clean, apply only the positive Site Product ID/revision guard to Buffer Feed/Provider reconciliation and Direct Instagram. Do not change explicit operator Story resend semantics. Test 5 new, 34 Buffer, 29 Instagram, and actual shortcut Qt VerifyOnly. Preserve Product data and full SQLite backup. No external publish or Host deploy.
 Prevention: resolve real user's launcher, installed app source and branch before any Windows change; apply source-specific diff rather than wholesale overwrite; distinguish automatic idempotency from deliberate operator Story repost. Current Windows W5 and Production Site are separate descendants, requiring explicit accepted lineage convergence before Web deploy.
+## ERR-50-038 — Isolated release worktree had no private .env
+**Date:** 2026-10-08
+**Observed:** the first Django test attempt in the clean A2T release worktree stopped before tests because `DJANGO_SECRET_KEY` was absent.
+
+**Root cause:** the selective release worktree intentionally does not copy the private project `.env`; non-debug settings fail closed without a secret.
+
+**Resolution:** do not copy Production or primary-worktree secrets. Run isolated Local tests with `DJANGO_DEBUG=1`, which activates the repository's explicit unsafe-development-only key path. The same release was later verified on Production using the real protected environment.
+
+**Prevention:** clean worktree tests must use documented CI/development-only environment values; never solve an isolated test secret error by copying Production secrets into another checkout.
+
+## ERR-50-039 — Stale mobile Hero asset-version assertion in broad regression
+**Date:** 2026-10-08
+**Observed:** `test_mobile_caption_is_compact_and_description_is_hidden` expected Slicebox asset query version `50.8.0`, but the release tree contains `50.10.0`.
+
+**Root cause:** stale test expectation. The exact untouched Production baseline `2b48a593...` reproduces the same failure before any A2T SEO delta.
+
+**Resolution:** do not regress the accepted Hero to satisfy a stale literal asset-version test. A2T release acceptance used the current Slicebox contract suite and all SEO/schema-related tests; 55/55 current related tests pass.
+
+**Prevention:** asset-cache version assertions must follow the owning Hero phase or test behavior rather than pin an obsolete literal version indefinitely. Prove suspected baseline failures against the exact pre-change commit before editing unrelated source.
+
+## ERR-50-040 — PowerShell verification variable collided with built-in HOME
+**Date:** 2026-10-08
+**Observed:** one post-toggle verification script attempted to assign `$home`, which is case-insensitively the read-only PowerShell `$HOME` variable. The Home check in that command did not run, while the remaining checks completed.
+
+**Resolution:** reran only the failed Home verification with a distinct `$homeResp` variable. Home returned HTTP 200, `index,follow` and apex canonical.
+
+**Prevention:** Windows verification scripts must not reuse automatic/read-only PowerShell variable names. A failed verifier step is rerun only after changing the actual cause.
+
+
+## ERR-50-041 — A2T read-only verifier context/quoting pitfalls
+**Date:** 2026-10-08
+
+**Observed:** two follow-up read-only verification commands failed without mutating Production: `git bundle verify` was first invoked while the shell was inside the backup directory rather than a Git repository, and one `manage.py shell -c` probe lost nested quotes through the Windows-to-Host command wrapper and raised `SyntaxError`.
+
+**Root cause:** verifier execution context and multi-layer shell quoting, not application/runtime failure.
+
+**Resolution:** rerun bundle verification from `/home/sfkilvrs/3dprinthub` while passing the absolute bundle path; it returned `SOURCE_CURRENT_BUNDLE=PASS`. Do not repeat the broken Django shell quoting form; public Home verification was used instead to confirm no `google-site-verification` meta is currently rendered, while the already-successful Host probe confirmed `allow_search_indexing=True`.
+
+**Prevention:** Host verification commands that require repository context must `cd` to the repository explicitly. Avoid deeply nested quoted one-liners through the PowerShell→router→Bash chain; prefer repository scripts, simple single-purpose probes, or public read-only HTTP evidence.
+
+## ERR-50-042 — Product snippets warning with variant-family AggregateOffer
+Date: 2026-10-08
+Environment: Search Console screenshot + read-only public pages + verified release code.
+Symptoms: six Store Product names flagged with the critical Product-snippet warning "Either offers, review, or aggregateRating should be specified".
+Read-only diagnosis: all six public Product URLs return 200 and currently contain a ProductGroup with 48–64 priced Product variants and positive IRR Offer prices. However ProductGroup also carried an AggregateOffer derived from catalog-profile min/max, using AggregateOffer for variants contrary to Google's current Product-variant guidance. Search Console's earlier Google-rendered document is not independently available; exact attribution of its warning to that redundant node remains unverified.
+Corrective local change: leave actual Variant Product/Offer prices intact; remove AggregateOffer from the variant family; produce a standalone Product + direct Offer only for the explicitly fixed-price order mode with positive real price; produce review-only Product exclusively from approved real customer reviews; emit only BreadcrumbList for unknown-price/no-review products. Added fixed/variant/unknown/review tests.
+Verification: 41/41 related Django tests PASS, py_compile, Django check, no migration drift, git diff --check PASS; known pre-existing warnings only. Production not yet mutated.
+Prevention: never synthesize Google prices, discounts, shipping fees or rating values; do not use AggregateOffer to summarize product variants; verify raw Google-facing ProductGroup, priced hasVariant offers and fixed-mode schema before publication.
+
+## ERR-50-043 — cPanel account quota blocked exact-SHA git fetch
+Date: 2026-10-08
+Environment: 3DPrintHub Production, dedicated authenticated project reverse tunnel.
+Observed: `git fetch --no-tags origin refs/heads/release/phase50-a2t-google-indexing-20261008` aborted with `fatal: unable to write loose object file: Disk quota exceeded`, although underlying filesystem reported 509GB free, inode use 15%.
+Root cause: cPanel account hard quota 2000MB; official `uapi StatsBar get_stats display=diskusage` reported 2040MB/2000MB (100%, maxed); `quota` command unavailable. Verified `pip cache info` documented 82.2MB regenerable cache.
+Corrective condition: only `/home/sfkilvrs/virtualenv/3dprinthub/3.12/bin/python -m pip cache purge` executed; removed 442 HTTP/wheel cache files (82.2MB). cPanel recheck: 1961/2000MB (98%, not maxed). Product/source/media/DB/rollback backups were not deleted. Exact GitHub SHA fetch then succeeded.
+Prevention: cPanel account quota is authoritative for source promotion, not filesystem `df`. Check `uapi StatsBar get_stats display=diskusage` before future deploy, reserve enough space for Git transfer and verified source+MySQL backup. Preserve owner data; request plan upgrade or approved retention cleanup if headroom is insufficient.
+
+## ERR-50-044 — Deploy allowlist omitted historical documentation-only release commits
+Date: 2026-10-08
+Observed: Product snippet Host runner pre-mutation rejected `unexpected_delta:docs/DEPLOYMENT.md`.
+Root cause: new runner compared actual Production HEAD `2b85a9c0` to newer release head, whose already approved docs-only commits also added `docs/DEPLOYMENT.md`, `docs/PATHS.md`, `docs/HOST_CONSTRAINTS.md` (42 added lines total). The first allowlist omitted these three inert documentation paths.
+Resolution: reviewed exact target-vs-Production `git diff`; extended allowlist only for these three documented historical paths. No runtime file, migration, dependency, settings, environment or data permissions expanded.
+Prevention: define allowlists from verified actual baseline-to-target delta, including any intervening docs-only commits; never loosen runtime surface acceptance generically. Do not retry failed runner until corrected code is committed/pushed.
+
+### ERR-50-043 / ERR-50-044 closure — 2026-10-08
+- Quota condition changed and reverified with cPanel StatsBar, not filesystem `df`; GitHub fetch exact `8e9f395b...` succeeded after regenerable `pip cache purge`.
+- Verified old release documentation-only delta and expanded only those 3 paths in the allowlist; Bash syntax and exact diff-path checks PASS. Corrected runner was committed to GitHub before execution.
+- Protected rollout on Production SHA `8e9f395b93f6a31802b951a71fcabbc8171985af` succeeded; pre-deploy source+MySQL backup checksum verified; Host clean; independent public 6/6 PASS.
+- New prevention: check cPanel quota headroom before Git fetch or backup; do not delete customer/backups blindly. Check full Production-baseline-to-GitHub-target diff when constructing guarded allowlist.
+
+
+### ERR-50-045 — Default public product price and Google variant Offer divergence (2026-10-09)
+Environment: isolated Windows Google Product snippets release worktree; owner Search Console follow-up.
+Symptoms: root Product URL did not preselect a real Variant; Product Schema used cached_unit_price but the customer HTML native selector used dynamic price_breakdown; Store ProductGroup could therefore advertise a stale value or an arbitrary initial option.
+Root Cause: different default selection and pricing authority at the HTML/JSON-LD integration boundary. No Production defect attribution claimed without Google recrawl evidence.
+Solution: select first positively priced/orderable material, sales/print profile and color by persisted sort orders, preserve explicit variant URL, and use one memoized live variant.price_breakdown per request for both HTML and Google Product/Offer. No invented ratings, zero prices, shipping or DB edits.
+Local test notes: system Python lacked allauth, so the verified project venv is mandatory; its test suite defaults SECURE_SSL_REDIRECT=1, so run local tests with SECURE_SSL_REDIRECT=0. Inventory-less color fixtures must not be mistaken for orderable real spools.
+Prevention: assert native selected option, visible default amount, Offer amount IRR conversion and existing checkout/variant orderability regressions together; no production deployment without cPanel quota and verified backup/rollback.
+
+
+### ERR-50-046 — Default-Offer deploy quota parser failed closed (2026-10-09)
+Symptoms: guarded deployment bootstrap fetched exact approved GitHub commit, then the new runner printed CPANEL_QUOTA_UNVERIFIED before attempting source/DB backup or touching Production Source.
+Verified state: Host branch release/phase50-a2j-hero-20260915 and source HEAD 8e9f395b93f6a31802b951a71fcabbc8171985af unchanged/clean; read-only cPanel StatsBar still reports _count='1977', _max='2000' MB.
+Root cause: accidental double-backslash escapes in the Python raw-string regex embedded in the new local Bash deploy runner; regex matched literal backslash-s instead of YAML leading spaces. Similar escaping affected the planned post-deploy default-price smoke regex.
+Solution: replace numeric YAML and HTML capture patterns with explicit spaces and [0-9] character classes; run local parser/smoke syntax gates, commit/push the correction and never rerun the failed runner or mutate Host Source before the new exact GitHub SHA passes strict preflight.
+Prevention: test embedded Bash heredoc Python against actual cPanel/YAML output shape and a real rendered Product HTML fixture, not only bash -n. Fail closed on unverified quota; no protected cleanup to free quota.
+
+ERR-50-046 RESOLVED / PREVENTION VERIFIED 2026-10-09: offline selftest validates cPanel YAML parser accepted 1977/2000 with 22MB required, rejects insufficient/invalid, compiles embedded quota/DB/public smoke snippets; Bash -n PASS. New SHA 2b567c9485ec5b2950d2c2644eb8d19ab425fdea production rollout PASS with true cPanel quota gates and checksum-proven source+DB backup. First Google Offer parity six/six PASS; no further retries of prior broken runner.
+
+### ERR-50-047 — Search Console still reports six invalid Product items on homepage (2026-10-09)
+**Symptom:** after validated Store ProductGroup Offer releases REQ-50-039/040, owner ran Search Console inspection on `https://3dprinthub.ir/`, which detected six critical Product items even though each linked Store product detail carries real Variant Offers.
+**Root cause:** `templates/website/partials/hero.html` wraps each curated Hero slide in `<li itemscope itemtype="https://schema.org/Product">` and labels name/image/description/url with itemprop, but homepage promotional tiles contain no Offer/Review/Rating. Google correctly parses these as six different incomplete Product microdata items independent of valid Store ProductGroup JSON-LD. Previous regression incorrectly required the Hero's invalid Product microdata.
+**Solution:** make Hero product teaser slides plain semantic linked content (li/a/img/h3/p) with stable SEO titles, alt text and canonical product URLs; remove only the Product itemscope/itemtype/itemprop attributes. Preserve actual Product/Offer JSON-LD on individual Store pages. Update the obsolete Hero SEO regression to assert no Product microdata; add rendered six-slide SSR regression. Google documentation recommends Product rich-result schema on single-Product-focused pages rather than product listing/home pages.
+**Prevention:** Google rich-result checks must include both the HOME HTML microdata parser and Store-detail JSON-LD. A six-of-six Store Offer smoke alone is insufficient. Release includes fresh scoped source+env/full DB rollback per ERR-49-213; Host quota 1994/2000 MB before deploy is unsafe without verified additional headroom.
+**Status:** Local patch/test and guarded rollout in progress, NOT yet Search Console confirmed.
+
+### ERR-50-048 — Post-Passenger-restart immediate homepage smoke read old markup (2026-10-09)
+**Observed:** guarded REQ-50-041 GitHub-first Host fast-forward and protected scoped Source/Env/full MySQL backup completed, but the first automated HTTP fetch immediately after touching Passenger restart marker and waiting 4 seconds still received the previous six Product microdata scopes; the public smoke exited 1 on `homepage_incomplete_product_microdata`.
+**Read-only recovery evidence:** Host checked clean at exact new SHA `c4cf19504081b8ccc9ed9cbeed392d44745a24ba`; tracked Hero template had no Product/itemprop fields; restart marker timestamp verified, Passenger WSGI workers still in startup period; a later independently fetched public root had zero Product scopes, all six Hero links, and all six Store detail ProductGroup entries. No source rollback/redeploy/re-publish or DB mutation was needed. Fresh backup of pre-change Hero, protected env and FULL MySQL gzip remained checksum-valid.
+**Probable root cause:** short-lived stale response during Passenger worker propagation/restart, not an incorrect patched Hero template. This is an observation-based timing attribution, not proof of a specific LiteSpeed cache configuration.
+**Prevention:** when the *post-deploy-only* public smoke fails after source/backups/fast-forward PASS, verify exact Host SHA, clean state, tracked template and Passenger state read-only; use a bounded fresh HTTP re-check after workers stabilize. Never blindly re-run deploy or overwrite clean exact SHA; improve future runners to wait for actual served-template readiness instead of assuming 4 seconds guarantees propagation.
+**Resolution:** final independent public Home+six Store smoke PASS, checksum verification PASS; owner Google Live Test/Validate Fix still pending.
+
+## ERR-50-049 — Thin indexed empty Store category pages + missing descriptive metadata (2026-10-09)
+Observed read-only Production audit: 89 sitemap pages HTTP 200, 33 Category URLs, 26 with zero Product cards yet all in sitemap with index,follow. Twenty-five category meta description tags empty; 8 external categories share identical description copy. Forty-two pages lack OG preview image and Homepage lacks twitter:card. This is not a Search Console indexing failure claim; actual search impressions and CWV have not been measured.
+Root cause: CategorySitemap.items used only active/index flags, not real public Product presence; Store Category robots flag didn't depend on actual Product inventory; Category template rendered empty description when database meta/description blank. Existing duplicate Category descriptions were output verbatim without distinguishing Category.name. Historical Product schema fixes were separate and remain valid.
+Corrective Local change: unique bounded Category name-grounded meta/OG fallbacks, preserving explicitly saved SEO meta; real active/indexable Product check over current Category/direct active children to noindex empty pages while preserving navigation/HTTP 200; sitemap filters categories using the same public Product criteria and parent/child relationship. No DB writes or fake SEO claims.
+Prevention: audit every live sitemap URL, assert no empty-indexed category and noindex/sitemap parity, regression that adding public Product restores inclusion and Product.robots_index=false removes it. Focused 29/29 and broad 62/62 PASS. Production not yet updated; cPanel 1996/2000 MB prevents guaranteed fresh rollback deployment. Later editorial/social image enhancement tracked in Phase50.A2U.
+
+## ERR-50-050 — Misnamed historical Phase48 backup and stale cPanel usage cache (2026-10-09)
+Owner authorized retention-aware deletion of old backups/extra images to free cPanel quota; active Product media/customer data, current full rollback and Git source are protected.
+Read-only Host audit: backup root 501,992 KiB; five old media-before.tar.gz copies of exactly 46,832,890 bytes have identical SHA256 b4ce802ed8dfab5861056920be5cc2732a08cbec9f7fa7f5a77be6af25d9a136. Accepted media archive SHA e395e025... differs and must be retained. Five different MySQL historical database backup SHA values were all distinct, so deleting entire prepublish directories would lose valid unique DB restore points.
+Safe correction: keep canonical 20260924-112026-a2z-628-final-prepublish/media-before.tar.gz, replace four exact duplicate media archive paths (20260923-225920, 20260923-230201, 20260924-104824 and 20260924-105351) with atomic hardlinks after verifying identical size, device, SHA and immutable permissions 0600. Retained paths and their original sha256sum manifests still verify, master link count 5, accepted archive untouched, all unique DB/source/environment backup artifacts retained. Backup physical size 501,992 → 319,036 KiB.
+First attempt to purge historical cPanel .trash folder failed closed before deletion: file named database-before-phase48.sql.gz was not valid gzip. The file was actually plain UTF-8 MySQL dump text erroneously named .gz (header starts '-- MySQL dump'). Never blindly trust filename extension. Revised evidence-based check preserved latest Aug15 historical raw SQL and full valid Oct9 gzip; purged ONLY 2 separately dated >30-day-old Phase48 backups already in Trash, 20260815-121022 and 20260815-121125, exact expected three files each, while preserving 20260815-155617 and /home/sfkilvrs/.trash/3dprinthub. Trash 107,532 → 74,108 KiB. Initial wrong hardcoded file modification epoch threshold also failed closed; replaced with verified find -mtime +30 before the actual operation.
+Post-cleanup cPanel StatsBar STILL reported 1996/2000MB, although actual physical backup/trash sizes fell significantly. Official cPanel docs note disk usage display may not reflect recent account changes. Deprecated cpapi2 DiskUsage clearcache attempt failed with 'setuids failed: Attempting to setuid as a normal user' (RUID 1178): no permission to refresh and do not retry same call. Independent bounded, fsynced 24MiB temporary write in actual account succeeded and file was verified/removed with trap. This is evidence of real transient write capacity, not a false claim that StatsBar refreshed.
+Prevention: use cPanel stats + actual account write-reserve test when stale usage is evident; never disable or bypass exact GitHub/SHA/backup gates. Backup retention needs exact protected manifest, size+SHA+gzip validation and a rollback-preserving cleanup; never delete actively referenced Product media, private uploads, recent accepted backups, distinct historical DB backup copies or secrets. GitHub-first deploy cannot start without fresh verified MySQL backup and confirmed user-account write headroom.
+
+### ERR-50-051 — A2R video false negative and raw-ACK Instagram duplicate risk (2026-10-09)
+Symptoms: the previous continuation reported Product #536 motion media unavailable because `selected_video_url`, `local_video_path`, `video_sha256`, `video_bytes` on top-level Products are blank. The actual `local_video_files_json` contains a real local GIF of 12,778,636 bytes, SHA256 `6f980225578d6afc94375ffc53848ca95440119f060f97f84dd3b2702fb056c6`; the Site ACK public_videos contains `https://3dprinthub.ir/media/store/products/videos/147/6f980225578d6afc.gif` with HTTP200, and independent public HTTP response has image/gif and matching 12,778,636 bytes. Product page `/store/product/little-ballerina/` HTTP200 and references that GIF. The previous diagnosis was not supported by the actual stored manifest and public ACK.
+Independent issue: Buffer and Direct Instagram dedup compared the entire raw `server_ack_json` string. Cosmetic ACK field changes/JSON ordering on the *same* (`product_id`, positive `product_revision`) would evade old receipt matching and risk a duplicate post. Fix on isolated clean release worktree: shared pure `same_site_revision` helper prefers exact raw ACK for backward compatibility, otherwise matches positive server Product identity + positive Site revision. Used by Buffer Feed/Story and Direct Instagram send guards. Incomplete, cross-product, malformed ACKs never semantically match. Does not mark a genuinely new revision as an old sent receipt.
+Real Catalog #536 current ACK has Site Product 48 revision **2**; prior Buffer Feed `instagram_published` and Story `instagram_story_published` are for Site Product 48 revision **1**. Provider statuses in those receipts are `sent`, but real live provider was not independently checked this iteration. An extra rev2 post or story was NOT sent. No DB/Host modification, no automatic repost.
+Prevention: reconcile `local_video_files_json` with actual file, Site ACK `public_videos` and public MIME/HTTP before claiming missing media. For social, classify identities by positive Site Product ID and monotonic Site revision; do not confuse formatting changes with a new publishable revision. External provider status/owner intent and real current media still gate rev2 publishing. Specific 5 new regressions PASS; maintained Buffer 12/12, Instagram 20/20, Story 2/2 PASS, syntax compiled; no Windows Qt launcher/canonical Catalog mutation.
+
+## ERR-50-055 — Latest release tip imports obsolete permanent Story guard (2026-10-09)
+Observed: `git merge-tree` against deployed Site SHA 02770187 predicted only 6 Docs conflicts, but exact latest GitHub release tip 0a68496f also brought a prior Windows-social test and old `_story_already_sent` helper, increasing actual full merge to 8 conflicts (7 Docs, 1 Buffer). Latest W5 v8.9.11 intentionally supports explicit operator repeated Story publication, with active request/provision and provider reconciliation; the old helper would conflict with accepted behavior. Old incoming test `test_phase50_a2r_social_revision_truth.py` failed ImportError when the old helper was correctly excluded.
+Fix: preserve W5 newer Buffer code, discard the single obsolete helper in the conflict hunk, update only stale incoming test to use the accepted current Feed `_already_sent` identity boundary, while separately retaining manual Story resend regressions. Seven Docs files merged with stage-1/2/3 `git merge-file --union`, preserving both histories and verifying no residual conflict markers. After correction: both 5-test identity modules PASS, Buffer 34/34, Instagram 29/29, Django SEO 37/37, W5 Gallery 14/14, Qt VerifyOnly and Django no-drift PASS. No provider/Host/database mutation.
+Prevention: always compare against latest GitHub branch tip **and** deployed Host SHA separately; an apparently clean merge against an older deployed ancestor is not proof that latest remote-tip code/tests auto-merge. Do not reintroduce legacy Story send locks or rewrite active W5 Buffer to satisfy superseded tests; isolate and test actual owner shortcut source before promoting a new GitHub lineage.
