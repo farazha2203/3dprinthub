@@ -1608,3 +1608,13 @@ Immediately next: final foreground Desktop acceptance on the exact GitHub SHA. F
 2026-10-09 A2R actual Desktop: shortcut resolved to W5 v8.9.11 source, not older canonical branch. Verified SQLite backup, source helper integration only in Buffer Feed and provider reconciliation plus Direct Instagram checks; explicit operator Story-repetition preserved. New5, Buffer34, Instagram29 tests and Qt VerifyOnly PASS. Next selective GitHub commit/push, exact shortcut-launch smoke and W5C gallery visual acceptance; divergent Production/Windows lineage remains a separate blocker before any broad Site deploy. Following phase W6 video/Reel.
 
 2026-10-09 ACTUAL Windows A2R GITHUB_UPDATED/launcher smoke PASS: b3c89f46be14f8c7ec45fc07108c040cd597778f deployed into desktop-shortcut source only. 5+34+29 scoped tests, Qt VerifyOnly PASS, real source-process pythonw confirmed. No Story posted. Remaining W5C gallery UI acceptance and latest Windows/Production lineage convergence before broad Host deployment; following phase W6 Video/Reel, separate changed-revision Social only after Product review/receipts and exact Site authority.
+
+## 2026-10-09 — Actual daily Windows Reel safeguard
+- [x] Verify W6D `ACCEPTED` historical scope vs real Reel go-live NOT proven; verify W5C manual operator acceptance still OPEN.
+- [x] Compare active Desktop Buffer source with unified latest GitHub code; only 23-line Reel preview/draft guard delta, media/Gallery and manual-Story repeat unaffected.
+- [x] Port exact approved guard/test without Desktop shortcut retarget, backup or Catalog mutation.
+- [x] Test on actual Windows source: 101/101 relevant PASS; Python compile, diff check and official Qt VerifyOnly PASS; protected SQLite backup hash matches and social receipts unchanged.
+- [ ] Commit/push scoped active Desktop patch to GitHub and verify exact SHA/local clean.
+- [ ] Owner hands-on W5C gallery UAT; cannot infer ACCEPTED from programmatic Qt tests.
+- [ ] Reel live go-live is separate: acquire **true compatible MP4/MOV**, validate codec/frame/orientation/length/MIME and public HTTPS, approved Product/Site version, read-only Buffer history and explicit action-time owner send authorization. Never send GIF Product #536 as Reel.
+- [ ] Following owner-selected master phase: Social Go-Live / Shipping or Secure Payment after relevant backups/tests/Host deployment gates; do not silently choose.
