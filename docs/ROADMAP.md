@@ -1737,3 +1737,14 @@ A2R revision-idempotency GitHub release checkpoint `1e0e00b34dd368e4aba275a443f4
 Details `docs/phases/PHASE50_A2Z_A2U_LINEAGE_CONVERGENCE_20261009.md`. No external social action and no Host deploy in this phase.
 
 Latest verified lineage closure 2026-10-09: **DONE** two-parent merge `53838458b41407f264e3de885b9d817673051b20` pushed to dedicated GitHub branch `merge/phase50-a2z-a2u-lineage-20261009`, 124/124 related PASS + Qt VerifyOnly + migration no drift. No active Desktop cutover or Production deploy. Remaining W5C GUI select/delete/reopen UAT must be done against a verified disposable clone, then chosen converged-source Windows runtime cutover (with backup + launcher exact SHA smoke); next W6 video/Reel. Pre-merge unchecked roadmap gate superseded by this verified closeout.
+
+## 2026-10-09 — W5C native Qt automated visual gate
+- [x] Verify isolated merged GitHub checkout/actual Desktop source, AGENTS/PATHS/ERRORS/active Phase, recent clean Production SHA.
+- [x] Fresh online SQLite disposable clone of canonical Catalog `mode=ro` source, `quick_check`, 1076 Products, SHA256 recorded; previous protected rollback checksum unchanged.
+- [x] Real ProductWizardPage with synthetic Product-owned JPEG/WebP media: Qt QTest preview click, 2-of-4 multi-select, toolbar deletion confirmation, remaining exact file & Site media resolver parity, product close/reopen.
+- [x] Separate 20-image Qt gallery visible rows, scroll to last card, QTest click card 20; 20 persisted image source identities unaffected.
+- [x] Windows-native (not just offscreen) six screenshots opened and visually inspected: Persian labels visible, image colors/corresponding image metadata and selection checkboxes accurate.
+- [x] Native Qt tests 2/2, headless 2/2, existing media-truth 14/14, Qt VerifyOnly and Python compile/diff check PASS.
+- [ ] Commit/push exact tested W5C QA source/docs to unified GitHub branch and verify clean Local/upstream.
+- [ ] Actual daily owner desktop application acceptance / gallery real operator signoff (separate from programmatic Qt interaction).
+- [ ] Following W6 Product Video and Reel, only after W5C acceptance, with Site revision and Buffer/Instagram idempotency safeguards. Existing Production code remains unchanged and separate Host rollout is not requested.

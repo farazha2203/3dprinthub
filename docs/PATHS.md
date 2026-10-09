@@ -362,3 +362,11 @@ This section supersedes older Production-HEAD examples above; historical entries
 - Release GitHub tip merged: `0a68496f438d0db36aec471e3aa219f99dbe24ee` (deployed clean Site source ancestor `0277018726cf02e565ba83eb724cfbf8acc523fb`).
 - Protected fresh Catalog online backup: `D:\projects\3dprinthub-backups\phase50-a2r-social-identity-20261009\catalog-before-a2r-social.sqlite3` (1222283264B, SHA256 c87fb9cc64d74d93760d5191b6b172a9a419ce3059c01425b197346bf033f6bd).
 - Actual Production existing rollback retained: `/home/sfkilvrs/3dprinthub-deploy-backups/20261009-020911-phase50-a2u-seo`. Official project gateway unchanged, no Production mutation in this source convergence.
+
+## 2026-10-09 W5C verified disposable visual-automation paths
+- Approved merged source `D:\projects\.worktrees\3dprinthub\phase50-lineage-20261009` branch `merge/phase50-a2z-a2u-lineage-20261009` (pre-change clean GitHub `09fd3b6e635ffe606fde34eb74575d22a517d6bd`).
+- Real canonical Catalog OPENED READ-ONLY: `D:\projects\3dprinthub-catalog-manager\catalog.sqlite3`, 1076 Products before/after.
+- Disposable actual Catalog online backup for QA `D:\projects\3dprinthub-backups\phase50-w5c-visual-20261009-1300\catalog.sqlite3`, initial SHA256 `42f6876f87c4c32fa480f5159c2395d4edb818c4cc0438714f2c9918bd04037f`, 1222283264 bytes, 1076 Products before test, 1077 after **one synthetic QA Product only**. Do not use this modified test copy as pristine backup. Source can be freshly backed up again as necessary under a new verified path.
+- Six native Windows Qt renderer screenshots are at `D:\projects\3dprinthub-backups\phase50-w5c-visual-20261009-1300\evidence\native-platform\01_before.png` ... `06_twenty_last.png`. These are *internal test evidence*, not Product media for download or production.
+- Protected independent prior rollback `D:\projects\3dprinthub-backups\phase50-a2r-social-identity-20261009\catalog-before-a2r-social.sqlite3` unchanged SHA256 `c87fb9cc64d74d93760d5191b6b172a9a419ce3059c01425b197346bf033f6bd`.
+- No changed Host paths, SQLite canonical/Media source, owner Desktop shortcut, installed app or production routes.
