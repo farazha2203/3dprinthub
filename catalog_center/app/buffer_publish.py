@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from typing import Any
+from urllib.parse import urlsplit
 from urllib import error as urllib_error
 from urllib import request as urllib_request
 
@@ -20,6 +21,17 @@ class BufferConfig:
     timeout: int = 30
 
 
+def _validated_instagram_reel_url(value: Any) -> str:
+    """Reject formats Instagram cannot use as Reels before making a draft."""
+    url = str(value or "").strip()
+    parsed = urlsplit(url)
+    if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password:
+        raise ValueError("Reel requires a public HTTPS video URL.")
+    if not parsed.path.lower().endswith((".mp4", ".mov")):
+        raise ValueError("Instagram Reel requires an MP4 or MOV video, not GIF/WebM.")
+    return url
+
+
 def prepare_reel_preview(
     product: dict[str, Any],
     *,
@@ -28,9 +40,7 @@ def prepare_reel_preview(
     thumbnail_offset_ms: int = 0,
 ) -> dict[str, Any]:
     """Build a review-only Reel handoff; never calls Buffer or mutates a DB."""
-    url = str(video_url or "").strip()
-    if not url.startswith("https://"):
-        raise ValueError("Reel requires a public HTTPS video URL.")
+    url = _validated_instagram_reel_url(video_url)
     offset = max(0, int(thumbnail_offset_ms))
     payload = canonical_site_payload(dict(product), site_url=site_url)
     return {
@@ -60,9 +70,10 @@ def build_reel_handoff_input(
         raise RuntimeError("Reel handoff requires explicit operator approval.")
     if str(preview.get("status") or "") != "preview":
         raise RuntimeError("Only a fresh Reel preview can be handed off.")
-    video_url = str(preview.get("video_url") or "").strip()
-    if not video_url.startswith("https://"):
-        raise RuntimeError("Reel handoff requires a public HTTPS video URL.")
+    try:
+        video_url = _validated_instagram_reel_url(preview.get("video_url"))
+    except ValueError as exc:
+        raise RuntimeError(str(exc)) from exc
     return {
         "text": str(preview.get("caption") or ""),
         "aiAssisted": True,

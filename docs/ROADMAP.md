@@ -1759,3 +1759,14 @@ W5C source checkpoint `9fcd898963c07d4eb78990d8b6711d9e1b4576f1` (2026-10-09) pu
 - [ ] Owner manual daily Desktop visual signoff remains independent (do not mark `ACCEPTED` by automated QTest alone).
 - [ ] No version activation unless source code discrepancy or owner UAT requires; then exact-SHA GitHub candidate, backed-up `.lnk` and `.cmd`, smoke and rollback.
 - [ ] Immediately following **W6** Source video, Instagram Reel/Story no-duplicate and provider/clickable-link capability gates; no blind publication.
+
+## 2026-10-09 — Accepted W6 Reel format correctness follow-up (not a new W6 phase)
+- [x] Read active W5C and W6 docs: W6D was already ACCEPTED in September; no actual Reel published. Preserve W5C owner signoff as open.
+- [x] Verify unified GitHub/Local 1445765f, Site Production 02770187 clean, original owner Desktop shortcut unchanged, protected 1.22GB SQLite rollback SHA verified.
+- [x] Read official Buffer Instagram Reel requirements and reproduce bug: HTTPS Product #536 GIF was incorrectly accepted in Reel preview and approved draft.
+- [x] Implement minimal extension-only format validation in Reel preview + handoff: MP4/MOV HTTPS paths only, signed URLs accepted, invalid GIF/WebM/M4V rejected; preserve Product GIF on Site and Feed/Story semantics.
+- [x] Regression 96/96, Python compile, diff check and Qt VerifyOnly PASS. No media/DB/host/provider API action.
+- [ ] Commit/push to exact approved unified GitHub branch and verify Local=GitHub.
+- [ ] W5C manual owner gallery acceptance in daily desktop still PENDING; no Desktop shortcut cutover needed for gallery.
+- [ ] For Product #536 Reel, acquire an actually compatible MP4/MOV asset *after approval*; inspect codec H.264, aspect, duration, audio and public HTTP MIME/size; verify Content URL and provider account read-only before any intentional new Reel/Feed/Story.
+- [ ] Following owner-selected master phase (Dynamic Shipping A2Z-C / Social Go-Live / Secure Store A3), only after mandatory phase-specific preflight/backup/migration/production gate.
