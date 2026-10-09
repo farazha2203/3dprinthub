@@ -1782,3 +1782,12 @@ W6 after-acceptance correction `3dd71b6dde88d9294c896988c61c6595e6b9f1e7` GITHUB
 - [ ] Owner hands-on W5C gallery UAT; cannot infer ACCEPTED from programmatic Qt tests.
 - [ ] Reel live go-live is separate: acquire **true compatible MP4/MOV**, validate codec/frame/orientation/length/MIME and public HTTPS, approved Product/Site version, read-only Buffer history and explicit action-time owner send authorization. Never send GIF Product #536 as Reel.
 - [ ] Following owner-selected master phase: Social Go-Live / Shipping or Secure Payment after relevant backups/tests/Host deployment gates; do not silently choose.
+
+## 2026-10-09 — Daily Windows W6 guard and unified-source ancestry completed
+- [x] Source W6 Reel format safety guard integrated into **actual daily Windows** active W5 branch `2946a6cb34827bcb0c6d5f9cea0f724692a9a58a`, verified in GitHub.
+- [x] 101 distinct daily regression PASS, live 1076 Products and protected SQLite backup intact; real Desktop Qt VerifyOnly PASS. Desktop LNK/CMD unchanged.
+- [x] Bring that exact Windows commit into accepted unified Windows+SEO GitHub branch via two-parent merge `ac7f2ecc2dc7015cc1ac246bbeaefc110fc4a1a2`, both histories present, zero new runtime/migration/dependency delta, same 101 tests, Qt, Django Check and no migrations PASS.
+- [x] Protected Site Production `02770187` left clean, no source update or Host deploy for Windows-only code.
+- [ ] Owner manually accepts gallery W5C in daily Desktop; screenshots/auto Qt alone do not equate owner signoff.
+- [ ] Next `A2Z-S Social Go-Live` exact preflight: Product/Site revision read-only verification, actual media MP4/MOV codec/size/aspect/public status, Buffer profile and true provider receipts, operator approval; then only one controlled new-Reel/Feed/Story action explicitly authorized. Preserve prior #536 revision1 receipts.
+- [ ] Immediately after: owner-selected `A2Z-C Dynamic Shipping` or `A3 Secure Store ZarinPal` with full independent Local/Host backed migration/Production gates.
