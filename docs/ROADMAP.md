@@ -1750,3 +1750,12 @@ Latest verified lineage closure 2026-10-09: **DONE** two-parent merge `53838458b
 - [ ] Following W6 Product Video and Reel, only after W5C acceptance, with Site revision and Buffer/Instagram idempotency safeguards. Existing Production code remains unchanged and separate Host rollout is not requested.
 
 W5C source checkpoint `9fcd898963c07d4eb78990d8b6711d9e1b4576f1` (2026-10-09) pushed to GitHub and Local=Remote clean. Native Windows Qt visual automation 2/2 (4-card click/delete/reopen and 20-image scroll last-click), headless 2/2, media truth 14/14, Qt VerifyOnly PASS. **Source/checkpoint task complete**, **owner daily Desktop UAT still required** and W5C is not yet ACCEPTED. No new Host/Production deployment. Following W6 Source Video/Reel after acceptance; preserve Feed/Story revision truth.
+
+## 2026-10-09 — Verify daily Windows gallery; shortcut cutover unnecessary
+- [x] Actual Desktop `.lnk` and `.cmd` target audited, worktree/branch/GitHub Local=Remote clean.
+- [x] Five gallery-related Git blobs and launcher script SHA256 exactly match merged approved GitHub code, **NO CUTOVER** and no backup/write to shortcut necessary.
+- [x] Native Windows Qt Actual Daily Source Product #1074, 5 local files: real thumbnails rendered, two preview-click edit selections, correct 5 Site selections retained, close/reopen restores operation checkbox state, URL↔filename/SHA exact Site resolver parity, 3 screenshots saved and inspected.
+- [x] Product #1074 on live read-only Canonical Catalog equals safe QA clone before/after, images and Social receipts untouched; daily launcher VerifyOnly PASS.
+- [ ] Owner manual daily Desktop visual signoff remains independent (do not mark `ACCEPTED` by automated QTest alone).
+- [ ] No version activation unless source code discrepancy or owner UAT requires; then exact-SHA GitHub candidate, backed-up `.lnk` and `.cmd`, smoke and rollback.
+- [ ] Immediately following **W6** Source video, Instagram Reel/Story no-duplicate and provider/clickable-link capability gates; no blind publication.
