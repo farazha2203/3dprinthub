@@ -1770,3 +1770,5 @@ W5C source checkpoint `9fcd898963c07d4eb78990d8b6711d9e1b4576f1` (2026-10-09) pu
 - [ ] W5C manual owner gallery acceptance in daily desktop still PENDING; no Desktop shortcut cutover needed for gallery.
 - [ ] For Product #536 Reel, acquire an actually compatible MP4/MOV asset *after approval*; inspect codec H.264, aspect, duration, audio and public HTTP MIME/size; verify Content URL and provider account read-only before any intentional new Reel/Feed/Story.
 - [ ] Following owner-selected master phase (Dynamic Shipping A2Z-C / Social Go-Live / Secure Store A3), only after mandatory phase-specific preflight/backup/migration/production gate.
+
+W6 after-acceptance correction `3dd71b6dde88d9294c896988c61c6595e6b9f1e7` GITHUB_UPDATED, 96/96 W6/Social/Media regressions, Qt VerifyOnly PASS. Real #536 GIF continues to work on Site but must not be treated as Instagram Reel until separate MP4/MOV transcoding and actual media/provider/owner acceptance. Neither Daily Windows .lnk/.cmd nor Host has been switched; W5C owner UAT still pending. The code fix is a safe guard, not proof of a published Reel. Do not rerun already-accepted W6 core or auto-send story/feed.
