@@ -1772,3 +1772,13 @@ W5C source checkpoint `9fcd898963c07d4eb78990d8b6711d9e1b4576f1` (2026-10-09) pu
 - [ ] Following owner-selected master phase (Dynamic Shipping A2Z-C / Social Go-Live / Secure Store A3), only after mandatory phase-specific preflight/backup/migration/production gate.
 
 W6 after-acceptance correction `3dd71b6dde88d9294c896988c61c6595e6b9f1e7` GITHUB_UPDATED, 96/96 W6/Social/Media regressions, Qt VerifyOnly PASS. Real #536 GIF continues to work on Site but must not be treated as Instagram Reel until separate MP4/MOV transcoding and actual media/provider/owner acceptance. Neither Daily Windows .lnk/.cmd nor Host has been switched; W5C owner UAT still pending. The code fix is a safe guard, not proof of a published Reel. Do not rerun already-accepted W6 core or auto-send story/feed.
+
+## 2026-10-09 — Actual daily Windows Reel safeguard
+- [x] Verify W6D `ACCEPTED` historical scope vs real Reel go-live NOT proven; verify W5C manual operator acceptance still OPEN.
+- [x] Compare active Desktop Buffer source with unified latest GitHub code; only 23-line Reel preview/draft guard delta, media/Gallery and manual-Story repeat unaffected.
+- [x] Port exact approved guard/test without Desktop shortcut retarget, backup or Catalog mutation.
+- [x] Test on actual Windows source: 101/101 relevant PASS; Python compile, diff check and official Qt VerifyOnly PASS; protected SQLite backup hash matches and social receipts unchanged.
+- [ ] Commit/push scoped active Desktop patch to GitHub and verify exact SHA/local clean.
+- [ ] Owner hands-on W5C gallery UAT; cannot infer ACCEPTED from programmatic Qt tests.
+- [ ] Reel live go-live is separate: acquire **true compatible MP4/MOV**, validate codec/frame/orientation/length/MIME and public HTTPS, approved Product/Site version, read-only Buffer history and explicit action-time owner send authorization. Never send GIF Product #536 as Reel.
+- [ ] Following owner-selected master phase: Social Go-Live / Shipping or Secure Payment after relevant backups/tests/Host deployment gates; do not silently choose.
