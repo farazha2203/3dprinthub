@@ -1735,3 +1735,5 @@ A2R revision-idempotency GitHub release checkpoint `1e0e00b34dd368e4aba275a443f4
 - [ ] Future Windows selected-head cutover only after active owner UI confirmation. Production source stays 02770187 unless separate controlled release requires change.
 - [ ] Next W6 Product Video/Reel / changed social revision (provider and owner approval, never duplicate old receipts).
 Details `docs/phases/PHASE50_A2Z_A2U_LINEAGE_CONVERGENCE_20261009.md`. No external social action and no Host deploy in this phase.
+
+Latest verified lineage closure 2026-10-09: **DONE** two-parent merge `53838458b41407f264e3de885b9d817673051b20` pushed to dedicated GitHub branch `merge/phase50-a2z-a2u-lineage-20261009`, 124/124 related PASS + Qt VerifyOnly + migration no drift. No active Desktop cutover or Production deploy. Remaining W5C GUI select/delete/reopen UAT must be done against a verified disposable clone, then chosen converged-source Windows runtime cutover (with backup + launcher exact SHA smoke); next W6 video/Reel. Pre-merge unchecked roadmap gate superseded by this verified closeout.

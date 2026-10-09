@@ -46,3 +46,9 @@ Create one forward GitHub source ancestry containing both the active owner's Win
 4. Next Phase50.A2Z-W6 — Product Source Video/Reel, with explicit provider/receipt and link-sticker capability proof. Historical Product #536 Feed+Story rev1 receipts never blindly reposted; rev2 remains under commercial review.
 
 DO NOT label W5C or full owner acceptance complete before real native UI acceptance.
+
+## Two-parent GitHub merge evidence
+- SOURCE_GIT_MERGE_SHA=`53838458b41407f264e3de885b9d817673051b20`; parents `8a8b23bc78b52e145c2b77702bac76ae15a88720` + `0a68496f438d0db36aec471e3aa219f99dbe24ee`, exactly in order.
+- Push `merge/phase50-a2z-a2u-lineage-20261009` to `https://github.com/farazha2203/3dprinthub.git` succeeded with new branch and without forced update.
+- Merge source has no migration/dependency changes, no unresolved merge conflicts and no runtime code regression in 124 in-scope related tests. Changed-condition old Story-import test corrected to current W5 policy.
+- Status **GITHUB_UPDATED / UNIFIED_SOURCE_CANDIDATE**. Neither Production source SHA nor Desktop .lnk has been changed by this merge; do not label them deployed. Next W5C visible UI acceptance, then optional Desktop activation, next W6.
