@@ -1748,3 +1748,5 @@ Latest verified lineage closure 2026-10-09: **DONE** two-parent merge `53838458b
 - [ ] Commit/push exact tested W5C QA source/docs to unified GitHub branch and verify clean Local/upstream.
 - [ ] Actual daily owner desktop application acceptance / gallery real operator signoff (separate from programmatic Qt interaction).
 - [ ] Following W6 Product Video and Reel, only after W5C acceptance, with Site revision and Buffer/Instagram idempotency safeguards. Existing Production code remains unchanged and separate Host rollout is not requested.
+
+W5C source checkpoint `9fcd898963c07d4eb78990d8b6711d9e1b4576f1` (2026-10-09) pushed to GitHub and Local=Remote clean. Native Windows Qt visual automation 2/2 (4-card click/delete/reopen and 20-image scroll last-click), headless 2/2, media truth 14/14, Qt VerifyOnly PASS. **Source/checkpoint task complete**, **owner daily Desktop UAT still required** and W5C is not yet ACCEPTED. No new Host/Production deployment. Following W6 Source Video/Reel after acceptance; preserve Feed/Story revision truth.
