@@ -1791,3 +1791,14 @@ W6 after-acceptance correction `3dd71b6dde88d9294c896988c61c6595e6b9f1e7` GITHUB
 - [ ] Owner manually accepts gallery W5C in daily Desktop; screenshots/auto Qt alone do not equate owner signoff.
 - [ ] Next `A2Z-S Social Go-Live` exact preflight: Product/Site revision read-only verification, actual media MP4/MOV codec/size/aspect/public status, Buffer profile and true provider receipts, operator approval; then only one controlled new-Reel/Feed/Story action explicitly authorized. Preserve prior #536 revision1 receipts.
 - [ ] Immediately after: owner-selected `A2Z-C Dynamic Shipping` or `A3 Secure Store ZarinPal` with full independent Local/Host backed migration/Production gates.
+
+## 2026-10-09 — A2Z-S changed-revision live provider and Catalog truth audit
+- [x] GitHub/Local verified unified b29c0970, real daily Windows 2946a6cb; Production clean 02770187 via dedicated tunnel, no deploy.
+- [x] Read-only Buffer channel connected, active mobile reminder device FALSE; automatic `bio_shop_grid` remains valid default; native Link Sticker reminder blocked until user mobile connection and test notification.
+- [x] Query actual saved provider IDs, not last-30 list. #536 rev1 Feed+Story sent, #309 rev2 Feed+Story sent, #301 rev2 Feed sent, #625 rev8 Feed+Story sent, #609 rev2 Feed sent; historical #609 Story local notification-ready was provider error, no live link.
+- [x] Catalog 1076 mode=ro, full backup SHA preserved. 48 public Site ACK, 45 valid public selected Social media, 35 same-revision Feed local receipts, 4 prior-revision only, 6 with no Feed receipt; do not auto-send any.
+- [x] Three public image parity blockers `#273/#303/#965` fail closed. Require per-Product exact Site/local media reconciliation, no false matching, before any campaign.
+- [x] #536 owner-approved commercial override despite review label; public GIF HTTP200 but no MP4/MOV Reel. No ffmpeg/ffprobe executable on current PATH; do not infer codec capability.
+- [x] 82/82 existing scoped Buffer/Instagram/Social readiness/Reel tests PASS. Provider read-only only.
+- [ ] GitHub docs-only checkpoint; owner W5C manual gallery signoff; choose exact product/revision and correct media truth on separately backed-up local+Host state; confirm Buffer device if native sticker requested; deliberate approved go-live only after protected rollback and final receipts.
+- [ ] Following owner-selected A2Z-C shipping or A3 secure checkout with independent migration/backup/Host/Production gates.

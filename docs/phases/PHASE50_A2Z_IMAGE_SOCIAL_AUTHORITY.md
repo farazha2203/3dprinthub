@@ -106,3 +106,7 @@ After #588 Site acceptance, return to the already-open A2Z-S external prerequisi
 
 ## Phase after this hotfix
 Continue A2Z Catalog Slider completeness/backfill + final Windows operator acceptance, then A2Z-S changed-revision Social rollout and the remaining master A2Z plan.
+
+## 2026-10-09 — Changed-revision Social Go-Live audit (does not reopen accepted A2Z-S2 automatic Story)
+Read-only provider post-ID verification confirms accepted default automatic Buffer `bio_shop_grid` Story continues to be supported with `hasActiveMemberDevice=false` (native mobile sticker remains optional/blocked), but no new Story/Feed/Reel was sent. Historical #536 rev1 Feed and automatic Story are truly provider sent; historical #609 native notification-ready provider status is `error`/no link, as ERR-49-220 already records. Public Site rev2 #536 retains owned GIF only and a separate valid owner-approved-license override; new version is neither automatically released nor a compatible MP4 Reel.
+Exact selected-media audit: 48 public Site products, 45 valid Social media, 3 fail-closed #273/#303/#965 requiring original Site↔Catalog media reconciliation. 82 scoped regressions PASS and no provider/product/host mutations. Active follow-up `docs/phases/PHASE50_A2Z_S_CHANGED_REVISION_PREFLIGHT_20261009.md` status `READONLY_PROVIDER_VERIFIED / EXTERNAL_ACTION_PENDING`, not owner Social Go-Live accepted.
