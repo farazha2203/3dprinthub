@@ -1604,3 +1604,5 @@ Immediately next: final foreground Desktop acceptance on the exact GitHub SHA. F
 - [x] Prune Git worktree metadata and retain only canonical Git anchor, current runtime source and social-assets worktree.
 - [x] Re-run Qt VerifyOnly and read-only Catalog quick_check after cleanup.
 - [ ] Do not collapse the remaining Git anchor/current-runtime pair until the current v8.9.11 WIP is reconciled/committed; the current worktree depends on the anchor Git metadata and launcher venv.
+
+2026-10-09 A2R actual Desktop: shortcut resolved to W5 v8.9.11 source, not older canonical branch. Verified SQLite backup, source helper integration only in Buffer Feed and provider reconciliation plus Direct Instagram checks; explicit operator Story-repetition preserved. New5, Buffer34, Instagram29 tests and Qt VerifyOnly PASS. Next selective GitHub commit/push, exact shortcut-launch smoke and W5C gallery visual acceptance; divergent Production/Windows lineage remains a separate blocker before any broad Site deploy. Following phase W6 video/Reel.

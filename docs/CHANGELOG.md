@@ -1927,3 +1927,5 @@ Record meaningful changes only. Older detailed entries remain available in Git h
 - Removed obsolete runtime/baseline/A2T release and historical Hero/Slicebox/Social worktrees plus the empty UAT directory.
 - Reduced registered worktrees to the canonical Git anchor, current v8.9.11 source and required social-assets worktree.
 - Post-cleanup Qt VerifyOnly and Catalog quick_check PASS; app remained running; no Production mutation.
+
+2026-10-09 A2R actual shortcut LOCAL_TESTED: semantic positive Product/revision matching for Feed duplicate and Buffer provider reconciliation; no operator Story-repeat regression. New5 + Buffer34 + Instagram29 tests PASS; actual W5 Qt launcher VerifyOnly PASS. SQLite rollback c87fb9cc64d74d93760d5191b6b172a9a419ce3059c01425b197346bf033f6bd retained; no external Buffer POST or Site deploy.

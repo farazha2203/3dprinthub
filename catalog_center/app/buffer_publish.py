@@ -7,6 +7,7 @@ from urllib import error as urllib_error
 from urllib import request as urllib_request
 
 from .instagram_publish import canonical_site_payload
+from .social_revision_identity import same_site_revision
 from .secure_secrets import get_secret
 from .social_content_policy import highlight_target_for_product
 
@@ -165,7 +166,7 @@ def _receipt_for_revision(db, product_id: int, fingerprint: str, statuses: set[s
             previous = json.loads(receipt["payload_json"] or "{}")
         except Exception:
             previous = {}
-        if str(previous.get("site_ack_fingerprint") or "") == fingerprint:
+        if same_site_revision(str(previous.get("site_ack_fingerprint") or ""), fingerprint):
             return dict(previous)
     return None
 
@@ -262,7 +263,7 @@ def _already_sent(db, product_id: int, fingerprint: str) -> bool:
             previous = json.loads(receipt["payload_json"] or "{}")
         except Exception:
             previous = {}
-        if str(previous.get("site_ack_fingerprint") or "") == fingerprint:
+        if same_site_revision(str(previous.get("site_ack_fingerprint") or ""), fingerprint):
             return True
     return False
 
@@ -662,7 +663,7 @@ def reconcile_product_receipts(
             continue
 
         receipt_fingerprint = str(payload.get("site_ack_fingerprint") or "")
-        if receipt_fingerprint != fingerprint:
+        if not same_site_revision(receipt_fingerprint, fingerprint):
             stale_skipped += 1
             continue
         provider_id = str(

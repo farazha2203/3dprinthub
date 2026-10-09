@@ -1458,3 +1458,5 @@ Status: `COMPLETED / RUNTIME PRESERVED / PRODUCTION UNTOUCHED`.
 Owner identified the visible Catalog Center v8.9.11 / Build 2026.10.04.2 as the current working version and requested removal of obsolete duplicate version folders while preserving every folder actually needed by that runtime.
 
 Completed with reversible cleanup: current runtime/source, canonical Git anchor/shared venv, live Catalog data, social provider assets and backups were retained; stale registered worktrees and empty UAT were removed only after dirty-delta rollback evidence was created and hashed. Qt VerifyOnly and Catalog integrity passed after cleanup.
+
+REQ-50-046: user requested continuation of A2R through actual Windows Desktop application. W5 shortcut source verified, localized rev1/rev2 Buffer/Instagram idempotency patch LOCAL_TESTED on active runtime, no historical rev1 Feed/Story replay. Next GitHub-only selective code release, then bounded Desktop foreground and lineage reconciliation. Product #536 site media already working and Product remains review, not auto-postable.
