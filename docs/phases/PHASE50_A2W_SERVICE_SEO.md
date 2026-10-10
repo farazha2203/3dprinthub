@@ -23,6 +23,8 @@ Status: LOCAL_TESTED; GitHub/Production gates pending.
 ## Release status
 Runtime Host baseline: `dc229de53db652ffe76464431c7271e5fbc25fae` on the established Host branch. Dedicated A2W runner requires exact GitHub branch/SHA, baseline ancestry, strict changed-file allowlist, fresh verified source + protected env + full MySQL rollback, no migration, then collectstatic/restart/public smoke. No Host operation has been performed for A2W yet.
 
+Initial runner attempt against commit `15d7c64980ff9a3cb0e78ffb4c09591613fcc340` stopped before backup/merge because its allowlist omitted its own contract-test file (ERR-50-052). Host remains at baseline; this will be retried only from a corrected successor SHA. Host `/tmp` is noexec; verified runner is invoked with Bash.
+
 Owner-provided Search Console evidence shows `/sitemap.xml` and `/sitemap-images.xml` as Success and the homepage as indexed; it does not establish that every URL is indexed or ranked. Instagram Insights was still processing in the supplied screenshot.
 
 Research references: [Google sitemap guidance](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap) treats sitemap submission as a discovery hint, not an indexing guarantee; [Google spam policies](https://developers.google.com/search/docs/essentials/spam-policies) warn against doorway/scaled low-value landing pages, so these pages carry distinct service instructions and honest limitations; [Google Business Profile supported countries](https://support.google.com/business/answer/6270107?hl=en-G) currently excludes Iran.

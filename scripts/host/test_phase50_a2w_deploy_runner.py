@@ -24,6 +24,7 @@ class A2WDeployRunnerContractTests(unittest.TestCase):
         self.assertIn("store/phase50_service_seo.py", paths)
         self.assertIn("templates/store/service_landing.html", paths)
         self.assertIn("scripts/seo/phase50_a2w_service_seo_smoke.py", paths)
+        self.assertIn("scripts/host/test_phase50_a2w_deploy_runner.py", paths)
         self.assertIn('*) fail "unexpected_release_file:$changed" ;;', self.source)
 
     def test_forbids_migration_dependency_settings_and_secret_deltas(self):

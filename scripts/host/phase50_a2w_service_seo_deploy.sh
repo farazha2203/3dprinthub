@@ -55,7 +55,7 @@ git merge-base --is-ancestor "$BASE" "$FETCHED" || fail not_fast_forward
 git diff --name-only "$BASE" "$FETCHED" > "$DELTA"
 while IFS= read -r changed; do
   case "$changed" in
-    store/phase50_service_seo.py|store/sitemaps.py|store/templatetags/store_seo.py|store/urls.py|store/views.py|store/test_phase50_service_seo.py|templates/store/isfahan_service_landing.html|templates/store/service_page.html|templates/store/service_landing.html|templates/website/partials/services.html|scripts/seo/phase50_a2w_service_seo_smoke.py|scripts/host/phase50_a2w_service_seo_deploy.sh|docs/CURRENT_STATE.md|docs/ROADMAP.md|docs/CHANGELOG.md|docs/ERRORS.md|docs/REQUESTS.md|docs/PATHS.md|docs/HOST_CONSTRAINTS.md|docs/phases/PHASE50_A2W_SERVICE_SEO.md|docs/phases/PHASE50_A2V_ISFAHAN_SEO_RELEASE.md) ;;
+    store/phase50_service_seo.py|store/sitemaps.py|store/templatetags/store_seo.py|store/urls.py|store/views.py|store/test_phase50_service_seo.py|templates/store/isfahan_service_landing.html|templates/store/service_page.html|templates/store/service_landing.html|templates/website/partials/services.html|scripts/seo/phase50_a2w_service_seo_smoke.py|scripts/host/phase50_a2w_service_seo_deploy.sh|scripts/host/test_phase50_a2w_deploy_runner.py|docs/CURRENT_STATE.md|docs/ROADMAP.md|docs/CHANGELOG.md|docs/ERRORS.md|docs/REQUESTS.md|docs/PATHS.md|docs/HOST_CONSTRAINTS.md|docs/phases/PHASE50_A2W_SERVICE_SEO.md|docs/phases/PHASE50_A2V_ISFAHAN_SEO_RELEASE.md) ;;
     *) fail "unexpected_release_file:$changed" ;;
   esac
 done < "$DELTA"
