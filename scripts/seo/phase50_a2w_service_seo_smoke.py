@@ -30,8 +30,11 @@ def run(base):
         status, body, _ = fetch(found)
         if status != 200:
             raise RuntimeError("service_http_failed:" + path)
+        decoded_body = body.decode("utf-8", "replace")
+        if any(term.casefold() in decoded_body.casefold() for term in ("H2S", "Bambu Lab", "۳۴۰×۳۲۰×۳۴۰", "حجم ساخت اسمی")):
+            raise RuntimeError("private_equipment_detail_leaked:" + path)
         parser = PageMetadata()
-        parser.feed(body.decode("utf-8", "replace"))
+        parser.feed(decoded_body)
         title = " ".join("".join(parser.title).split())
         description = parser.meta.get("description", "")
         robots = parser.meta.get("robots", "index,follow").casefold()
@@ -41,7 +44,7 @@ def run(base):
             raise RuntimeError("service_canonical_mismatch:" + path)
         if any(term not in title for term in title_terms):
             raise RuntimeError("service_title_terms_missing:" + path)
-        if "/store/request-a-part/?service=" + path.rstrip("/").split("/")[-1] not in body.decode("utf-8", "replace"):
+        if "/store/request-a-part/?service=" + path.rstrip("/").split("/")[-1] not in decoded_body:
             raise RuntimeError("service_request_prefill_link_missing:" + path)
         if not any(
             node.get("@type") == "Service"

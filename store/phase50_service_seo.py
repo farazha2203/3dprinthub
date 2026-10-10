@@ -6,14 +6,6 @@ from django.shortcuts import render
 from django.utils.text import slugify
 
 
-H2S_CAPABILITY_NOTE = (
-    "طبق مشخصات رسمی Bambu Lab H2S، حجم ساخت اسمی ۳۴۰×۳۲۰×۳۴۰ میلی‌متر است. "
-    "این عدد به‌تنهایی اندازهٔ قابل‌استفادهٔ هر هندسه یا دوام قطعه را تضمین نمی‌کند؛ "
-    "جهت چاپ، ساپورت، تلرانس، انقباض، مونتاژ، نوع فیلامنت و شرایط واقعی کار پیش از پذیرش بررسی می‌شوند. "
-    "قطعات بزرگ‌تر فقط در صورت امکان طراحی و اتصال به چند بخش تقسیم خواهند شد."
-)
-
-
 SERVICE_GUIDES = {
     "3d-printing-services": {
         "meta_title": "خدمات چاپ سه‌بعدی قطعه و نمونه اولیه | 3DprintHub",
@@ -287,6 +279,5 @@ def service_landing_view(request, slug):
             "service": profile,
             "service_slug": slug,
             "related_products": related_products,
-            "h2s_capability_note": H2S_CAPABILITY_NOTE,
         },
     )

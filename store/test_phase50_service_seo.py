@@ -44,8 +44,8 @@ class ServiceSeoAndIntakeTests(TestCase):
                 self.assertIn("ثبت درخواست و ارسال فایل/عکس", body)
                 self.assertIn("/store/request-a-part/?service=" + slug, body)
                 self.assertIn("application/ld+json", body)
-                self.assertContains(response, "۳۴۰×۳۲۰×۳۴۰ میلی‌متر")
-                self.assertContains(response, "مشخصات رسمی Bambu Lab H2S")
+                for private_equipment_detail in ("H2S", "Bambu Lab", "۳۴۰×۳۲۰×۳۴۰", "حجم ساخت اسمی"):
+                    self.assertNotIn(private_equipment_detail.casefold(), body.casefold())
                 if profile.get("article_sections"):
                     self.assertGreaterEqual(body.count("<h2"), len(profile["article_sections"]))
                     for article_section in profile["article_sections"]:

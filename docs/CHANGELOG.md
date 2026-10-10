@@ -1305,7 +1305,7 @@ Phase50.A2U owner-authorized safe Host quota recovery 2026-10-09: four 46,832,89
 - Added distinct landing pages for custom figures, rare car/motorcycle/appliance components and architectural maquettes, alongside the studio-props page.
 - Added page-specific Persian SEO titles/descriptions, editorial H2 sections, request-prefilled CTAs, sitemap and Home/Isfahan navigation.
 - Pages display up to six matching real public catalog products; inactive or unrelated items are not substituted and no catalog rows/tags are changed.
-- Documented nominal H2S build size from the official manufacturer page and added explicit geometry/material/safety caveats.
+- Removed public equipment/model specifications from service pages per owner confidentiality instruction; technical feasibility remains subject to private case-by-case review.
 - Confirmed project Instagram architecture: Buffer default Feed/Story, Direct Meta Graph Feed/Carousel, secure credential store; no account mutation or post was made.
 - Focused Store/SEO/Hero regression 33/33 PASS. Not committed/pushed/deployed.
 ## 2026-10-10 — A2X/A2Y Persian service discovery published

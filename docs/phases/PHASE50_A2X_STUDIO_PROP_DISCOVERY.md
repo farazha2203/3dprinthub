@@ -27,7 +27,7 @@ Status: LOCAL_TESTED; GitHub/Host/Production pending.
 ## Safety boundaries
 - Must not touch: product/order/pricing/media rows, all-product tag assignments, Instagram posts/settings/credentials, Search Console, gallery/screenshot workflows, database schema/migrations, Host or production data.
 - SEO keyword meta tags are not added; actual visible content, descriptive titles, internal links and user-facing product search carry the intent.
-- No Business Profile/knowledge panel, indexing, ranking, sales or manufacturing-capability guarantee. The new service page phase adds H2S nominal build volume sourced from the manufacturer's [official specification page](https://us.store.bambulab.com/en/products/h2s); actual usable envelope and suitability remain project-specific.
+- No Business Profile/knowledge panel, indexing, ranking, sales or manufacturing-capability guarantee. Per owner confidentiality instruction, public service pages must not identify equipment brands/models or disclose machine specifications; suitability is reviewed privately per request.
 
 ## Verification
 - Related A2W/A2V/A2U/Hero regressions: 33/33 PASS with process-scoped test settings (`DJANGO_DEBUG=1`, blank `DB_NAME`, `SECURE_SSL_REDIRECT=0`). Django check reports three existing warnings: absent optional Google OAuth, unsupported CKEditor 4 and in-memory realtime. The later six-service-page extension is tracked in `PHASE50_A2Y_SERVICE_VERTICAL_LANDINGS.md`.
