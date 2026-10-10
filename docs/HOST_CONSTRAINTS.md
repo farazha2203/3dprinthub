@@ -291,3 +291,9 @@ Official cPanel docs: Disk Usage can report stale values after deletion; account
 - Host exact runtime SHA `dc229de53db652ffe76464431c7271e5fbc25fae` on `release/phase50-a2j-hero-20260915`; worktree clean. Dedicated tunnel only.
 - Fresh pre-deploy cPanel StatsBar 1789/2000 MB; actual 48MiB and 32MiB reservations passed. Verified backup `/home/sfkilvrs/3dprinthub-deploy-backups/20261010-113529-phase50-a2v-isfahan-seo` contains source snapshots, protected `.env`, valid/checksummed MySQL gzip and checksummed guarded rollback script.
 - No migrations or database writes. Public endpoints HTTP 200 and independent workstation 64/64 sitemap crawl PASS. Host-originated full crawl once timed out; retain as transient egress warning.
+
+## 2026-10-10 — A2W service SEO deployment contract
+- A2W is Local-only until exact GitHub SHA promotion. Use `scripts/host/phase50_a2w_service_seo_deploy.sh` via the dedicated project router; do not reuse an older runner with a different expected target.
+- Expected Host runtime base remains `dc229de53db652ffe76464431c7271e5fbc25fae`; runner checks actual SHA, clean Host, MySQL identity, empty migration plan, exact branch SHA and strict delta allowlist.
+- Before promotion, require fresh official account quota plus real 48/32 MiB write reserves and checksum-verifiable source, protected `.env`, full MySQL gzip, and guarded source rollback. If any fails, stop without Host source promotion.
+- Runtime verification must discover both new paths from sitemap, verify HTTP 200, canonical, index/follow, title/description, Service JSON-LD and existing request-form prefill links.

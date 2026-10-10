@@ -13,38 +13,44 @@
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <div class="glass rounded-3xl p-7 hover:border-cyan-400/50 transition">
                 <div class="text-4xl mb-5">🧩</div>
-                <h3 class="text-xl font-black mb-3">طراحی سه‌بعدی قطعات</h3>
+                <h3 class="text-xl font-black mb-3"><a href="{% url 'store:design_from_idea' %}" class="hover:text-cyan-300">طراحی سه‌بعدی از ایده، عکس یا نقشه</a></h3>
                 <p class="text-slate-400 leading-8">مدلسازی دقیق قطعات صنعتی، مکانیکی، قاب‌ها، براکت‌ها و تجهیزات سفارشی.</p>
+                <a href="{% url 'store:design_from_idea' %}" class="mt-4 inline-flex text-cyan-300 underline">جزئیات و ثبت درخواست طراحی</a>
             </div>
 
             <div class="glass rounded-3xl p-7 hover:border-cyan-400/50 transition">
                 <div class="text-4xl mb-5">🔍</div>
-                <h3 class="text-xl font-black mb-3">مهندسی معکوس</h3>
+                <h3 class="text-xl font-black mb-3"><a href="{% url 'store:service_page' 'reverse-engineering-parts' %}" class="hover:text-cyan-300">مهندسی معکوس</a></h3>
                 <p class="text-slate-400 leading-8">بازطراحی قطعات از روی نمونه، عکس، اندازه‌برداری یا قطعه آسیب‌دیده.</p>
+                <a href="{% url 'store:service_page' 'reverse-engineering-parts' %}" class="mt-4 inline-flex text-cyan-300 underline">جزئیات و ثبت درخواست</a>
             </div>
 
             <div class="glass rounded-3xl p-7 hover:border-cyan-400/50 transition">
                 <div class="text-4xl mb-5">🏭</div>
-                <h3 class="text-xl font-black mb-3">چاپ سه‌بعدی صنعتی</h3>
+                <h3 class="text-xl font-black mb-3"><a href="{% url 'store:service_page' '3d-printing-services' %}" class="hover:text-cyan-300">چاپ سه‌بعدی صنعتی</a></h3>
                 <p class="text-slate-400 leading-8">ساخت قطعات کاربردی با متریال‌های مهندسی مانند PET-CF، PA12-CF، PPS-CF و PC-FR.</p>
+                <a href="{% url 'store:service_page' '3d-printing-services' %}" class="mt-4 inline-flex text-cyan-300 underline">جزئیات و ثبت درخواست</a>
             </div>
 
             <div class="glass rounded-3xl p-7 hover:border-cyan-400/50 transition">
                 <div class="text-4xl mb-5">🛠️</div>
-                <h3 class="text-xl font-black mb-3">جیگ و فیکسچر</h3>
-                <p class="text-slate-400 leading-8">ساخت ابزارهای کمکی تولید، مونتاژ، کنترل کیفیت و فیکسچرهای CNC.</p>
+                <h3 class="text-xl font-black mb-3"><a href="{% url 'store:jigs_fixtures_service' %}" class="hover:text-cyan-300">جیگ، فیکسچر و مدل اولیه قالب</a></h3>
+                <p class="text-slate-400 leading-8">بررسی ابزارهای کمکی مونتاژ و موقعیت‌دهی قطعه؛ روش و امکان ساخت پس از مشخص‌شدن نیرو و شرایط کار تعیین می‌شود.</p>
+                <a href="{% url 'store:jigs_fixtures_service' %}" class="mt-4 inline-flex text-cyan-300 underline">جزئیات و ثبت درخواست</a>
             </div>
 
             <div class="glass rounded-3xl p-7 hover:border-cyan-400/50 transition">
                 <div class="text-4xl mb-5">🚀</div>
-                <h3 class="text-xl font-black mb-3">نمونه‌سازی اولیه</h3>
+                <h3 class="text-xl font-black mb-3"><a href="{% url 'store:service_page' 'architectural-student-model-making' %}" class="hover:text-cyan-300">نمونه‌سازی، ماکت و مدل پروژه</a></h3>
                 <p class="text-slate-400 leading-8">ساخت سریع نمونه اولیه برای تست فرم، ابعاد، نصب و ارائه به مشتری.</p>
+                <a href="{% url 'store:service_page' 'architectural-student-model-making' %}" class="mt-4 inline-flex text-cyan-300 underline">جزئیات و ثبت درخواست</a>
             </div>
 
             <div class="glass rounded-3xl p-7 hover:border-cyan-400/50 transition">
                 <div class="text-4xl mb-5">🧪</div>
                 <h3 class="text-xl font-black mb-3">مشاوره انتخاب متریال</h3>
                 <p class="text-slate-400 leading-8">انتخاب متریال بر اساس دما، فشار، ضربه، مواد شیمیایی، محیط کاری و بودجه.</p>
+                <a href="{% url 'store:service_page' '3d-printing-services' %}" class="mt-4 inline-flex text-cyan-300 underline">ارسال کاربرد قطعه برای بررسی</a>
             </div>
         </div>
         <div class="mt-10 rounded-2xl border border-white/10 bg-white/5 p-6 text-right">

@@ -100,9 +100,9 @@ def _absolute(request, value):
 
 def _organization(seo, request):
     if not seo:
-        return {"@type":"Organization", "name":"3DprintHub", "url":request.build_absolute_uri("/")}
+        return {"@type":"ProfessionalService", "name":"3DprintHub", "url":request.build_absolute_uri("/")}
     organization_name = str(seo.organization_name or seo.site_name or "3DprintHub").strip()
-    item = {"@type":"Organization", "@id":seo.site_url.rstrip("/") + "/#organization", "name":organization_name, "url":seo.site_url}
+    item = {"@type":"ProfessionalService", "@id":seo.site_url.rstrip("/") + "/#organization", "name":organization_name, "url":seo.site_url}
     if seo.organization_logo:
         item["logo"] = _absolute(request, seo.organization_logo.url)
     if seo.organization_phone:
@@ -120,6 +120,9 @@ def _organization(seo, request):
                 address[key] = str(value).strip()
         item["address"] = address
     same_as = [line.strip() for line in (seo.same_as or "").splitlines() if line.strip()]
+    verified_instagram = "https://www.instagram.com/3dprinthub_ir/"
+    if verified_instagram not in same_as:
+        same_as.append(verified_instagram)
     if same_as:
         item["sameAs"] = same_as
     # Return-policy markup is intentionally omitted until the merchant
@@ -300,10 +303,26 @@ def product_list_schema_json(products, request, current_category=None):
 
 
 @register.simple_tag
-def service_schema_json(page, request, seo):
+def service_schema_json(page, request, seo, guide=None):
     url=_absolute(request, page.get_absolute_url())
-    graph=[{"@type":"Service", "name":page.title, "description":page.short_description, "url":url, "provider":{"@id":(seo.site_url.rstrip("/") + "/#organization") if seo else url + "#provider"}, "areaServed":{"@type":"Country", "name":"Iran"}}, _breadcrumb(request, [("خانه", "/"), ("خدمات", "/#services"), (page.title, "")])]
+    description = (guide or {}).get("lead") or page.short_description
+    graph=[{"@type":"Service", "name":page.title, "description":description, "url":url, "provider":{"@id":(seo.site_url.rstrip("/") + "/#organization") if seo else url + "#provider"}, "areaServed":{"@type":"Country", "name":"ایران"}}, _breadcrumb(request, [("خانه", "/"), ("خدمات", "/#services"), (page.title, "")])]
     return _json({"@context":"https://schema.org", "@graph":graph})
+
+
+@register.simple_tag
+def service_landing_schema_json(profile, slug, request, seo):
+    url = _absolute(request, f"/store/services/{slug}/")
+    service = {
+        "@type": "Service",
+        "name": profile["title"],
+        "description": profile["meta_description"],
+        "url": url,
+        "provider": {"@id": (seo.site_url.rstrip("/") + "/#organization") if seo else _absolute(request, "/#organization")},
+        "areaServed": {"@type": "Country", "name": profile.get("area", "ایران")},
+    }
+    graph = [service, _breadcrumb(request, [("خانه", "/"), ("خدمات", "/#services"), (profile["title"], "")])]
+    return _json({"@context": "https://schema.org", "@graph": graph})
 
 
 @register.simple_tag

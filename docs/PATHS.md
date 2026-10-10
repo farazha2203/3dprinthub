@@ -259,3 +259,9 @@ This section supersedes older Production-HEAD examples above; historical entries
 - Host branch remains `release/phase50-a2j-hero-20260915`, exact deployed SHA above, clean worktree.
 - Verified rollback root: `/home/sfkilvrs/3dprinthub-deploy-backups/20261010-113529-phase50-a2v-isfahan-seo`.
 - Current public landing: `https://3dprinthub.ir/store/services/3d-printing-isfahan/`.
+
+## 2026-10-10 — A2W service SEO Local release paths
+- Isolated release checkout: `D:\projects\.worktrees\3dprinthub\isfahan-seo-release-20261010`.
+- Branch: `release/phase50-a2w-service-seo-20261010`; Host baseline: `dc229de53db652ffe76464431c7271e5fbc25fae`.
+- Active phase: `docs/phases/PHASE50_A2W_SERVICE_SEO.md`.
+- Guarded Host runner: `scripts/host/phase50_a2w_service_seo_deploy.sh`; public smoke: `scripts/seo/phase50_a2w_service_seo_smoke.py`.

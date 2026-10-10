@@ -1,0 +1,71 @@
+{% extends "store/base.html" %}
+{% load store_seo %}
+
+{% block title %}{{ service.meta_title }}{% endblock %}
+{% block meta_description %}{{ service.meta_description }}{% endblock %}
+{% block canonical %}{{ request.scheme }}://{{ request.get_host }}/store/services/{{ service_slug }}/{% endblock %}
+{% block robots %}index,follow{% endblock %}
+{% block og_type %}website{% endblock %}
+{% block og_title %}{{ service.meta_title }}{% endblock %}
+{% block og_description %}{{ service.meta_description }}{% endblock %}
+{% block og_image %}{% if seo_settings.default_og_image %}{{ request.scheme }}://{{ request.get_host }}{{ seo_settings.default_og_image.url }}{% endif %}{% endblock %}
+{% block extra_head %}
+{{ block.super }}
+<meta property="og:site_name" content="3DprintHub">
+<meta name="twitter:title" content="{{ service.meta_title }}">
+<meta name="twitter:description" content="{{ service.meta_description }}">
+{% if seo_settings.default_og_image %}<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ seo_settings.default_og_image.url }}">{% endif %}
+{% endblock %}
+{% block structured_data %}
+{% service_landing_schema_json service service_slug request seo_settings as schema_json %}
+<script type="application/ld+json">{{ schema_json }}</script>
+{% endblock %}
+
+{% block content %}
+<main class="container mx-auto px-4 md:px-6 py-10 md:py-14">
+  <nav aria-label="مسیر صفحه" class="text-sm text-slate-500 mb-6">
+    <a href="{% url 'website:home' %}">خانه</a><span class="px-2">/</span>
+    <a href="/#services">خدمات</a><span class="px-2">/</span>
+    <span aria-current="page">{{ service.title }}</span>
+  </nav>
+  <section class="rounded-3xl border border-slate-200 bg-white p-6 md:p-10">
+    <span class="store-eyebrow">خدمات طراحی و ساخت سفارشی</span>
+    <h1 class="text-3xl md:text-5xl font-black leading-tight mt-4">{{ service.title }}</h1>
+    <p class="text-slate-600 leading-8 mt-5 max-w-4xl">{{ service.lead }}</p>
+    <div class="flex flex-wrap gap-3 mt-7">
+      <a href="{% url 'store:product_request' %}?service={{ service_slug|urlencode }}" class="btn-primary rounded-2xl px-6 py-3 font-black">ثبت درخواست و ارسال فایل/عکس</a>
+      <a href="{% url 'store:product_list' %}" class="rounded-2xl border border-slate-300 bg-white px-6 py-3 font-bold">دیدن محصولات آماده</a>
+    </div>
+  </section>
+  <section class="grid lg:grid-cols-3 gap-5 mt-7">
+    <article class="rounded-2xl border border-slate-200 bg-white p-6">
+      <h2 class="text-xl font-black">اطلاعاتی که کار را جلو می‌برد</h2>
+      <ul class="mt-4 space-y-3 leading-7 text-slate-600">{% for item in service.send %}<li>{{ item }}</li>{% endfor %}</ul>
+    </article>
+    <article class="rounded-2xl border border-slate-200 bg-white p-6">
+      <h2 class="text-xl font-black">از درخواست تا برآورد</h2>
+      <ol class="mt-4 space-y-3 leading-7 text-slate-600">{% for item in service.steps %}<li>{{ forloop.counter }}. {{ item }}</li>{% endfor %}</ol>
+    </article>
+    <article class="rounded-2xl border border-amber-200 bg-amber-50 p-6">
+      <h2 class="text-xl font-black">محدوده و امکان‌سنجی</h2>
+      <p class="mt-4 leading-8 text-slate-700">{{ service.note }}</p>
+    </article>
+  </section>
+  <section class="mt-8 rounded-2xl bg-slate-950 p-6 md:p-8 text-white">
+    <h2 class="text-2xl font-black">برای شروع چه کار کنم؟</h2>
+    <p class="mt-3 leading-8 text-slate-300">فرم درخواست را با عنوان ازپیش‌پرشده باز کنید، جزئیات را اصلاح کنید و فایل یا عکس‌های لازم را پیوست کنید. درخواست برای بررسی فنی ثبت می‌شود؛ قیمت و زمان پس از روشن‌شدن مشخصات اعلام خواهد شد.</p>
+    <a href="{% url 'store:product_request' %}?service={{ service_slug|urlencode }}" class="mt-5 inline-flex rounded-xl bg-orange-500 px-5 py-3 font-black text-slate-950">شروع درخواست</a>
+  </section>
+  <nav class="mt-8 rounded-2xl border border-slate-200 bg-white p-6" aria-label="خدمات دیگر">
+    <h2 class="font-black text-xl">سایر خدمات</h2>
+    <div class="mt-4 flex flex-wrap gap-x-5 gap-y-3">
+      <a href="{% url 'store:isfahan_service_landing' %}" class="text-orange-700 underline">چاپ سه‌بعدی در اصفهان</a>
+      <a href="{% url 'store:design_from_idea' %}" class="text-orange-700 underline">طراحی سه‌بعدی از ایده</a>
+      <a href="{% url 'store:jigs_fixtures_service' %}" class="text-orange-700 underline">جیگ، فیکسچر و مدل قالب</a>
+      <a href="{% url 'store:service_page' '3d-printing-services' %}" class="text-orange-700 underline">خدمات چاپ سه‌بعدی</a>
+      <a href="{% url 'store:service_page' 'reverse-engineering-parts' %}" class="text-orange-700 underline">مهندسی معکوس قطعه</a>
+      <a href="{% url 'store:service_page' 'architectural-student-model-making' %}" class="text-orange-700 underline">ماکت و مدل پروژه</a>
+    </div>
+  </nav>
+</main>
+{% endblock %}

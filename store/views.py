@@ -210,10 +210,16 @@ def service_page_view(request, slug):
         "kids_drawing": "creative",
         "custom_figure": "creative",
     }.get(page.service_type, "general"))[:6]
-    return render(request, "store/service_page.html", {"page": page, "related_products": related_products})
+    from .phase50_service_seo import service_page_context
+
+    context = service_page_context(page)
+    context.update({"page": page, "related_products": related_products})
+    return render(request, "store/service_page.html", context)
 
 
 def product_request_view(request):
+    from .phase50_service_seo import request_prefill
+
     if request.method == "POST":
         form = ProductRequestForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
@@ -227,7 +233,7 @@ def product_request_view(request):
             return redirect("store:product_request_success")
         messages.error(request, "اطلاعات فرم را بررسی کنید.")
     else:
-        form = ProductRequestForm(user=request.user)
+        form = ProductRequestForm(user=request.user, initial=request_prefill(request.GET.get("service", "")))
     return render(request, "store/product_request.html", {"form": form})
 
 

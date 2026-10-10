@@ -951,3 +951,13 @@ Status: PRODUCTION_VERIFIED (runtime scope; external Google acceptance pending).
 - [x] Production Home, Isfahan landing, robots and sitemap HTTP 200; independent 64/64 sitemap SEO smoke PASS.
 - [ ] Owner authenticated Search Console: submit `/sitemap.xml`, URL Inspection for homepage and Isfahan service page, request indexing and observe indexing status.
 - [ ] Separate Iran Post: obtain official API/merchant contract, sandbox credentials, current rate/fee terms; implement and test only against verified contract.
+
+## 2026-10-10 — Phase50.A2W service discovery SEO
+Status: LOCAL_TESTED; exact GitHub/Production gates pending. See `docs/phases/PHASE50_A2W_SERVICE_SEO.md`.
+- [x] Distinct Persian, factual metadata and practical intake details on seven existing service pages; preserve custom admin copy.
+- [x] Add design-from-idea and jig/fixture/mold-prototype pages, request-form prefills, internal links and sitemap discovery.
+- [x] Add factual Service JSON-LD and verified Instagram profile identity only.
+- [x] 22 focused tests, Django check, no-migration check, compile and diff hygiene pass.
+- [ ] Push exact tested SHA and verify GitHub.
+- [ ] Fresh Host quota, tunnel, MySQL and full rollback gates; guarded deploy and production page/sitemap smoke.
+- [ ] Owner Search Console URL inspection/request crawling for new URLs; indexing/rank not guaranteed.

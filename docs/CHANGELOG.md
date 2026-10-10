@@ -1278,3 +1278,9 @@ Phase50.A2U owner-authorized safe Host quota recovery 2026-10-09: four 46,832,89
 ## 2026-10-10 — A2V Production verification
 - Runtime SHA `dc229de53db652ffe76464431c7271e5fbc25fae` deployed via the project reverse tunnel after fresh verified rollback and no-migration gates.
 - Public endpoints passed; independent crawl checked 64/64 sitemap URLs and Isfahan structured data. Google index inclusion and Iran Post API remain pending.
+
+## 2026-10-10 — Phase50.A2W Service SEO (Local tested)
+- Added two crawlable Persian service pages: design/CAD from an idea or drawing, and jig/fixture/mold-prototype feasibility.
+- Reworked seven existing service pages with unique practical requirements, workflow and limitations; preserved custom operator metadata.
+- Added crawlable internal links, request-form prefill and factual Service structured data; Instagram `sameAs` reflects the owner-provided profile.
+- Local: 22 focused tests pass, no migration, Django check/compile/diff hygiene pass. GitHub/Production pending.

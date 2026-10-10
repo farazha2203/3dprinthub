@@ -2,23 +2,23 @@
 {% load store_seo %}
 {% block canonical %}{% if page.canonical_url %}{{ page.canonical_url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{{ page.get_absolute_url }}{% endif %}{% endblock %}
 
-{% block title %}{{ page.meta_title|default:page.title }}{% endblock %}
-{% block meta_description %}{{ page.meta_description|default:page.short_description }}{% endblock %}
+{% block title %}{{ service_seo_title|default:page.meta_title|default:page.title }}{% endblock %}
+{% block meta_description %}{{ service_seo_description|default:page.meta_description|default:page.short_description }}{% endblock %}
 
 {% block structured_data %}
-{% service_schema_json page request seo_settings as schema_json %}
+{% service_schema_json page request seo_settings service_guide as schema_json %}
 <script type="application/ld+json">{{ schema_json }}</script>
 {% endblock %}
 
 {% block robots %}{% if page.robots_index %}index{% else %}noindex{% endif %},{% if page.robots_follow %}follow{% else %}nofollow{% endif %}{% endblock %}
-{% block og_title %}{{ page.og_title|default:page.meta_title|default:page.title }}{% endblock %}
-{% block og_description %}{{ page.og_description|default:page.meta_description|default:page.short_description }}{% endblock %}
+{% block og_title %}{{ page.og_title|default:service_seo_title|default:page.meta_title|default:page.title }}{% endblock %}
+{% block og_description %}{{ page.og_description|default:service_seo_description|default:page.meta_description|default:page.short_description }}{% endblock %}
 {% block og_image %}{% if page.og_image %}{{ request.scheme }}://{{ request.get_host }}{{ page.og_image.url }}{% elif page.hero_image %}{{ request.scheme }}://{{ request.get_host }}{{ page.hero_image.url }}{% endif %}{% endblock %}
 {% block extra_head %}
 {{ block.super }}
 <meta property="og:site_name" content="3DprintHub">
-<meta name="twitter:title" content="{{ page.og_title|default:page.meta_title|default:page.title }}">
-<meta name="twitter:description" content="{{ page.og_description|default:page.meta_description|default:page.short_description }}">
+<meta name="twitter:title" content="{{ page.og_title|default:service_seo_title|default:page.meta_title|default:page.title }}">
+<meta name="twitter:description" content="{{ page.og_description|default:service_seo_description|default:page.meta_description|default:page.short_description }}">
 {% if page.og_image %}<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ page.og_image.url }}">{% elif page.hero_image %}<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ page.hero_image.url }}">{% elif seo_settings.default_og_image %}<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ seo_settings.default_og_image.url }}">{% endif %}
 {% endblock %}
 
@@ -28,9 +28,9 @@
         <div>
             <span class="store-eyebrow">خدمات تخصصی 3DprintHub</span>
             <h1 class="text-3xl md:text-5xl font-black leading-tight mt-4">{{ page.title }}</h1>
-            <p class="text-slate-600 leading-8 mt-5">{{ page.short_description }}</p>
+            <p class="text-slate-600 leading-8 mt-5">{% if service_guide %}{{ service_guide.lead }}{% else %}{{ page.short_description }}{% endif %}</p>
             <div class="flex flex-wrap gap-3 mt-7">
-                <a href="{% url 'store:product_request' %}" class="btn-primary rounded-2xl px-6 py-3 font-black">ثبت درخواست پروژه</a>
+                <a href="{% url 'store:product_request' %}?service={{ page.slug|urlencode }}" class="btn-primary rounded-2xl px-6 py-3 font-black">ثبت درخواست همین خدمت</a>
                 <a href="{% url 'store:product_list' %}" class="rounded-2xl bg-white border border-slate-300 px-6 py-3 font-bold">مشاهده محصولات آماده</a>
             </div>
         </div>
@@ -39,6 +39,22 @@
 </section>
 <section class="container mx-auto px-4 md:px-6 py-10 md:py-14">
     <article class="store-content-card prose-content">{{ page.content|linebreaks }}</article>
+    {% if service_guide %}
+    <section class="grid lg:grid-cols-3 gap-5 mt-8" aria-label="راهنمای ثبت درخواست خدمت">
+        <article class="rounded-2xl border border-slate-200 bg-white p-6"><h2 class="text-xl font-black">برای بررسی چه بفرستم؟</h2><ul class="mt-4 space-y-3 leading-7 text-slate-600">{% for item in service_guide.send %}<li>{{ item }}</li>{% endfor %}</ul></article>
+        <article class="rounded-2xl border border-slate-200 bg-white p-6"><h2 class="text-xl font-black">روند بررسی درخواست</h2><ol class="mt-4 space-y-3 leading-7 text-slate-600">{% for item in service_guide.steps %}<li>{{ forloop.counter }}. {{ item }}</li>{% endfor %}</ol></article>
+        <article class="rounded-2xl border border-amber-200 bg-amber-50 p-6"><h2 class="text-xl font-black">نکتهٔ فنی</h2><p class="mt-4 leading-8 text-slate-700">{{ service_guide.note }}</p><a href="{% url 'store:product_request' %}?service={{ page.slug|urlencode }}" class="mt-5 inline-flex rounded-xl bg-orange-500 px-5 py-3 font-bold text-slate-950">ارسال اطلاعات برای بررسی</a></article>
+    </section>
+    {% endif %}
+    <nav class="mt-10 rounded-2xl border border-slate-200 bg-white p-6" aria-label="خدمات مرتبط">
+        <h2 class="font-black text-xl">خدمات و مسیرهای مرتبط</h2>
+        <div class="mt-4 flex flex-wrap gap-x-5 gap-y-3">
+            <a href="{% url 'store:design_from_idea' %}" class="text-orange-700 underline">طراحی سه‌بعدی از ایده و نقشه</a>
+            <a href="{% url 'store:jigs_fixtures_service' %}" class="text-orange-700 underline">جیگ، فیکسچر و مدل اولیه قالب</a>
+            <a href="{% url 'store:isfahan_service_landing' %}" class="text-orange-700 underline">خدمات در اصفهان</a>
+            <a href="{% url 'store:product_list' %}" class="text-orange-700 underline">محصولات آماده</a>
+        </div>
+    </nav>
     {% if related_products %}
         <h2 class="text-2xl font-black mt-10 mb-5">محصولات مرتبط با این خدمت</h2>
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
