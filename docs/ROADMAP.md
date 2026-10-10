@@ -963,7 +963,7 @@ Status: PRODUCTION_VERIFIED at exact runtime SHA `5a1a6ea08abf6400661fbeb80dec03
 - [ ] Owner Search Console URL inspection/request crawling for new URLs; indexing/rank not guaranteed.
 
 ## 2026-10-10 — Home Hero raw template note hotfix
-Status: IN_PROGRESS. Live homepage served the literal Hero developer note once per active slide (six repetitions confirmed). Remove only that note, regression-test six-slide output and promote by the dedicated exact-SHA, backup-gated runner. Do not modify Hero media selection, product image/gallery workflows or structured-data policy.
-- [ ] Focused six-slide rendered-HTML and source-contract regression; runner contract, Django and migration checks.
-- [ ] Push exact tested SHA, verify GitHub, then run fresh dedicated Host quota/backup gates.
-- [ ] Verify live Home returns HTTP 200, zero note occurrences, and equal nonzero Hero slide/image counts.
+Status: PRODUCTION_VERIFIED at runtime SHA `06f37f75cf01c1de3ddfeb06aafe97536f69d5b8`. Removed only the leaked note. Do not modify Hero media selection, product image/gallery workflows or structured-data policy.
+- [x] Focused six-slide rendered-HTML regression 8/8; runner contract 4/4, Django/no-migration checks, Bash syntax and diff hygiene pass.
+- [x] Push exact tested SHA and verify GitHub; fresh dedicated Host quota, backup and rollback gates passed.
+- [x] Live Home HTTP 200; zero note occurrences; six Hero slides and six images.

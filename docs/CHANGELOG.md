@@ -1290,7 +1290,8 @@ Phase50.A2U owner-authorized safe Host quota recovery 2026-10-09: four 46,832,89
 - New service pages and sitemap/robots passed HTTP 200; full sitemap crawl 66/66 passed unique metadata/canonical/indexability checks.
 - Rollback: `/home/sfkilvrs/3dprinthub-deploy-backups/20261010-120836-phase50-a2w-service-seo`. Google URL inspection for new pages remains owner-side.
 
-## 2026-10-10 — Home Hero leaked developer note (fix in progress)
-- Live Home returned the raw `{# ... #}` developer note six times, once per Hero slide.
-- Remove only the note and add rendered six-slide assertions for zero leaked template markers and unchanged image/link parity.
-- Product media, gallery, screenshot capture, database, and publishing workflows remain untouched. Deployment pending fresh gates.
+## 2026-10-10 — Home Hero leaked developer note (PRODUCTION_VERIFIED)
+- Removed the developer-only note that appeared six times, one per slide. No Hero image or destination changed.
+- Regression: six slides retain six image links and raw note/template markers occur zero times. Hero test 8/8; deploy-runner contract 4/4.
+- Exact runtime SHA `06f37f75cf01c1de3ddfeb06aafe97536f69d5b8` deployed from GitHub. Live Home HTTP 200, zero note occurrences, six slides/six images; Host clean.
+- Fresh backup `/home/sfkilvrs/3dprinthub-deploy-backups/20261010-130050-phase50-a2w-home-hero-comment`; source, protected environment, full MySQL gzip and rollback checksums PASS. No migration/DB write; product gallery and screenshot capture untouched.
