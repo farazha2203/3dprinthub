@@ -7,7 +7,8 @@ PY="/home/sfkilvrs/virtualenv/3dprinthub/3.12/bin/python"
 DB="sfkilvrs_EmiAdmin_3dprinthub"
 HOST_BRANCH="release/phase50-a2j-hero-20260915"
 RELEASE_BRANCH="release/phase50-a2w-service-seo-20261010"
-BASE="06f37f75cf01c1de3ddfeb06aafe97536f69d5b8"
+INITIAL_BASE="06f37f75cf01c1de3ddfeb06aafe97536f69d5b8"
+BASE="${2:-$INITIAL_BASE}"
 TARGET="${1:-}"
 BACKUPS="/home/sfkilvrs/3dprinthub-deploy-backups"
 BACKUP="$BACKUPS/$(date +%Y%m%d-%H%M%S)-phase50-a2w-service-seo"
@@ -17,6 +18,7 @@ trap 'rm -f -- "$DELTA" "$PROBE"' EXIT
 fail(){ echo "PHASE50_A2W_DEPLOY_FAIL=$1" >&2; exit 1; }
 
 test -n "$TARGET" || fail target_sha_required
+[[ "$BASE" =~ ^[0-9a-f]{40}$ ]] || fail expected_base_sha_invalid
 cd "$ROOT"
 test -d .git || fail project_git_missing
 test -x "$PY" || fail production_python_missing
@@ -59,7 +61,12 @@ while IFS= read -r changed; do
     *) fail "unexpected_release_file:$changed" ;;
   esac
 done < "$DELTA"
-for required in store/phase50_service_seo.py store/sitemaps.py store/urls.py store/views.py store/test_phase50_service_seo.py templates/store/service_landing.html templates/website/partials/services.html scripts/seo/phase50_a2w_service_seo_smoke.py; do
+if [ "$BASE" = "$INITIAL_BASE" ]; then
+  REQUIRED_DELTA=(store/phase50_service_seo.py store/sitemaps.py store/urls.py store/views.py store/test_phase50_service_seo.py templates/store/service_landing.html templates/website/partials/services.html scripts/seo/phase50_a2w_service_seo_smoke.py)
+else
+  REQUIRED_DELTA=(scripts/host/phase50_a2w_service_seo_deploy.sh scripts/host/test_phase50_a2w_deploy_runner.py scripts/seo/phase50_a2w_service_seo_smoke.py docs/phases/PHASE50_A2Y_SERVICE_VERTICAL_LANDINGS.md)
+fi
+for required in "${REQUIRED_DELTA[@]}"; do
   grep -Fxq "$required" "$DELTA" || fail "required_delta_missing:$required"
 done
 if grep -Eq '(^|/)migrations/[0-9]{4}_[^/]+\.py$|^requirements[^/]*\.txt$|^config/settings|(^|/)\.env$' "$DELTA"; then fail migration_dependency_settings_or_env_delta; fi

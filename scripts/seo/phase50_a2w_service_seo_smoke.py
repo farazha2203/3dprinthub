@@ -13,8 +13,8 @@ EXPECTED = {
     "/store/services/jigs-fixtures-and-mold-prototypes/": ("جیگ", "فیکسچر"),
     "/store/services/studio-props-and-photography-decor/": ("پراپ", "آتلیه"),
     "/store/services/custom-figure-design-and-printing/": ("فیگور", "سه‌بعدی"),
-    "/store/services/rare-car-part-reconstruction/": ("قطعات", "خودرو"),
-    "/store/services/rare-motorcycle-part-reconstruction/": ("قطعات", "موتورسیکلت"),
+    "/store/services/rare-car-part-reconstruction/": ("قطعه", "خودرو"),
+    "/store/services/rare-motorcycle-part-reconstruction/": ("قطعه", "موتورسیکلت"),
     "/store/services/rare-home-appliance-part-reconstruction/": ("قطعه", "لوازم خانگی"),
     "/store/services/architectural-maquette-and-model-making/": ("ماکت", "معماری"),
 }

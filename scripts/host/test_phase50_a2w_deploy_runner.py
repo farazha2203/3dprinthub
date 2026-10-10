@@ -14,7 +14,9 @@ class A2WDeployRunnerContractTests(unittest.TestCase):
         cls.source = RUNNER.read_text(encoding="utf-8")
 
     def test_exact_host_baseline_and_release_branch_are_pinned(self):
-        self.assertIn('BASE="06f37f75cf01c1de3ddfeb06aafe97536f69d5b8"', self.source)
+        self.assertIn('INITIAL_BASE="06f37f75cf01c1de3ddfeb06aafe97536f69d5b8"', self.source)
+        self.assertIn('BASE="${2:-$INITIAL_BASE}"', self.source)
+        self.assertIn('[[ "$BASE" =~ ^[0-9a-f]{40}$ ]] || fail expected_base_sha_invalid', self.source)
         self.assertIn('RELEASE_BRANCH="release/phase50-a2w-service-seo-20261010"', self.source)
         self.assertIn('git ls-remote origin "refs/heads/$RELEASE_BRANCH"', self.source)
         self.assertIn('git merge --ff-only "$FETCHED"', self.source)
@@ -29,6 +31,15 @@ class A2WDeployRunnerContractTests(unittest.TestCase):
         self.assertIn("docs/phases/PHASE50_A2Y_SERVICE_VERTICAL_LANDINGS.md", paths)
         required = re.search(r"for required in (.+?); do", self.source).group(1).split()
         self.assertNotIn("store/templatetags/store_seo.py", required)
+
+    def test_successor_runner_requires_only_its_smoke_and_guard_files(self):
+        self.assertIn('REQUIRED_DELTA=(scripts/host/phase50_a2w_service_seo_deploy.sh scripts/host/test_phase50_a2w_deploy_runner.py scripts/seo/phase50_a2w_service_seo_smoke.py docs/phases/PHASE50_A2Y_SERVICE_VERTICAL_LANDINGS.md)', self.source)
+
+    def test_public_smoke_covers_all_eight_service_routes_and_exact_rare_part_titles(self):
+        smoke = (RUNNER.parent.parent / "seo" / "phase50_a2w_service_seo_smoke.py").read_text(encoding="utf-8")
+        self.assertIn('"/store/services/rare-car-part-reconstruction/": ("قطعه", "خودرو")', smoke)
+        self.assertIn('"/store/services/rare-motorcycle-part-reconstruction/": ("قطعه", "موتورسیکلت")', smoke)
+        self.assertEqual(smoke.count('"/store/services/'), 8)
         self.assertIn('*) fail "unexpected_release_file:$changed" ;;', self.source)
 
     def test_forbids_migration_dependency_settings_and_secret_deltas(self):
