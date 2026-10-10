@@ -8,9 +8,9 @@
 
 ## 2026-10-10 A2X/A2Y service SEO release
 - Release worktree: `D:\projects\.worktrees\3dprinthub\isfahan-seo-release-20261010`.
-- GitHub release branch: `release/phase50-a2w-service-seo-20261010`; deployed runtime SHA: `33b45d494def37db00cfed79d24b60f8e43fc81b`.
+- GitHub release branch: `release/phase50-a2w-service-seo-20261010`; deployed runtime SHA: `23c3c699fb277eb29f001b7ae50cf8abd02af05c`.
 - Production checkout: `/home/sfkilvrs/3dprinthub`, branch `release/phase50-a2j-hero-20260915`; exact clean deployed SHA matches the runtime SHA above.
-- Verified rollback root: `/home/sfkilvrs/3dprinthub-deploy-backups/20261010-143931-phase50-a2w-service-seo`.
+- Verified rollback root: `/home/sfkilvrs/3dprinthub-deploy-backups/20261010-144531-phase50-a2w-service-seo`.
 - Use only the dedicated router and candidate SHA-pinned runner; Search Console was not changed.
 
 ## 2026-09-16 A2J release/Production paths
