@@ -59,7 +59,7 @@ while IFS= read -r changed; do
     *) fail "unexpected_release_file:$changed" ;;
   esac
 done < "$DELTA"
-for required in store/phase50_service_seo.py store/sitemaps.py store/templatetags/store_seo.py store/urls.py store/views.py store/test_phase50_service_seo.py templates/store/service_landing.html templates/website/partials/services.html scripts/seo/phase50_a2w_service_seo_smoke.py; do
+for required in store/phase50_service_seo.py store/sitemaps.py store/urls.py store/views.py store/test_phase50_service_seo.py templates/store/service_landing.html templates/website/partials/services.html scripts/seo/phase50_a2w_service_seo_smoke.py; do
   grep -Fxq "$required" "$DELTA" || fail "required_delta_missing:$required"
 done
 if grep -Eq '(^|/)migrations/[0-9]{4}_[^/]+\.py$|^requirements[^/]*\.txt$|^config/settings|(^|/)\.env$' "$DELTA"; then fail migration_dependency_settings_or_env_delta; fi
