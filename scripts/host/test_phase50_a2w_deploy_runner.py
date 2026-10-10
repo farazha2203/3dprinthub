@@ -33,7 +33,8 @@ class A2WDeployRunnerContractTests(unittest.TestCase):
         self.assertNotIn("store/templatetags/store_seo.py", required)
 
     def test_successor_runner_requires_only_its_smoke_and_guard_files(self):
-        self.assertIn('REQUIRED_DELTA=(scripts/host/phase50_a2w_service_seo_deploy.sh scripts/host/test_phase50_a2w_deploy_runner.py scripts/seo/phase50_a2w_service_seo_smoke.py docs/phases/PHASE50_A2Y_SERVICE_VERTICAL_LANDINGS.md)', self.source)
+        self.assertIn('REQUIRED_DELTA=(scripts/host/phase50_a2w_service_seo_deploy.sh scripts/host/test_phase50_a2w_deploy_runner.py docs/phases/PHASE50_A2Y_SERVICE_VERTICAL_LANDINGS.md)', self.source)
+        self.assertIn('REQUIRED_DELTA+=(store/phase50_service_seo.py store/test_phase50_service_seo.py)', self.source)
 
     def test_public_smoke_covers_all_eight_service_routes_and_exact_rare_part_titles(self):
         smoke = (RUNNER.parent.parent / "seo" / "phase50_a2w_service_seo_smoke.py").read_text(encoding="utf-8")

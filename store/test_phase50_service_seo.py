@@ -196,7 +196,7 @@ class ServiceSeoAndIntakeTests(TestCase):
             ("rare_motorcycle_parts_service", "motorcycle", "نگهدارنده موتورسیکلت", "motorcycle-part"),
             ("rare_appliance_parts_service", "home_appliance", "دستگیره یخچال", "appliance-part"),
             ("maquette_service", "academic", "ماکت معماری اصفهان", "maquette-sample"),
-            ("custom_figure_service", "creative", "فیگور سه‌بعدی سفارشی", "figure-sample"),
+            ("custom_figure_service", "general", "فیگور سه‌بعدی سفارشی", "figure-sample"),
         )
         for route_name, section, title, slug in cases:
             category = Category.objects.create(

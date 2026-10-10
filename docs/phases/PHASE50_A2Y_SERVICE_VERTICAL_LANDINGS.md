@@ -1,7 +1,7 @@
 # Phase50.A2Y — Persian service verticals and catalog discovery
 
 Date: 2026-10-10
-Status: LOCAL_TESTED / GITHUB_AND_PRODUCTION_PENDING
+Status: PRODUCTION_VERIFIED
 Branch: `release/phase50-a2w-service-seo-20261010`
 Base: `1341502661deb154bdeefef49ff71d55fe2e5521`
 
@@ -45,4 +45,8 @@ Review exact diff and all release docs; run compile/check/no-migration/diff and 
 
 Owner authorized publication. The existing guarded A2W runner was extended narrowly for this successor: its exact Host baseline is the verified current Production SHA `06f37f75cf01c1de3ddfeb06aafe97536f69d5b8`, its allowlist admits only these A2Y phase documents in addition to the prior approved A2W files, and its public smoke now checks the two A2W pages plus all six A2X/A2Y service landings. It still requires the dedicated bridge, GitHub exact SHA/fast-forward ancestry, cPanel quota and real 48/32 MiB reserves, correct MySQL identity with empty migration plan, verified source/env/full-DB backup, no migration/dependency/settings/env delta, and post-restart smoke. The initial attempted test command named two nonexistent module paths; corrected test discovery ran the actual service and category test modules successfully. No Product/order data, Instagram, Search Console or Production has been changed in preparation.
 
-The first GitHub-runner promotion passed quota (1805/2000 MiB), both real reserves, MySQL identity/empty plan, and source/env/full-DB rollback checks, then fast-forwarded Production from `06f37f75…` to `be22597de43dde2ba42ffff2ade491f4e26790f9`. Its post-restart smoke correctly caught an assertion mismatch: the real SEO titles say singular «قطعه» while the smoke expected plural «قطعات». This was a smoke-test expectation bug, not a page failure. A corrected read-only public run then verified all eight sitemap-discovered service URLs, titles, descriptions, canonicals, indexability, request-prefill links and Service schema. ERR-50-055 records the runner bootstrap and assertion corrections. A follow-up exact-base GitHub runner release is in progress to make the automated gate pass end-to-end.
+The first GitHub-runner promotion passed quota (1805/2000 MiB), both real reserves, MySQL identity/empty plan, and source/env/full-DB rollback checks, then fast-forwarded Production from `06f37f75…` to `be22597de43dde2ba42ffff2ade491f4e26790f9`. Its post-restart smoke caught a test-only title assertion mismatch («قطعه» is singular); a corrected public smoke verified all eight sitemap-discovered pages. The follow-up exact-base runner was then pushed and deployed successfully at `33b45d494def37db00cfed79d24b60f8e43fc81b`; automated post-restart smoke PASSed all eight routes. Verified fresh rollback: `/home/sfkilvrs/3dprinthub-deploy-backups/20261010-143931-phase50-a2w-service-seo` (source/.env SHA checks, complete MySQL gzip/checksum and rollback-script checksum PASS). Host is clean, MySQL identity correct, and migration plan zero. ERR-50-055 records the initial runner bootstrap/assertion corrections. Search Console was not mutated; owner URL Inspection/request indexing remains pending and Google ranking is not guaranteed.
+
+## Live catalog relevance audit
+
+Read-only Production audit found 47 active/indexable products, all in the `general` category section; there are no active public products in creative, automotive, motorcycle, home-appliance or academic sections. Existing figurines are in `general`, so the custom-figure page is being widened only to `creative` + `general` to show genuine catalog examples. The other specialized pages retain the honest no-ready-example state because no verified related public catalog item exists; no unrelated Product is mislabeled and no catalog row is changed.

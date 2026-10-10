@@ -116,7 +116,8 @@ STATIC_SERVICE_LANDINGS = {
         "steps": ["بررسی مرجع‌ها و مشخص‌کردن بخش‌های دیده‌نشده یا مبهم", "توافق درباره سبک، ابعاد، ایستایی، تعداد قطعات و پیش‌نمایش", "برآورد طراحی/ساخت؛ شروع پس از تأیید محدوده و حقوق استفاده از تصویر"],
         "note": "یک عکس، پشت و کناره‌های سوژه را نشان نمی‌دهد؛ شباهت کامل، رنگ‌آمیزی دستی یا جزئیات بسیار ریز بدون ارزیابی فایل و نمونه تضمین نمی‌شود. برای چهره اشخاص، مجوز استفاده از تصویر لازم است.",
         "request_type": "custom_figure", "request_title": "درخواست طراحی و ساخت فیگور سه‌بعدی سفارشی", "area": "ایران",
-        "product_sections": ("creative",),
+        # Public figurines are currently categorized as general in the live catalog.
+        "product_sections": ("creative", "general"),
         "product_terms": ("فیگور", "مجسمه", "پیکر", "کاراکتر", "عروسک", "تندیس", "figurine", "figure", "sculpture", "statue"),
         "catalog_query": "فیگور",
         "article_sections": [

@@ -64,7 +64,13 @@ done < "$DELTA"
 if [ "$BASE" = "$INITIAL_BASE" ]; then
   REQUIRED_DELTA=(store/phase50_service_seo.py store/sitemaps.py store/urls.py store/views.py store/test_phase50_service_seo.py templates/store/service_landing.html templates/website/partials/services.html scripts/seo/phase50_a2w_service_seo_smoke.py)
 else
-  REQUIRED_DELTA=(scripts/host/phase50_a2w_service_seo_deploy.sh scripts/host/test_phase50_a2w_deploy_runner.py scripts/seo/phase50_a2w_service_seo_smoke.py docs/phases/PHASE50_A2Y_SERVICE_VERTICAL_LANDINGS.md)
+  REQUIRED_DELTA=(scripts/host/phase50_a2w_service_seo_deploy.sh scripts/host/test_phase50_a2w_deploy_runner.py docs/phases/PHASE50_A2Y_SERVICE_VERTICAL_LANDINGS.md)
+  if grep -Fxq scripts/seo/phase50_a2w_service_seo_smoke.py "$DELTA"; then
+    REQUIRED_DELTA+=(scripts/seo/phase50_a2w_service_seo_smoke.py)
+  fi
+  if grep -Fxq store/phase50_service_seo.py "$DELTA"; then
+    REQUIRED_DELTA+=(store/phase50_service_seo.py store/test_phase50_service_seo.py)
+  fi
 fi
 for required in "${REQUIRED_DELTA[@]}"; do
   grep -Fxq "$required" "$DELTA" || fail "required_delta_missing:$required"

@@ -1308,3 +1308,7 @@ Phase50.A2U owner-authorized safe Host quota recovery 2026-10-09: four 46,832,89
 - Documented nominal H2S build size from the official manufacturer page and added explicit geometry/material/safety caveats.
 - Confirmed project Instagram architecture: Buffer default Feed/Story, Direct Meta Graph Feed/Carousel, secure credential store; no account mutation or post was made.
 - Focused Store/SEO/Hero regression 33/33 PASS. Not committed/pushed/deployed.
+## 2026-10-10 — A2X/A2Y Persian service discovery published
+- Added six Persian service landing pages for studio props, custom figures, rare vehicle/appliance parts and architectural maquettes; linked from Home/Isfahan and sitemap with safe request prefill and real matching products.
+- Deployed GitHub SHA `33b45d494def37db00cfed79d24b60f8e43fc81b`; clean Host, MySQL identity/no migrations and all-eight-page public smoke PASS.
+- Search Console indexing review remains owner-side; no ranking promise.
