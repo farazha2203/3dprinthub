@@ -1275,3 +1275,6 @@ Phase50.A2U owner-authorized safe Host quota recovery 2026-10-09: four 46,832,89
 - Improve page-specific Persian SEO fallbacks and Open Graph/Twitter metadata; no Product or pricing data is invented.
 - Add exact-baseline guarded Host deployment and public sitemap SEO smoke tooling.
 - Local verification: 39 related tests + 4 deploy-runner contract tests pass; no DB migrations. Host rollout pending.
+## 2026-10-10 — A2V Production verification
+- Runtime SHA `dc229de53db652ffe76464431c7271e5fbc25fae` deployed via the project reverse tunnel after fresh verified rollback and no-migration gates.
+- Public endpoints passed; independent crawl checked 64/64 sitemap URLs and Isfahan structured data. Google index inclusion and Iran Post API remain pending.

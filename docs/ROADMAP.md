@@ -943,3 +943,11 @@ Status: IN_PROGRESS / Local gates PASS; GitHub and Production gates pending. See
 - [ ] Verify production sitemap/pages and document runtime SHA/backup.
 - [ ] Owner Search Console sitemap submission/URL inspection; Google appearance is not guaranteed.
 - [ ] Separate Iran Post API/tariff/credential verification and end-to-end shipping acceptance.
+## 2026-10-10 — Phase50.A2V runtime deployed
+Status: PRODUCTION_VERIFIED (runtime scope; external Google acceptance pending).
+- [x] Local SEO regression 39/39; deploy runner test 5/5; Django check/no migration/compile/Bash syntax/diff check pass.
+- [x] GitHub runtime SHA `dc229de53db652ffe76464431c7271e5fbc25fae` verified exact.
+- [x] Dedicated tunnel deploy; Host clean at exact SHA; verified source/env/MySQL/rollback backup; no migration.
+- [x] Production Home, Isfahan landing, robots and sitemap HTTP 200; independent 64/64 sitemap SEO smoke PASS.
+- [ ] Owner authenticated Search Console: submit `/sitemap.xml`, URL Inspection for homepage and Isfahan service page, request indexing and observe indexing status.
+- [ ] Separate Iran Post: obtain official API/merchant contract, sandbox credentials, current rate/fee terms; implement and test only against verified contract.

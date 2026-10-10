@@ -287,3 +287,7 @@ Official cPanel docs: Disk Usage can report stale values after deletion; account
 - Deploy requires fresh official cPanel StatsBar identity plus 48MiB and 32MiB real writable reserves, exact GitHub target SHA, clean exact baseline, matching MySQL identity, empty migration plan, and checksum-verified source/`.env`/full-MySQL backup before fast-forward.
 - The runner writes an exact-SHA guarded source rollback procedure into the verified backup directory. No database migration or data write is part of A2V.
 - Search Console authentication and owner sitemap submission are outside Host deploy authority. No Iran Post API/contract/tariff is established by this release.
+## 2026-10-10 — A2V deployed and verified
+- Host exact runtime SHA `dc229de53db652ffe76464431c7271e5fbc25fae` on `release/phase50-a2j-hero-20260915`; worktree clean. Dedicated tunnel only.
+- Fresh pre-deploy cPanel StatsBar 1789/2000 MB; actual 48MiB and 32MiB reservations passed. Verified backup `/home/sfkilvrs/3dprinthub-deploy-backups/20261010-113529-phase50-a2v-isfahan-seo` contains source snapshots, protected `.env`, valid/checksummed MySQL gzip and checksummed guarded rollback script.
+- No migrations or database writes. Public endpoints HTTP 200 and independent workstation 64/64 sitemap crawl PASS. Host-originated full crawl once timed out; retain as transient egress warning.

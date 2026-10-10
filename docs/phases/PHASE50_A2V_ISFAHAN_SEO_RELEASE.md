@@ -1,7 +1,7 @@
 # Phase50.A2V — Persian SEO and Isfahan service landing
 
 Date: 2026-10-10
-Status: IN_PROGRESS (Local gates passed; GitHub/Host/Production gates pending)
+Status: PRODUCTION_VERIFIED for website runtime; Google indexing and carrier integration remain pending
 
 ## Lineage and scope
 - Isolated Windows worktree: `D:\projects\.worktrees\3dprinthub\isfahan-seo-release-20261010`.
@@ -28,4 +28,4 @@ The deploy runner is restricted to the exact baseline and release branch, checks
 - Iran Post carrier API/contract, live credentials, tariff and approved internal fallback price are not present in this release evidence. No live carrier quote/label/dispatch is claimed or activated; shipment fee must remain factual and nonzero only when backed by an approved rate.
 
 ## Next
-Commit and push the exact tested branch; verify the remote SHA; deploy only that SHA through the dedicated 3DPrintHub reverse tunnel; then complete independent public smoke and update this phase with backup root, quota, runtime SHA and Production result.
+Runtime commit `dc229de53db652ffe76464431c7271e5fbc25fae` is on GitHub and live on Host branch `release/phase50-a2j-hero-20260915`; Host worktree is clean. Fresh cPanel StatsBar was 1789/2000 MB; real 48MiB and 32MiB reserves passed. Verified rollback root: `/home/sfkilvrs/3dprinthub-deploy-backups/20261010-113529-phase50-a2v-isfahan-seo` (source files, protected `.env`, full MySQL gzip, guarded rollback script all checksum-verified; DB gzip valid; no migrations). Host-side all-URL smoke hit a transient Python HTTPS read timeout without returning a URL; independent rerun from the Windows workstation passed all 64/64 sitemap pages, unique metadata, Isfahan schema/canonical and Home link. Host read-only recheck passed exact runtime SHA/clean status and Home, Isfahan landing, robots and sitemap HTTP 200. A current Google web search returned no indexed result for the domain; Search Console owner verification/submission and Google re-crawl remain pending, and indexing/ranking is not guaranteed. Next: owner-authenticated Search Console submit `/sitemap.xml` and inspect/request indexing. Iran Post contract/tariff/API remains a separate unimplemented phase.

@@ -254,3 +254,8 @@ This section supersedes older Production-HEAD examples above; historical entries
 - Active phase: `docs/phases/PHASE50_A2V_ISFAHAN_SEO_RELEASE.md`.
 - Host deploy runner: `scripts/host/phase50_a2v_isfahan_seo_deploy.sh`; public acceptance script: `scripts/seo/phase50_a2v_public_smoke.py`.
 - Dedicated Host route only: `D:\projects\.chatgpt-gateway\project-host.ps1 -Project 3dprinthub`, Windows loopback `127.0.0.1:22024` to Host bridge `127.0.0.1:22224`.
+## 2026-10-10 — A2V Production runtime
+- Runtime SHA: `dc229de53db652ffe76464431c7271e5fbc25fae`; pushed release branch `release/phase50-a2v-isfahan-seo-20261010`.
+- Host branch remains `release/phase50-a2j-hero-20260915`, exact deployed SHA above, clean worktree.
+- Verified rollback root: `/home/sfkilvrs/3dprinthub-deploy-backups/20261010-113529-phase50-a2v-isfahan-seo`.
+- Current public landing: `https://3dprinthub.ir/store/services/3d-printing-isfahan/`.

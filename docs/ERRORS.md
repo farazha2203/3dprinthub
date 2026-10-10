@@ -2496,3 +2496,8 @@ Prevention: use cPanel stats + actual account write-reserve test when stale usag
 - Classification: unrelated stale assertion on the exact A2V baseline; do not alter working Hero behavior as part of SEO release.
 - Verification: A2V scoped SEO regression 39/39 and runner contract 4/4 pass; all other touched checks pass.
 - Prevention: keep this test excluded from A2V acceptance unless its contract is separately reviewed and updated.
+## 2026-10-10 — A2V Host public smoke transient HTTPS read timeout
+- Symptom: deploy runner completed verified backup and fast-forward to `dc229de53db652ffe76464431c7271e5fbc25fae`, then its Host-originated concurrent public sitemap crawl raised Python `TimeoutError` on an unidentified URL; runner returned nonzero and did not claim deploy PASS.
+- Root evidence: immediate read-only Host check proved exact SHA and clean worktree; Host curl of Home, Isfahan landing, robots and sitemap returned 200; independent same-script workstation crawl passed 64/64 sitemap URLs with all metadata/schema checks.
+- Resolution/classification: deployment is independently PRODUCTION_VERIFIED for runtime/public content; retain the transient Host egress/read timeout as an operational warning, not a code/data failure. No rollback was needed; verified rollback remains retained.
+- Prevention: future host-side crawler diagnostics should include the failing URL; keep independent external public crawl as a second verification path.
