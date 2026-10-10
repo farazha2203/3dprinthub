@@ -14,7 +14,7 @@ class A2WDeployRunnerContractTests(unittest.TestCase):
         cls.source = RUNNER.read_text(encoding="utf-8")
 
     def test_exact_host_baseline_and_release_branch_are_pinned(self):
-        self.assertIn('BASE="dc229de53db652ffe76464431c7271e5fbc25fae"', self.source)
+        self.assertIn('BASE="06f37f75cf01c1de3ddfeb06aafe97536f69d5b8"', self.source)
         self.assertIn('RELEASE_BRANCH="release/phase50-a2w-service-seo-20261010"', self.source)
         self.assertIn('git ls-remote origin "refs/heads/$RELEASE_BRANCH"', self.source)
         self.assertIn('git merge --ff-only "$FETCHED"', self.source)
@@ -25,6 +25,8 @@ class A2WDeployRunnerContractTests(unittest.TestCase):
         self.assertIn("templates/store/service_landing.html", paths)
         self.assertIn("scripts/seo/phase50_a2w_service_seo_smoke.py", paths)
         self.assertIn("scripts/host/test_phase50_a2w_deploy_runner.py", paths)
+        self.assertIn("docs/phases/PHASE50_A2X_STUDIO_PROP_DISCOVERY.md", paths)
+        self.assertIn("docs/phases/PHASE50_A2Y_SERVICE_VERTICAL_LANDINGS.md", paths)
         self.assertIn('*) fail "unexpected_release_file:$changed" ;;', self.source)
 
     def test_forbids_migration_dependency_settings_and_secret_deltas(self):

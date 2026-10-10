@@ -266,3 +266,8 @@ This section supersedes older Production-HEAD examples above; historical entries
 - Active phase: `docs/phases/PHASE50_A2W_SERVICE_SEO.md`.
 - Guarded Host runner: `scripts/host/phase50_a2w_service_seo_deploy.sh`; public smoke: `scripts/seo/phase50_a2w_service_seo_smoke.py`.
 - Production runtime SHA: `5a1a6ea08abf6400661fbeb80dec03446500e158`; verified rollback: `/home/sfkilvrs/3dprinthub-deploy-backups/20261010-120836-phase50-a2w-service-seo`.
+
+## 2026-10-10 — A2X Local Studio discovery
+- Isolated checkout: `D:\projects\.worktrees\3dprinthub\isfahan-seo-release-20261010`; branch `release/phase50-a2w-service-seo-20261010`.
+- Candidate URL: `https://3dprinthub.ir/store/services/studio-props-and-photography-decor/`.
+- Local-only until exact GitHub and dedicated Host release gates pass; production remains at verified runtime SHA `06f37f75cf01c1de3ddfeb06aafe97536f69d5b8`.

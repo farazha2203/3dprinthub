@@ -7,6 +7,12 @@ class StaticViewSitemap(Sitemap):
         "website:home",
         "store:product_list",
         "store:isfahan_service_landing",
+        "store:studio_props_service",
+        "store:custom_figure_service",
+        "store:rare_car_parts_service",
+        "store:rare_motorcycle_parts_service",
+        "store:rare_appliance_parts_service",
+        "store:maquette_service",
         "store:design_from_idea",
         "store:jigs_fixtures_service",
     ]

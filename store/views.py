@@ -28,6 +28,9 @@ SORT_MAP = {
     "expensive": ("-min_price", "-published_at"),
 }
 
+STUDIO_SEARCH_INTENTS = ("آتلیه", "استودیو", "پراپ", "عکاسی")
+STUDIO_SEARCH_TERMS = ("دکور", "عکاسی", "پراپ", "استند", "تزئینی")
+
 
 
 def _product_queryset():
@@ -67,14 +70,28 @@ def product_list_view(request, slug=None):
     sort = request.GET.get("sort", "newest")
 
     if query:
-        products = products.filter(
+        search_filter = (
             Q(title__icontains=query)
             | Q(short_description__icontains=query)
             | Q(description__icontains=query)
+            | Q(technical_notes__icontains=query)
+            | Q(hashtags__icontains=query)
             | Q(sku__icontains=query)
             | Q(compatibilities__brand__icontains=query)
             | Q(compatibilities__model__icontains=query)
-        ).distinct()
+        )
+        # Studio/photography intent should discover decor and prop products
+        # even when customers do not know the exact catalog product names.
+        if any(term in query for term in STUDIO_SEARCH_INTENTS):
+            for term in STUDIO_SEARCH_TERMS:
+                search_filter |= (
+                    Q(title__icontains=term)
+                    | Q(short_description__icontains=term)
+                    | Q(description__icontains=term)
+                    | Q(technical_notes__icontains=term)
+                    | Q(hashtags__icontains=term)
+                )
+        products = products.filter(search_filter).distinct()
     if section:
         products = products.filter(category__section=section)
     if material.isdigit():

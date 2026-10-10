@@ -1295,3 +1295,16 @@ Phase50.A2U owner-authorized safe Host quota recovery 2026-10-09: four 46,832,89
 - Regression: six slides retain six image links and raw note/template markers occur zero times. Hero test 8/8; deploy-runner contract 4/4.
 - Exact runtime SHA `06f37f75cf01c1de3ddfeb06aafe97536f69d5b8` deployed from GitHub. Live Home HTTP 200, zero note occurrences, six slides/six images; Host clean.
 - Fresh backup `/home/sfkilvrs/3dprinthub-deploy-backups/20261010-130050-phase50-a2w-home-hero-comment`; source, protected environment, full MySQL gzip and rollback checksums PASS. No migration/DB write; product gallery and screenshot capture untouched.
+
+## 2026-10-10 — Phase50.A2X Studio discovery (LOCAL_TESTED)
+- Added a Persian landing for custom photography-studio props/decor, linked from Home, Isfahan services and sitemap, with request prefill and factual printability/safety limits.
+- Store search now matches Product hashtags/technical notes and maps studio/photography intent to existing decor/prop products. No catalog records or DB schema changed.
+- Live read-only review found `?q=آتلیه` returned zero cards before this change while decor search showed existing products. Public `@3dprinthub_ir` profile is reachable and describes custom 3D printing/decor; no authenticated Instagram-management connector was available and no account/post mutation occurred.
+- Related A2W/A2V/A2U/Hero regressions 31/31 PASS; Django check, no-migration, touched Python compile and diff hygiene PASS. GitHub/Host release and Search Console URL inspection remain pending.
+## 2026-10-10 — Phase50.A2Y Persian service pages (Local candidate)
+- Added distinct landing pages for custom figures, rare car/motorcycle/appliance components and architectural maquettes, alongside the studio-props page.
+- Added page-specific Persian SEO titles/descriptions, editorial H2 sections, request-prefilled CTAs, sitemap and Home/Isfahan navigation.
+- Pages display up to six matching real public catalog products; inactive or unrelated items are not substituted and no catalog rows/tags are changed.
+- Documented nominal H2S build size from the official manufacturer page and added explicit geometry/material/safety caveats.
+- Confirmed project Instagram architecture: Buffer default Feed/Story, Direct Meta Graph Feed/Carousel, secure credential store; no account mutation or post was made.
+- Focused Store/SEO/Hero regression 33/33 PASS. Not committed/pushed/deployed.

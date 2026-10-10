@@ -11,6 +11,12 @@ from phase50_a2v_public_smoke import PageMetadata, fetch, sitemap_page_urls
 EXPECTED = {
     "/store/services/design-from-idea/": ("طراحی سه‌بعدی", "ایده"),
     "/store/services/jigs-fixtures-and-mold-prototypes/": ("جیگ", "فیکسچر"),
+    "/store/services/studio-props-and-photography-decor/": ("پراپ", "آتلیه"),
+    "/store/services/custom-figure-design-and-printing/": ("فیگور", "سه‌بعدی"),
+    "/store/services/rare-car-part-reconstruction/": ("قطعات", "خودرو"),
+    "/store/services/rare-motorcycle-part-reconstruction/": ("قطعات", "موتورسیکلت"),
+    "/store/services/rare-home-appliance-part-reconstruction/": ("قطعه", "لوازم خانگی"),
+    "/store/services/architectural-maquette-and-model-making/": ("ماکت", "معماری"),
 }
 
 

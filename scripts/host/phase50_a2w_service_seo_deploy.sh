@@ -7,7 +7,7 @@ PY="/home/sfkilvrs/virtualenv/3dprinthub/3.12/bin/python"
 DB="sfkilvrs_EmiAdmin_3dprinthub"
 HOST_BRANCH="release/phase50-a2j-hero-20260915"
 RELEASE_BRANCH="release/phase50-a2w-service-seo-20261010"
-BASE="dc229de53db652ffe76464431c7271e5fbc25fae"
+BASE="06f37f75cf01c1de3ddfeb06aafe97536f69d5b8"
 TARGET="${1:-}"
 BACKUPS="/home/sfkilvrs/3dprinthub-deploy-backups"
 BACKUP="$BACKUPS/$(date +%Y%m%d-%H%M%S)-phase50-a2w-service-seo"
@@ -55,7 +55,7 @@ git merge-base --is-ancestor "$BASE" "$FETCHED" || fail not_fast_forward
 git diff --name-only "$BASE" "$FETCHED" > "$DELTA"
 while IFS= read -r changed; do
   case "$changed" in
-    store/phase50_service_seo.py|store/sitemaps.py|store/templatetags/store_seo.py|store/urls.py|store/views.py|store/test_phase50_service_seo.py|templates/store/isfahan_service_landing.html|templates/store/service_page.html|templates/store/service_landing.html|templates/website/partials/services.html|scripts/seo/phase50_a2w_service_seo_smoke.py|scripts/host/phase50_a2w_service_seo_deploy.sh|scripts/host/test_phase50_a2w_deploy_runner.py|docs/CURRENT_STATE.md|docs/ROADMAP.md|docs/CHANGELOG.md|docs/ERRORS.md|docs/REQUESTS.md|docs/PATHS.md|docs/HOST_CONSTRAINTS.md|docs/phases/PHASE50_A2W_SERVICE_SEO.md|docs/phases/PHASE50_A2V_ISFAHAN_SEO_RELEASE.md) ;;
+    store/phase50_service_seo.py|store/sitemaps.py|store/templatetags/store_seo.py|store/urls.py|store/views.py|store/test_phase50_service_seo.py|templates/store/isfahan_service_landing.html|templates/store/service_page.html|templates/store/service_landing.html|templates/website/partials/services.html|scripts/seo/phase50_a2w_service_seo_smoke.py|scripts/host/phase50_a2w_service_seo_deploy.sh|scripts/host/test_phase50_a2w_deploy_runner.py|docs/CURRENT_STATE.md|docs/ROADMAP.md|docs/CHANGELOG.md|docs/ERRORS.md|docs/REQUESTS.md|docs/PATHS.md|docs/HOST_CONSTRAINTS.md|docs/phases/PHASE50_A2W_SERVICE_SEO.md|docs/phases/PHASE50_A2V_ISFAHAN_SEO_RELEASE.md|docs/phases/PHASE50_A2X_STUDIO_PROP_DISCOVERY.md|docs/phases/PHASE50_A2Y_SERVICE_VERTICAL_LANDINGS.md) ;;
     *) fail "unexpected_release_file:$changed" ;;
   esac
 done < "$DELTA"
