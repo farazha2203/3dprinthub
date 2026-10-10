@@ -1310,5 +1310,5 @@ Phase50.A2U owner-authorized safe Host quota recovery 2026-10-09: four 46,832,89
 - Focused Store/SEO/Hero regression 33/33 PASS. Not committed/pushed/deployed.
 ## 2026-10-10 — A2X/A2Y Persian service discovery published
 - Added six Persian service landing pages for studio props, custom figures, rare vehicle/appliance parts and architectural maquettes; linked from Home/Isfahan and sitemap with safe request prefill and catalog matching that only surfaces relevant public products.
-- Follow-up GitHub/Production runtime SHA `23c3c699fb277eb29f001b7ae50cf8abd02af05c` includes genuine general-section figure matches without changing catalog data; clean Host, MySQL identity/no migrations and all-eight-page public smoke PASS.
+- Follow-up GitHub/Production runtime SHA `f9d7968d0e157326bff3c060cfa67230432b91ac` includes genuine general-section figure matches and removes public equipment/model disclosures; clean Host, MySQL identity/no migrations and all-eight-page positive/negative public smoke PASS.
 - Search Console indexing review remains owner-side; no ranking promise.
