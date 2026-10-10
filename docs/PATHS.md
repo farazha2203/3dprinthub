@@ -248,3 +248,9 @@ This section supersedes older Production-HEAD examples above; historical entries
 - Isolated Local fix worktree `D:\projects\.worktrees\3dprinthub\product-snippet-20261008`, branch `fix/phase50-product-snippet-20261008`; original `D:\projects\3DPrintHub` WIP untouched.
 - Verified Host rollback `/home/sfkilvrs/3dprinthub-deploy-backups/20261008-203110-product-snippet`.
 - Project-specific Windows↔Host remote bridge: `127.0.0.1:22024`, through `D:\projects\.chatgpt-gateway\project-host.ps1 -Project 3dprinthub` only.
+## 2026-10-10 — A2V Isfahan SEO release path
+- Isolated release checkout: `D:\projects\.worktrees\3dprinthub\isfahan-seo-release-20261010`.
+- Branch: `release/phase50-a2v-isfahan-seo-20261010`; exact Production baseline `0277018726cf02e565ba83eb724cfbf8acc523fb`.
+- Active phase: `docs/phases/PHASE50_A2V_ISFAHAN_SEO_RELEASE.md`.
+- Host deploy runner: `scripts/host/phase50_a2v_isfahan_seo_deploy.sh`; public acceptance script: `scripts/seo/phase50_a2v_public_smoke.py`.
+- Dedicated Host route only: `D:\projects\.chatgpt-gateway\project-host.ps1 -Project 3dprinthub`, Windows loopback `127.0.0.1:22024` to Host bridge `127.0.0.1:22224`.

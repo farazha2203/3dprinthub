@@ -1270,3 +1270,8 @@ Public read-only sitemap crawler added (3 simultaneous GET max) and run on all 8
 A2U GITHUB CHECKPOINT `6751ab85350683e080bfd54b19cb7d4224d72d55` (2026-10-09): 62/62 final Django regressions PASS; compile/check/no-migration/diff PASS. Local and GitHub code match; Host stays at `c4cf1950` due 1996/2000 MB account quota, intentionally not deployed. This is not a Production SEO improvement claim.
 
 Phase50.A2U owner-authorized safe Host quota recovery 2026-10-09: four 46,832,890-byte duplicate old media backup archive copies deduplicated as hardlinks (preserve all archive paths and checksums, unique MySQL DB dumps), physical backup root 501,992→319,036 KiB. Removed only two >30-day-old backups already in cPanel Trash; Trash 107,532→74,108 KiB; preserved active Media, DB, latest verified backup and older historical recovery copy. Official StatsBar cached 1996/2000 but fsynced 24MiB real quota probe PASS, temp removed. Created guarded exact GitHub SHA A2U deployment runner and offline self-test. No Production Source updated by cleanup.
+## 2026-10-10 — Phase50.A2V (release candidate)
+- Add Persian Isfahan 3D-printing service landing with factual City/Service structured data and sitemap/Home discovery links.
+- Improve page-specific Persian SEO fallbacks and Open Graph/Twitter metadata; no Product or pricing data is invented.
+- Add exact-baseline guarded Host deployment and public sitemap SEO smoke tooling.
+- Local verification: 39 related tests + 4 deploy-runner contract tests pass; no DB migrations. Host rollout pending.

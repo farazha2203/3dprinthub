@@ -932,3 +932,14 @@ Parallel earlier Phase50.A2R Video/Site/Instagram acceptance remains pending as 
 A2U GITHUB_UPDATED checkpoint 2026-10-09: tested exact source SHA `6751ab85350683e080bfd54b19cb7d4224d72d55` pushed to GitHub release branch (Local=GitHub, clean), 62/62 regression PASS. Production unchanged at c4cf1950 because official account quota 1996/2000 MB; no database/source rollback capacity for a safe Host deploy. Update prior unchecked GitHub task to PASS by this later closure checkpoint; remaining blocked gate is Host capacity and fresh protected rollback, then SEO live re-crawl/owner Search Console. Do not delete protected backups.
 
 Phase50.A2U owner-approved quota recovery checkpoint 2026-10-09: four verified identical historical media archives hardlink-deduplicated safely; two old trashed Phase48 backup dirs removed under owner authority. Exact old unique MySQL backup histories, current media, accepted backup and latest Oct9 rollback retained. Physical disk freed >200,000 KiB; official cPanel StatsBar shows delayed 1996/2000MB while temporary 24MiB fsynced write reserve PASS. Dedicated fresh guarded A2U deployment runner + offline parser/safety tests LOCAL_TESTED, pending GitHub SHA release, Host exact fast-forward and final SEO smoke. See ERR-50-050 / docs/HOST_CONSTRAINTS.md. Do NOT delete live Product images to free space.
+## 2026-10-10 — Phase50.A2V Isfahan Persian SEO release
+Status: IN_PROGRESS / Local gates PASS; GitHub and Production gates pending. See `docs/phases/PHASE50_A2V_ISFAHAN_SEO_RELEASE.md`.
+- [x] Persian, factual Isfahan service landing and internal Home link.
+- [x] Canonical, title/description, Service+City schema, sitemap inclusion.
+- [x] Per-page OG/Twitter metadata; Persian fallback snippets for three English-slug categories.
+- [x] Related regression 39/39; guarded deploy contract 4/4; no migrations.
+- [ ] Commit/push tested branch and verify exact remote SHA.
+- [ ] Fresh rollback/quota gates and deploy exact SHA through dedicated tunnel.
+- [ ] Verify production sitemap/pages and document runtime SHA/backup.
+- [ ] Owner Search Console sitemap submission/URL inspection; Google appearance is not guaranteed.
+- [ ] Separate Iran Post API/tariff/credential verification and end-to-end shipping acceptance.

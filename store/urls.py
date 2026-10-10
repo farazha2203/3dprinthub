@@ -14,11 +14,13 @@ from .views import (
     toggle_like_view,
 )
 from .phase50_variant_views import variant_commerce_options_view
+from .phase50_isfahan_seo import isfahan_service_landing_view
 
 app_name = "store"
 
 urlpatterns = [
     path("", product_list_view, name="product_list"),
+    path("services/3d-printing-isfahan/", isfahan_service_landing_view, name="isfahan_service_landing"),
     path("category/<uslug:slug>/", product_list_view, name="category"),
     path("product/<uslug:slug>/", product_detail_view, name="product_detail"),
     path("product/<uslug:slug>/like/", toggle_like_view, name="toggle_like"),

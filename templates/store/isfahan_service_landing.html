@@ -1,0 +1,50 @@
+{% extends "store/base.html" %}
+{% load store_seo %}
+
+{% block title %}{{ isfahan_page_title }}{% endblock %}
+{% block meta_description %}{{ isfahan_page_description }}{% endblock %}
+{% block canonical %}{{ request.scheme }}://{{ request.get_host }}{% url 'store:isfahan_service_landing' %}{% endblock %}
+{% block robots %}index,follow{% endblock %}
+{% block og_type %}website{% endblock %}
+{% block og_title %}{{ isfahan_page_title }}{% endblock %}
+{% block og_description %}{{ isfahan_page_description }}{% endblock %}
+{% block og_image %}{% if seo_settings.default_og_image %}{{ request.scheme }}://{{ request.get_host }}{{ seo_settings.default_og_image.url }}{% endif %}{% endblock %}
+{% block extra_head %}
+{{ block.super }}
+<meta property="og:site_name" content="3DprintHub">
+<meta name="twitter:title" content="{{ isfahan_page_title }}">
+<meta name="twitter:description" content="{{ isfahan_page_description }}">
+{% if seo_settings.default_og_image %}<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ seo_settings.default_og_image.url }}">{% endif %}
+{% endblock %}
+{% block structured_data %}
+{% isfahan_service_schema_json request seo_settings as schema_json %}
+<script type="application/ld+json">{{ schema_json }}</script>
+{% endblock %}
+
+{% block content %}
+<section class="store-service-hero">
+  <div class="container mx-auto px-4 md:px-6 py-14 md:py-20">
+    <nav aria-label="مسیر صفحه" class="text-sm text-slate-500 mb-5">
+      <a href="{% url 'website:home' %}">خانه</a><span class="px-2">/</span>
+      <a href="{% url 'store:product_list' %}">فروشگاه</a><span class="px-2">/</span>
+      <span aria-current="page">خدمات اصفهان</span>
+    </nav>
+    <div class="max-w-4xl">
+      <span class="store-eyebrow">خدمات پروژه‌های اصفهان</span>
+      <h1 class="text-3xl md:text-5xl font-black leading-tight mt-4">چاپ سه‌بعدی و مهندسی معکوس در اصفهان</h1>
+      <p class="text-slate-600 leading-8 mt-5 max-w-3xl">برای ساخت قطعه یا بازسازی نمونه، فایل سه‌بعدی، عکس‌های واضح، ابعاد و کاربرد قطعه را ارسال کنید. امکان‌سنجی، متریال مناسب، قیمت و زمان پس از بررسی اطلاعات پروژه اعلام می‌شود؛ ثبت درخواست به‌تنهایی به معنی تأیید فنی یا زمان تحویل قطعی نیست.</p>
+      <div class="flex flex-wrap gap-3 mt-7">
+        <a href="{% url 'store:product_request' %}" class="btn-primary rounded-2xl px-6 py-3 font-black">ارسال درخواست بررسی قطعه</a>
+        <a href="{% url 'store:product_list' %}" class="rounded-2xl border border-slate-300 bg-white px-6 py-3 font-bold">دیدن محصولات آماده</a>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="container mx-auto px-4 md:px-6 pb-14">
+  <div class="grid md:grid-cols-3 gap-5">
+    <article class="rounded-2xl border border-slate-200 bg-white p-6"><h2 class="text-xl font-black">طراحی و مدل‌سازی سه‌بعدی</h2><p class="mt-3 leading-8 text-slate-600">مدل‌سازی قطعه بر پایه فایل، نقشه، اندازه‌برداری یا اطلاعاتی که برای بررسی فنی فراهم می‌کنید.</p></article>
+    <article class="rounded-2xl border border-slate-200 bg-white p-6"><h2 class="text-xl font-black">مهندسی معکوس نمونه</h2><p class="mt-3 leading-8 text-slate-600">بررسی امکان بازسازی قطعه از روی نمونه یا تصاویر و اندازه‌ها؛ دقت نهایی به دسترسی و کیفیت مرجع وابسته است.</p></article>
+    <article class="rounded-2xl border border-slate-200 bg-white p-6"><h2 class="text-xl font-black">چاپ سه‌بعدی صنعتی</h2><p class="mt-3 leading-8 text-slate-600">انتخاب فرایند و متریال با توجه به کاربرد، شرایط محیطی، ابعاد و نیاز پروژه؛ پیشنهاد نهایی پس از بررسی فنی ارائه می‌شود.</p></article>
+  </div>
+</section>
+{% endblock %}

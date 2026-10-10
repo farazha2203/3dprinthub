@@ -18,6 +18,10 @@
 
 {% block extra_head %}
 {{ block.super }}
+<meta property="og:site_name" content="3DprintHub">
+<meta name="twitter:title" content="{{ product.og_title|default:product.seo_title }}">
+<meta name="twitter:description" content="{{ product.og_description|default:product.seo_description }}">
+{% if product.og_image %}<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ product.og_image.url }}">{% else %}<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ product.main_image.url }}">{% endif %}
 <link rel="stylesheet" href="{% static 'store/css/phase49-product-info-tabs.css' %}">
 {% endblock %}
 

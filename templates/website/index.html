@@ -19,12 +19,18 @@
     <meta name="robots" content="{% if seo_settings and not seo_settings.allow_search_indexing %}noindex,nofollow{% else %}index,follow{% endif %}">
     {% if seo_settings.google_site_verification %}<meta name="google-site-verification" content="{{ seo_settings.google_site_verification }}">{% endif %}
 
-    <meta property="og:title" content="3DprintHub.ir | طراحی و ساخت قطعات صنعتی">
-    <meta property="og:description" content="طراحی، ساخت، چاپ سه‌بعدی صنعتی و مهندسی معکوس قطعات.">
+    <meta property="og:title" content="{% if settings %}{{ settings.meta_title }}{% else %}3DprintHub.ir | طراحی، چاپ سه‌بعدی و مهندسی معکوس قطعات صنعتی{% endif %}">
+    <meta property="og:description" content="{% if settings %}{{ settings.meta_description }}{% else %}خدمات طراحی سه‌بعدی، چاپ سه‌بعدی صنعتی، مهندسی معکوس و ساخت قطعات سفارشی.{% endif %}">
+    <meta property="og:site_name" content="3DprintHub">
     <meta property="og:type" content="website">
     <meta property="og:url" content="{% if seo_settings and seo_settings.site_url %}{{ seo_settings.site_url }}{% else %}https://3dprinthub.ir{% endif %}">
+    {% if seo_settings and seo_settings.default_og_image %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ seo_settings.default_og_image.url }}"><meta property="og:image:alt" content="نشان رسمی 3DprintHub">{% endif %}
 
     <link rel="canonical" href="{% if seo_settings and seo_settings.site_url %}{{ seo_settings.site_url }}{% else %}https://3dprinthub.ir{% endif %}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% if settings %}{{ settings.meta_title }}{% else %}3DprintHub.ir | طراحی، چاپ سه‌بعدی و مهندسی معکوس{% endif %}">
+    <meta name="twitter:description" content="{% if settings %}{{ settings.meta_description }}{% else %}خدمات طراحی سه‌بعدی، چاپ سه‌بعدی صنعتی، مهندسی معکوس و ساخت قطعات سفارشی.{% endif %}">
+    {% if seo_settings and seo_settings.default_og_image %}<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ seo_settings.default_og_image.url }}">{% endif %}
     <link rel="icon" type="image/png" href="{% static 'img/brand/3dprinthublogo.png' %}">
     <link rel="apple-touch-icon" href="{% static 'img/brand/3dprinthublogo.png' %}">
     <meta name="theme-color" content="#FF9800">

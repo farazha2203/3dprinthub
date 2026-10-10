@@ -14,6 +14,13 @@
 {% block og_title %}{{ page.og_title|default:page.meta_title|default:page.title }}{% endblock %}
 {% block og_description %}{{ page.og_description|default:page.meta_description|default:page.short_description }}{% endblock %}
 {% block og_image %}{% if page.og_image %}{{ request.scheme }}://{{ request.get_host }}{{ page.og_image.url }}{% elif page.hero_image %}{{ request.scheme }}://{{ request.get_host }}{{ page.hero_image.url }}{% endif %}{% endblock %}
+{% block extra_head %}
+{{ block.super }}
+<meta property="og:site_name" content="3DprintHub">
+<meta name="twitter:title" content="{{ page.og_title|default:page.meta_title|default:page.title }}">
+<meta name="twitter:description" content="{{ page.og_description|default:page.meta_description|default:page.short_description }}">
+{% if page.og_image %}<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ page.og_image.url }}">{% elif page.hero_image %}<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ page.hero_image.url }}">{% elif seo_settings.default_og_image %}<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ seo_settings.default_og_image.url }}">{% endif %}
+{% endblock %}
 
 {% block content %}
 <section class="store-service-hero">
