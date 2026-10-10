@@ -1,7 +1,7 @@
 # Phase50.A2W — Service discovery and Persian conversion SEO
 
 Date: 2026-10-10
-Status: LOCAL_TESTED; GitHub/Production gates pending.
+Status: PRODUCTION_VERIFIED for the deployed runtime; new-URL Search Console review remains external.
 
 ## Requested delta and surfaces
 - Improve all seven existing service detail pages with distinct Persian title/description, useful project-specific requirements, realistic process and technical limitations, while preserving explicit operator-authored metadata.
@@ -21,13 +21,13 @@ Status: LOCAL_TESTED; GitHub/Production gates pending.
 - Django check PASS with existing optional Google OAuth/CKEditor warnings; `makemigrations --check --dry-run` reports no changes; touched-source compile and `git diff --check` PASS.
 
 ## Release status
-Runtime Host baseline: `dc229de53db652ffe76464431c7271e5fbc25fae` on the established Host branch. Dedicated A2W runner requires exact GitHub branch/SHA, baseline ancestry, strict changed-file allowlist, fresh verified source + protected env + full MySQL rollback, no migration, then collectstatic/restart/public smoke. No Host operation has been performed for A2W yet.
+Runtime Host baseline was `dc229de53db652ffe76464431c7271e5fbc25fae`. The exact deployed GitHub/Host SHA is `5a1a6ea08abf6400661fbeb80dec03446500e158` on Host branch `release/phase50-a2j-hero-20260915`. Guarded rollout passed exact branch/SHA, baseline ancestry, strict allowlist, official quota + actual 48/32 MiB reserves, MySQL identity/empty plan, full database gzip and checksum-verified source/env/rollback before fast-forward. No migrations or DB writes.
 
-Initial runner attempt against commit `15d7c64980ff9a3cb0e78ffb4c09591613fcc340` stopped before backup/merge because its allowlist omitted its own contract-test file (ERR-50-052). Host remains at baseline; this will be retried only from a corrected successor SHA. Host `/tmp` is noexec; verified runner is invoked with Bash.
+Initial runner attempt against commit `15d7c64980ff9a3cb0e78ffb4c09591613fcc340` stopped before backup/merge because its allowlist omitted its own contract-test file (ERR-50-052); the exact path was added, covered by four offline runner contract tests and deployed in successor `5a1a6ea…`. Host `/tmp` is noexec; the verified runner was invoked with Bash.
 
 Owner-provided Search Console evidence shows `/sitemap.xml` and `/sitemap-images.xml` as Success and the homepage as indexed; it does not establish that every URL is indexed or ranked. Instagram Insights was still processing in the supplied screenshot.
 
 Research references: [Google sitemap guidance](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap) treats sitemap submission as a discovery hint, not an indexing guarantee; [Google spam policies](https://developers.google.com/search/docs/essentials/spam-policies) warn against doorway/scaled low-value landing pages, so these pages carry distinct service instructions and honest limitations; [Google Business Profile supported countries](https://support.google.com/business/answer/6270107?hl=en-G) currently excludes Iran.
 
 ## Acceptance / next
-After Local gates, push the exact commit to GitHub, verify remote SHA, and run only `scripts/host/phase50_a2w_service_seo_deploy.sh` through `project-host.ps1 -Project 3dprinthub`. Confirm fresh rollback and production public smoke. Then the owner can use the existing Search Console property to inspect/request crawling of the two new URLs. No Google Business Profile promise and no Instagram post is part of this phase.
+Production verification: Host source clean at exact `5a1a6ea…`; rollback `/home/sfkilvrs/3dprinthub-deploy-backups/20261010-120836-phase50-a2w-service-seo` passed DB gzip, env and rollback script SHA checks. The new-page smoke passed on Host and Windows; the complete sitemap SEO smoke passed 66/66 with unique titles/descriptions, indexability, canonical, Isfahan schema and Home internal discovery. `/robots.txt`, `/sitemap.xml`, and both new service URLs return HTTP 200. Next: owner URL Inspection/request indexing for both new URLs. No Google Business Profile promise and no Instagram post is part of this phase.

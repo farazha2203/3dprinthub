@@ -297,3 +297,4 @@ Official cPanel docs: Disk Usage can report stale values after deletion; account
 - Expected Host runtime base remains `dc229de53db652ffe76464431c7271e5fbc25fae`; runner checks actual SHA, clean Host, MySQL identity, empty migration plan, exact branch SHA and strict delta allowlist.
 - Before promotion, require fresh official account quota plus real 48/32 MiB write reserves and checksum-verifiable source, protected `.env`, full MySQL gzip, and guarded source rollback. If any fails, stop without Host source promotion.
 - Runtime verification must discover both new paths from sitemap, verify HTTP 200, canonical, index/follow, title/description, Service JSON-LD and existing request-form prefill links.
+- Deployment completed at `5a1a6ea08abf6400661fbeb80dec03446500e158`; rollback root `/home/sfkilvrs/3dprinthub-deploy-backups/20261010-120836-phase50-a2w-service-seo`; checksums, DB gzip, clean Host and 66/66 public crawl passed. No migration/DB write.

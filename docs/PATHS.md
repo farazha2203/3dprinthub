@@ -265,3 +265,4 @@ This section supersedes older Production-HEAD examples above; historical entries
 - Branch: `release/phase50-a2w-service-seo-20261010`; Host baseline: `dc229de53db652ffe76464431c7271e5fbc25fae`.
 - Active phase: `docs/phases/PHASE50_A2W_SERVICE_SEO.md`.
 - Guarded Host runner: `scripts/host/phase50_a2w_service_seo_deploy.sh`; public smoke: `scripts/seo/phase50_a2w_service_seo_smoke.py`.
+- Production runtime SHA: `5a1a6ea08abf6400661fbeb80dec03446500e158`; verified rollback: `/home/sfkilvrs/3dprinthub-deploy-backups/20261010-120836-phase50-a2w-service-seo`.

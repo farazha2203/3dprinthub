@@ -1284,3 +1284,8 @@ Phase50.A2U owner-authorized safe Host quota recovery 2026-10-09: four 46,832,89
 - Reworked seven existing service pages with unique practical requirements, workflow and limitations; preserved custom operator metadata.
 - Added crawlable internal links, request-form prefill and factual Service structured data; Instagram `sameAs` reflects the owner-provided profile.
 - Local: 22 focused tests pass, no migration, Django check/compile/diff hygiene pass. GitHub/Production pending.
+
+## 2026-10-10 — A2W Production verification
+- Deployed exact SHA `5a1a6ea08abf6400661fbeb80dec03446500e158` from GitHub through the dedicated project tunnel with verified rollback and no migration.
+- New service pages and sitemap/robots passed HTTP 200; full sitemap crawl 66/66 passed unique metadata/canonical/indexability checks.
+- Rollback: `/home/sfkilvrs/3dprinthub-deploy-backups/20261010-120836-phase50-a2w-service-seo`. Google URL inspection for new pages remains owner-side.

@@ -953,11 +953,11 @@ Status: PRODUCTION_VERIFIED (runtime scope; external Google acceptance pending).
 - [ ] Separate Iran Post: obtain official API/merchant contract, sandbox credentials, current rate/fee terms; implement and test only against verified contract.
 
 ## 2026-10-10 — Phase50.A2W service discovery SEO
-Status: LOCAL_TESTED; exact GitHub/Production gates pending. See `docs/phases/PHASE50_A2W_SERVICE_SEO.md`.
+Status: PRODUCTION_VERIFIED at exact runtime SHA `5a1a6ea08abf6400661fbeb80dec03446500e158`; external Search Console URL review pending. See `docs/phases/PHASE50_A2W_SERVICE_SEO.md`.
 - [x] Distinct Persian, factual metadata and practical intake details on seven existing service pages; preserve custom admin copy.
 - [x] Add design-from-idea and jig/fixture/mold-prototype pages, request-form prefills, internal links and sitemap discovery.
 - [x] Add factual Service JSON-LD and verified Instagram profile identity only.
 - [x] 22 focused tests, Django check, no-migration check, compile and diff hygiene pass.
-- [ ] Push exact tested SHA and verify GitHub.
-- [ ] Fresh Host quota, tunnel, MySQL and full rollback gates; guarded deploy and production page/sitemap smoke.
+- [x] Push exact tested SHA and verify GitHub.
+- [x] Fresh Host quota, tunnel, MySQL and full rollback gates; guarded deploy and production page/sitemap smoke; 66/66 sitemap-wide crawl PASS.
 - [ ] Owner Search Console URL inspection/request crawling for new URLs; indexing/rank not guaranteed.
