@@ -12,9 +12,6 @@
       <ul id="sb-slider" class="sb-slider">
         {% for slide in homepage_hero_slides %}
           {% with product=slide.asset.product %}
-            {# A home-page Hero is a visual navigation list, NOT a Product detail.
-               Product rich-result markup lives on the individual Store pages,
-               where real per-Variant Offers are present. #}
             <li>
               <a href="{{ slide.target_url }}" aria-label="مشاهده {{ slide.effective_title }}">
                 <img

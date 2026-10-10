@@ -127,6 +127,8 @@ class Phase50A2KTympanusSliceboxContractTests(SimpleTestCase):
         self.assertIn('id="sb-slider"', html)
         self.assertIn('id="nav-arrows"', html)
         self.assertIn('id="nav-dots"', html)
+        self.assertNotIn("A home-page Hero is a visual navigation list", html)
+        self.assertNotIn("{#", html)
         self.assertNotIn('itemscope', html)
         self.assertNotIn('itemtype=', html)
         self.assertNotIn('itemprop=', html)

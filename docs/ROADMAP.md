@@ -961,3 +961,9 @@ Status: PRODUCTION_VERIFIED at exact runtime SHA `5a1a6ea08abf6400661fbeb80dec03
 - [x] Push exact tested SHA and verify GitHub.
 - [x] Fresh Host quota, tunnel, MySQL and full rollback gates; guarded deploy and production page/sitemap smoke; 66/66 sitemap-wide crawl PASS.
 - [ ] Owner Search Console URL inspection/request crawling for new URLs; indexing/rank not guaranteed.
+
+## 2026-10-10 — Home Hero raw template note hotfix
+Status: IN_PROGRESS. Live homepage served the literal Hero developer note once per active slide (six repetitions confirmed). Remove only that note, regression-test six-slide output and promote by the dedicated exact-SHA, backup-gated runner. Do not modify Hero media selection, product image/gallery workflows or structured-data policy.
+- [ ] Focused six-slide rendered-HTML and source-contract regression; runner contract, Django and migration checks.
+- [ ] Push exact tested SHA, verify GitHub, then run fresh dedicated Host quota/backup gates.
+- [ ] Verify live Home returns HTTP 200, zero note occurrences, and equal nonzero Hero slide/image counts.

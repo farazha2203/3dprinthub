@@ -298,3 +298,8 @@ Official cPanel docs: Disk Usage can report stale values after deletion; account
 - Before promotion, require fresh official account quota plus real 48/32 MiB write reserves and checksum-verifiable source, protected `.env`, full MySQL gzip, and guarded source rollback. If any fails, stop without Host source promotion.
 - Runtime verification must discover both new paths from sitemap, verify HTTP 200, canonical, index/follow, title/description, Service JSON-LD and existing request-form prefill links.
 - Deployment completed at `5a1a6ea08abf6400661fbeb80dec03446500e158`; rollback root `/home/sfkilvrs/3dprinthub-deploy-backups/20261010-120836-phase50-a2w-service-seo`; checksums, DB gzip, clean Host and 66/66 public crawl passed. No migration/DB write.
+
+## 2026-10-10 — Home Hero note hotfix deployment
+- Current verified Host baseline is `5a1a6ea08abf6400661fbeb80dec03446500e158`; use only the dedicated 3DPrintHub router and a new runner pinned to this exact baseline and A2W GitHub release branch.
+- A template-only change still requires current branch/HEAD/clean-worktree, official quota + actual 48/32 MiB reserves, exact fetched SHA, MySQL identity/empty migration plan, and fresh checksummed source/.env/full-MySQL rollback before ff-only merge.
+- Do not touch or backfill product images, gallery data, screenshot flows, or Search Console. Stop before promotion on any mismatch or failed reserve/backup gate.
