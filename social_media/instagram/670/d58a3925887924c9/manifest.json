@@ -1,0 +1,16 @@
+{
+  "asset_revision": "d58a3925887924c9",
+  "feed_sha256": [
+    "eb4fd759c703707ded5b52fc6e65b5ffd056c778d97e485f35dd3956d3a4ff13",
+    "9b7b6b8a69df319ab81227818e88045892f5d9eeda462daac1c949b124225f4f"
+  ],
+  "product_id": 670,
+  "purpose": "Buffer public media compatibility",
+  "site_product_id": 55,
+  "site_revision": 2,
+  "source_media_urls": [
+    "https://makerworld.bblmw.com/makerworld/model/US186c1ebdbd63ce/design/4d3606296e480652.png",
+    "local://source-page-screenshot-20260924-195657.png"
+  ],
+  "story_sha256": ""
+}
