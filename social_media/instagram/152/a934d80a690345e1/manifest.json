@@ -1,0 +1,22 @@
+{
+  "asset_revision": "a934d80a690345e1",
+  "feed_sha256": [
+    "8c8f4d7f86d73bde26cf27243ad7f8dd7d1225ad92f2d18bce94ca129e1a38c7",
+    "2981774f80a541d9cd45b6d451a1cc0c62a5ce4ceea2e1b37702cd0b668aef42",
+    "4241a2fcf25db6de916805186aa5ea0350a19d473c3a994ca583d7dd2f7d0272",
+    "7786ed3ed2accf12fe79644ec531fa0753bdc3da58bb632aea85115e73f79ca9",
+    "cd1fc405395f6a3257379139b0530eacb5797f3ec08807959b7fe11bd44899b5"
+  ],
+  "product_id": 152,
+  "purpose": "Buffer public media compatibility",
+  "site_product_id": 50,
+  "site_revision": 1,
+  "source_media_urls": [
+    "https://makerworld.bblmw.com/makerworld/model/USd0700ec9e7368b/design/ba250a127f7f7837.jpg?x-oss-process=image/resize,w_1000/format,webp",
+    "https://makerworld.bblmw.com/makerworld/model/USd0700ec9e7368b/design/151c8ebac0b92a86.jpg?x-oss-process=image/resize,w_1000/format,webp",
+    "https://makerworld.bblmw.com/makerworld/model/USd0700ec9e7368b/design/b47b37d5091725ad.jpg?x-oss-process=image/resize,w_1000/format,webp",
+    "local://04.webp",
+    "local://source-page-screenshot-20260922-174718.png"
+  ],
+  "story_sha256": ""
+}
