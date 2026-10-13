@@ -1,3 +1,12 @@
+## 2026-10-13 — Phase50.A2Z public social contact
+- [x] Isolate the contact/footer change on the current GitHub A2W Release lineage; preserve canonical dirty WIP.
+- [x] Read WhatsApp from SiteSetting; prefer configured Instagram setting/SEO `same_as`, with fallback to the already owner-verified Organization-schema profile; normalize local/international WhatsApp formats.
+- [x] Add desktop/mobile header links, clickable Home contact links, and shared footer on Home, Store, customer account, auth, order-detail and password-reset pages.
+- [x] Rerun focused regression with standalone customer-page coverage: 8/8; Django system check and no-migration check pass with known warnings.
+- [x] Validate A2W deployment-runner contract 7/7, Python compile, Bash syntax and diff hygiene.
+- [ ] Push the tested commit to GitHub release branch and verify exact target SHA.
+- [ ] Fast-forward deploy from Host SHA `f9d7968d0e157326bff3c060cfa67230432b91ac`; verify public Home/Store links and footer.
+
 ## 2026-09-21 - Phase50.A.2X Server parity + Hero public-media closure
 - [x] Reproduce real #620 case-only REPUBLISH_PARITY_MISMATCH.
 - [x] Verify Production exact clean baseline 03042d... through dedicated reverse tunnel.

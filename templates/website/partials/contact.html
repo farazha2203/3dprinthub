@@ -22,9 +22,11 @@
                     <div class="glass rounded-2xl p-5">
                         <div class="text-slate-400 text-sm mb-1">واتساپ</div>
                         <div class="font-black text-lg">
-                            {% if settings and settings.whatsapp %}{{ settings.whatsapp }}{% else %}شماره واتساپ را وارد کنید{% endif %}
+                            {% if public_whatsapp_url %}<a href="{{ public_whatsapp_url }}" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:text-emerald-300">{{ public_site_settings.whatsapp }} · گفت‌وگو در واتساپ</a>{% else %}شماره واتساپ در تنظیمات سایت ثبت نشده است{% endif %}
                         </div>
                     </div>
+
+                    {% if public_instagram_url %}<a href="{{ public_instagram_url }}" target="_blank" rel="noopener noreferrer" class="glass flex items-center justify-between rounded-2xl p-5 font-black text-lg text-fuchsia-300 hover:text-fuchsia-200"><span>صفحه اینستاگرام 3DprintHub</span><span aria-hidden="true">↗</span></a>{% endif %}
 
                     <div class="glass rounded-2xl p-5">
                         <div class="text-slate-400 text-sm mb-1">ایمیل</div>
@@ -64,14 +66,5 @@
             </div>
         </div>
 
-        <footer class="mt-20 pt-8 border-t border-slate-800 flex flex-col md:flex-row gap-4 md:items-center md:justify-between text-slate-500 text-sm">
-            <div>
-                © تمام حقوق برای 3DprintHub.ir محفوظ است.
-            </div>
-
-            <div>
-                طراحی و توسعه با Django
-            </div>
-        </footer>
     </div>
 </section>

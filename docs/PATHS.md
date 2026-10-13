@@ -1,3 +1,11 @@
+## 2026-10-13 Phase50.A2Z public contact release
+- Isolated worktree: `D:\projects\3DPrintHub-contact-current`.
+- Candidate branch: `codex/site-contact-social-current`; release target `release/phase50-a2w-service-seo-20261010`.
+- Current GitHub release base: `9a546de40fa3bce0d13dc50b06fc21f2b551741f`.
+- Verified Host base: `f9d7968d0e157326bff3c060cfa67230432b91ac` on Host branch `release/phase50-a2j-hero-20260915`.
+- Guarded runner: `scripts/host/phase50_a2w_service_seo_deploy.sh`; public smoke `scripts/seo/phase50_a2w_service_seo_smoke.py --social`.
+- Canonical dirty workspace remains `D:\projects\3DPrintHub`; do not stage its unrelated WIP.
+
 ## 2026-09-19 verified current Production media paths
 - Production root: `/home/sfkilvrs/3dprinthub`.
 - Effective Django `MEDIA_ROOT` (verified from live settings): `/home/sfkilvrs/3dprinthub/media`.

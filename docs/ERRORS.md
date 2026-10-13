@@ -1,3 +1,10 @@
+## 2026-10-13 — Isolated worktree test environment has no `.env`
+**Observed:** the first Django test invocation from the clean Release worktree stopped during settings initialization because `DJANGO_SECRET_KEY` was absent. This was a Local test-environment setup issue, not an application/test failure.
+
+**Correct handling:** load the existing canonical workspace `.env` into the child test process in memory with `python-dotenv`; do not copy it into the isolated worktree, print it, or add it to Git. Final focused regressions passed 8/8, `manage.py check` passed with existing warnings, and `makemigrations --check --dry-run` reported no changes.
+
+**Prevention:** isolated Django worktrees use the canonical local environment through a secret-safe process boundary; never solve this by committing or logging credentials.
+
 ## ERR-49-213 - Full fresh Hero follow-up rollback hit Host quota after source bundle creation
 **Date:** 2026-09-21
 **Observed:** final A2X Hero follow-up pre-deploy backup created a valid ~13 MB source bundle and `.env`, then the required MySQL gzip stopped with `OSError: [Errno 122] Disk quota exceeded`. Source promotion had not started; Production remained clean at `143848eeeeac7be8ec64c33ab7aa4c95c9f42165`.

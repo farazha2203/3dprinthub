@@ -1,3 +1,6 @@
+## 2026-10-13 — Public Instagram/WhatsApp visibility and shared site footer
+Owner reports that the site's Instagram and WhatsApp are missing from desktop/mobile Home and that the header/footer are inconsistent across pages. A2Z reads existing `SiteSetting` values, renders desktop/mobile links, makes WhatsApp actionable via a normalized `wa.me` URL, and provides a shared footer for Home, Store, customer-account, auth, order-detail, and password-reset pages. The verified Instagram profile falls back to the existing Organization schema identity if contact settings are blank. Guarded Release deployment and live verification remain pending. No Instagram post/Story, credential, Search Console, catalog, order, or DB data change is included.
+
 ## 2026-09-21 - Owner: continue A2X Hero #17 closure
 Status: `A2X PRODUCTION_VERIFIED / CLOSED`.
 

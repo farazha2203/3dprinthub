@@ -2,6 +2,7 @@
 """Read-only public acceptance for the A2W service discovery pages."""
 
 import argparse
+import re
 import sys
 from urllib.parse import urlparse
 
@@ -20,8 +21,22 @@ EXPECTED = {
 }
 
 
-def run(base):
+def run(base, check_social=False):
     base = base.rstrip("/")
+    if check_social:
+        for path in ("/", "/store/"):
+            status, body, _ = fetch(base + path)
+            if status != 200:
+                raise RuntimeError("social_shell_http_failed:" + path)
+            html = body.decode("utf-8", "replace")
+            if 'aria-label="پاورقی و راه‌های ارتباطی 3DprintHub"' not in html:
+                raise RuntimeError("shared_footer_missing:" + path)
+            if not re.search(r'href=["\']https://wa\.me/\d+["\']', html):
+                raise RuntimeError("clickable_whatsapp_missing:" + path)
+            if not re.search(r'href=["\']https?://(?:www\.)?instagram\.com/3dprinthub_ir/?["\']', html):
+                raise RuntimeError("instagram_profile_link_missing:" + path)
+            print("SOCIAL_SHELL=PASS", path)
+        print("SOCIAL_CONTACT_SMOKE=PASS")
     urls = set(sitemap_page_urls(base + "/sitemap.xml"))
     for path, title_terms in EXPECTED.items():
         found = next((url for url in urls if urlparse(url).path == path), None)
@@ -61,8 +76,10 @@ def run(base):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--base", default="https://3dprinthub.ir")
+    parser.add_argument("--social", action="store_true", help="verify configured social links and shared footer on Home and Store")
     try:
-        run(parser.parse_args().base)
+        args = parser.parse_args()
+        run(args.base, check_social=args.social)
     except Exception as exc:
         print("A2W_SERVICE_SEO_SMOKE=FAIL", str(exc), file=sys.stderr)
         return 1

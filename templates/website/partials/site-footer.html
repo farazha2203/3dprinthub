@@ -1,0 +1,29 @@
+{% load static %}
+<footer class="site-footer bg-slate-950 text-slate-200" aria-label="پاورقی و راه‌های ارتباطی 3DprintHub">
+  <div class="container mx-auto px-4 sm:px-6 py-10 md:py-14">
+    <div class="grid gap-8 md:grid-cols-[1.3fr_1fr_1fr] md:items-start">
+      <div>
+        <a href="/#home" class="inline-flex items-center gap-3 font-black text-white">
+          <img src="{% static 'img/brand/3dprinthublogo.png' %}" width="44" height="44" alt="" class="h-11 w-11 object-contain">
+          <span>{% if public_site_settings and public_site_settings.brand_name %}{{ public_site_settings.brand_name }}{% else %}3DprintHub.ir{% endif %}</span>
+        </a>
+        <p class="mt-4 max-w-xl text-sm leading-7 text-slate-400">طراحی، چاپ سه‌بعدی و ساخت قطعات سفارشی؛ برای بررسی پروژه با ما در ارتباط باشید.</p>
+      </div>
+      <div>
+        <h2 class="font-black text-white">راه‌های ارتباطی</h2>
+        <div class="mt-4 flex flex-wrap gap-3">
+          {% if public_whatsapp_url %}<a href="{{ public_whatsapp_url }}" target="_blank" rel="noopener noreferrer" aria-label="گفت‌وگو در واتساپ" class="inline-flex min-h-11 items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 font-bold text-white hover:bg-emerald-500"><span aria-hidden="true">◉</span> واتساپ</a>{% endif %}
+          {% if public_instagram_url %}<a href="{{ public_instagram_url }}" target="_blank" rel="noopener noreferrer" aria-label="صفحه اینستاگرام 3DprintHub" class="inline-flex min-h-11 items-center gap-2 rounded-xl border border-fuchsia-400/40 bg-fuchsia-500/10 px-4 py-2 font-bold text-white hover:bg-fuchsia-500/20"><span aria-hidden="true">◎</span> اینستاگرام</a>{% endif %}
+          {% if public_site_settings and public_site_settings.phone %}<a href="tel:{{ public_site_settings.phone }}" class="inline-flex min-h-11 items-center rounded-xl border border-slate-700 px-4 py-2 font-bold hover:border-orange-400">{{ public_site_settings.phone }}</a>{% endif %}
+        </div>
+        {% if public_site_settings and public_site_settings.address %}<p class="mt-4 text-sm leading-7 text-slate-400">{{ public_site_settings.address }}</p>{% endif %}
+      </div>
+      <nav aria-label="لینک‌های اصلی" class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+        <a href="/#services" class="hover:text-orange-300">خدمات</a><a href="{% url 'store:product_list' %}" class="hover:text-orange-300">فروشگاه</a>
+        <a href="/#portfolio" class="hover:text-orange-300">نمونه‌کارها</a><a href="/#contact" class="hover:text-orange-300">تماس با ما</a>
+        <a href="/#order" class="hover:text-orange-300">ثبت سفارش</a>
+      </nav>
+    </div>
+    <div class="mt-8 border-t border-slate-800 pt-5 text-xs text-slate-500">© تمام حقوق برای 3DprintHub.ir محفوظ است.</div>
+  </div>
+</footer>

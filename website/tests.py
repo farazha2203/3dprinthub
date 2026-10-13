@@ -6,7 +6,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
 
-from .models import CustomerProfile, Material, Order, Quote, OrderReview
+from .models import CustomerProfile, Material, Order, Quote, OrderReview, SiteSetting
 
 
 class WebsiteTestHelpers:
@@ -87,6 +87,58 @@ class HomePageTests(TestCase, WebsiteTestHelpers):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "website/index.html")
+
+    def test_social_links_render_from_site_settings_on_home_and_mobile(self):
+        SiteSetting.objects.create(
+            whatsapp="09121234567",
+            instagram="https://www.instagram.com/3dprinthub_ir/",
+        )
+        response = self.client.get(reverse("website:home"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'href="https://wa.me/989121234567"', count=4)
+        self.assertContains(response, 'href="https://www.instagram.com/3dprinthub_ir/"', count=4)
+        self.assertContains(response, 'aria-label="پاورقی و راه‌های ارتباطی 3DprintHub"')
+        self.assertContains(response, 'id="mobile-menu"')
+
+    def test_shared_footer_is_present_on_store_and_customer_shell(self):
+        SiteSetting.objects.create(
+            whatsapp="+98 912 123 4567",
+            instagram="https://www.instagram.com/3dprinthub_ir/",
+        )
+        store_response = self.client.get(reverse("store:product_list"))
+        user = self.create_user(phone="09129999999")
+        self.client.login(username=user.username, password="StrongPass123!")
+        customer_response = self.client.get(reverse("website:customer_dashboard"))
+
+        self.assertContains(store_response, "راه‌های ارتباطی")
+        self.assertContains(store_response, 'href="https://wa.me/989121234567"')
+        self.assertContains(customer_response, "راه‌های ارتباطی")
+
+    def test_footer_is_present_on_standalone_customer_pages(self):
+        for route in (
+            "website:customer_login",
+            "website:customer_register",
+            "website:customer_password_reset",
+            "website:customer_password_reset_done",
+            "website:customer_password_reset_complete",
+        ):
+            with self.subTest(route=route):
+                response = self.client.get(reverse(route))
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, 'aria-label="پاورقی و راه‌های ارتباطی 3DprintHub"')
+
+    def test_empty_whatsapp_number_does_not_render_invalid_link(self):
+        SiteSetting.objects.create(instagram="https://www.instagram.com/3dprinthub_ir/")
+        response = self.client.get(reverse("website:home"))
+
+        self.assertNotContains(response, "https://wa.me/")
+
+    def test_verified_instagram_profile_falls_back_when_contact_setting_is_blank(self):
+        SiteSetting.objects.create(whatsapp="09121234567")
+        response = self.client.get(reverse("website:home"))
+
+        self.assertContains(response, 'href="https://www.instagram.com/3dprinthub_ir/"')
 
     def test_header_shows_customer_login_link_for_anonymous_user(self):
         response = self.client.get(reverse("website:home"))

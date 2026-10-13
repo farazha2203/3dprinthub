@@ -34,6 +34,7 @@ class A2WDeployRunnerContractTests(unittest.TestCase):
 
     def test_successor_runner_requires_phase_doc_and_pairs_runner_test_only_when_runner_changes(self):
         self.assertIn('REQUIRED_DELTA=(docs/phases/PHASE50_A2Y_SERVICE_VERTICAL_LANDINGS.md)', self.source)
+        self.assertIn('REQUIRED_DELTA=(docs/phases/PHASE50_A2Z_PUBLIC_SOCIAL_CONTACT.md)', self.source)
         self.assertIn('REQUIRED_DELTA+=(scripts/host/test_phase50_a2w_deploy_runner.py)', self.source)
         self.assertIn('deploy_runner_test_changed_without_runner', self.source)
         self.assertIn('REQUIRED_DELTA+=(store/phase50_service_seo.py store/test_phase50_service_seo.py)', self.source)
@@ -50,6 +51,26 @@ class A2WDeployRunnerContractTests(unittest.TestCase):
         self.assertIn("migration_plan", self.source)
         self.assertNotIn('manage.py migrate ', self.source)
         self.assertIn("collectstatic --noinput", self.source)
+
+    def test_contact_successor_allowlists_only_the_public_contact_surfaces(self):
+        for path in (
+            "website/context_processors.py",
+            "website/tests.py",
+            "templates/website/partials/header.html",
+            "templates/website/partials/contact.html",
+            "templates/website/partials/site-footer.html",
+            "templates/store/base.html",
+            "templates/website/customer/account_base.html",
+            "templates/website/customer/login.html",
+            "templates/website/customer/register.html",
+            "templates/website/customer/order_detail.html",
+            "templates/website/customer/password_reset_form.html",
+            "docs/phases/PHASE50_A2Z_PUBLIC_SOCIAL_CONTACT.md",
+        ):
+            self.assertIn(path, self.source)
+        smoke = (RUNNER.parent.parent / "seo" / "phase50_a2w_service_seo_smoke.py").read_text(encoding="utf-8")
+        self.assertIn('parser.add_argument("--social"', smoke)
+        self.assertIn("SOCIAL_CONTACT_SMOKE=PASS", smoke)
 
     def test_full_database_env_and_source_rollback_are_required_before_merge(self):
         backup = self.source.index("PREDEPLOY_SOURCE_ENV_DATABASE_BACKUP=PASS")

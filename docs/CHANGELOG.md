@@ -1,3 +1,8 @@
+## 2026-10-13 — Phase50.A2Z public contact links (Local-tested)
+- Added configured WhatsApp/Instagram links to desktop and mobile navigation, the Home contact section, and a reusable footer shared by Home, Store, customer account, auth, order-detail, and password-reset pages.
+- Formatted local/international WhatsApp numbers for `wa.me` without hard-coded contact data.
+- Added focused tests and a guarded Production smoke for Home and Store. No social publishing, SEO/schema, Product, order, migration, or DB-data behavior changed.
+
 ## 2026-09-21 - A2X Hero public-media persistence follow-up
 - Unified Desktop->Hero sync now persists Product-owned gallery/main media instead of private ImportedPrintAsset working-media.
 - Selected gallery ordering is preserved when a corresponding ProductImage exists; Product.main_image is the safe public fallback.

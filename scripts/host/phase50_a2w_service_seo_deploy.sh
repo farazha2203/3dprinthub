@@ -57,14 +57,18 @@ git merge-base --is-ancestor "$BASE" "$FETCHED" || fail not_fast_forward
 git diff --name-only "$BASE" "$FETCHED" > "$DELTA"
 while IFS= read -r changed; do
   case "$changed" in
-    store/phase50_service_seo.py|store/sitemaps.py|store/templatetags/store_seo.py|store/urls.py|store/views.py|store/test_phase50_service_seo.py|templates/store/isfahan_service_landing.html|templates/store/service_page.html|templates/store/service_landing.html|templates/website/partials/services.html|scripts/seo/phase50_a2w_service_seo_smoke.py|scripts/host/phase50_a2w_service_seo_deploy.sh|scripts/host/test_phase50_a2w_deploy_runner.py|docs/CURRENT_STATE.md|docs/ROADMAP.md|docs/CHANGELOG.md|docs/ERRORS.md|docs/REQUESTS.md|docs/PATHS.md|docs/HOST_CONSTRAINTS.md|docs/phases/PHASE50_A2W_SERVICE_SEO.md|docs/phases/PHASE50_A2V_ISFAHAN_SEO_RELEASE.md|docs/phases/PHASE50_A2X_STUDIO_PROP_DISCOVERY.md|docs/phases/PHASE50_A2Y_SERVICE_VERTICAL_LANDINGS.md) ;;
+    store/phase50_service_seo.py|store/sitemaps.py|store/templatetags/store_seo.py|store/urls.py|store/views.py|store/test_phase50_service_seo.py|templates/store/isfahan_service_landing.html|templates/store/service_page.html|templates/store/service_landing.html|templates/store/base.html|templates/website/index.html|templates/website/partials/services.html|templates/website/partials/header.html|templates/website/partials/contact.html|templates/website/partials/site-footer.html|templates/website/customer/account_base.html|templates/website/customer/login.html|templates/website/customer/register.html|templates/website/customer/order_detail.html|templates/website/customer/password_reset_complete.html|templates/website/customer/password_reset_done.html|templates/website/customer/password_reset_confirm.html|templates/website/customer/password_reset_form.html|website/context_processors.py|website/tests.py|scripts/seo/phase50_a2w_service_seo_smoke.py|scripts/host/phase50_a2w_service_seo_deploy.sh|scripts/host/test_phase50_a2w_deploy_runner.py|docs/CURRENT_STATE.md|docs/ROADMAP.md|docs/CHANGELOG.md|docs/ERRORS.md|docs/REQUESTS.md|docs/PATHS.md|docs/HOST_CONSTRAINTS.md|docs/phases/PHASE50_A2W_SERVICE_SEO.md|docs/phases/PHASE50_A2V_ISFAHAN_SEO_RELEASE.md|docs/phases/PHASE50_A2X_STUDIO_PROP_DISCOVERY.md|docs/phases/PHASE50_A2Y_SERVICE_VERTICAL_LANDINGS.md|docs/phases/PHASE50_A2Z_PUBLIC_SOCIAL_CONTACT.md) ;;
     *) fail "unexpected_release_file:$changed" ;;
   esac
 done < "$DELTA"
 if [ "$BASE" = "$INITIAL_BASE" ]; then
   REQUIRED_DELTA=(store/phase50_service_seo.py store/sitemaps.py store/urls.py store/views.py store/test_phase50_service_seo.py templates/store/service_landing.html templates/website/partials/services.html scripts/seo/phase50_a2w_service_seo_smoke.py)
 else
-  REQUIRED_DELTA=(docs/phases/PHASE50_A2Y_SERVICE_VERTICAL_LANDINGS.md)
+  if grep -Fxq docs/phases/PHASE50_A2Z_PUBLIC_SOCIAL_CONTACT.md "$DELTA"; then
+    REQUIRED_DELTA=(docs/phases/PHASE50_A2Z_PUBLIC_SOCIAL_CONTACT.md)
+  else
+    REQUIRED_DELTA=(docs/phases/PHASE50_A2Y_SERVICE_VERTICAL_LANDINGS.md)
+  fi
   if grep -Fxq scripts/host/phase50_a2w_service_seo_deploy.sh "$DELTA"; then
     REQUIRED_DELTA+=(scripts/host/test_phase50_a2w_deploy_runner.py)
   fi
@@ -154,6 +158,6 @@ test -z "$(git status --porcelain --untracked-files=all)" || fail dirty_after_me
 mkdir -p tmp
 touch tmp/restart.txt
 sleep 8
-"$PY" scripts/seo/phase50_a2w_service_seo_smoke.py --base https://3dprinthub.ir
+"$PY" scripts/seo/phase50_a2w_service_seo_smoke.py --base https://3dprinthub.ir --social
 echo "PHASE50_A2W_DEPLOY=PASS"
 echo "PRODUCTION_SHA=$(git rev-parse HEAD)"
