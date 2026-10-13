@@ -2,7 +2,7 @@
 - Host identity was reverified through the dedicated project router: `sfkilvrs@nphost4.parsblog.com`, `/home/sfkilvrs/3dprinthub`, clean branch `release/phase50-a2j-hero-20260915`, exact source `f9d7968d0e157326bff3c060cfa67230432b91ac`.
 - That exact Host source is an ancestor of live GitHub branch `release/phase50-a2w-service-seo-20261010`; the isolated candidate is based on its current GitHub tip `9a546de40fa3bce0d13dc50b06fc21f2b551741f`.
 - Use only `scripts/host/phase50_a2w_service_seo_deploy.sh` through `D:\projects\.chatgpt-gateway\project-host.ps1 -Project 3dprinthub`, passing the verified Host SHA explicitly as `BASE`. The runner retains quota, actual reserve, MySQL identity, empty migration plan, source/.env/full-DB backup, strict allowlist, ff-only and Passenger/public-smoke checks.
-- No Host changes have occurred yet. Stop if any baseline, quota, backup, migration, or public-link check fails.
+- A2Z completed on exact runtime SHA `d196edc6a3dffc54add147a9d4b4c7cf49b62895`; guarded quota/reserve, full source/.env/MySQL backup, identity, empty migration plan, ff-only, restart and public Home/Store social smoke all passed. Rollback root: `/home/sfkilvrs/3dprinthub-deploy-backups/20261013-162447-phase50-a2w-service-seo`.
 
 ## 2026-09-20 A2R Production preflight transport block
 - Central Windows router selection/REST invocation was locally repaired with a verified backup; this did not change application source or Production.

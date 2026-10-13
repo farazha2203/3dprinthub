@@ -1,7 +1,7 @@
 # Phase50.A2Z — Public social links and shared site footer
 
 Date: 2026-10-13
-Status: LOCAL_TESTED / GITHUB_PROMOTION_NEXT
+Status: PRODUCTION_VERIFIED
 
 ## Requested delta
 - Make the configured WhatsApp number a `wa.me` link and show Instagram in the desktop header, mobile menu, contact section, and a consistent footer. Prefer `SiteSetting.instagram`, then an Instagram URL from SEO `same_as`, then the already owner-verified `@3dprinthub_ir` Organization-schema profile.
@@ -32,10 +32,12 @@ Status: LOCAL_TESTED / GITHUB_PROMOTION_NEXT
 - Django check: PASS with existing CKEditor 4 support and in-memory channel-layer warnings.
 - `makemigrations --check --dry-run`: no changes.
 - Guarded runner contract: 7/7 PASS; Python compile, Bash syntax, and diff hygiene PASS.
-- Public release smoke remains required after promotion.
+- Production release SHA `d196edc6a3dffc54add147a9d4b4c7cf49b62895` passed guarded deploy. Exact Host rollback root: `/home/sfkilvrs/3dprinthub-deploy-backups/20261013-162447-phase50-a2w-service-seo`; source, `.env`, full MySQL backup, SHA256 and gzip validation passed.
+- Runner output confirmed zero migrations, ff-only source promotion, Django checks with only pre-existing warnings, Passenger restart, clickable social/contact shell on Home and Store, and all eight service landing routes.
+- No social posting, credential, Search Console, Product, order, media, or Production DB-data change occurred.
 
 ## Release and acceptance
 - Host baseline: `f9d7968d0e157326bff3c060cfa67230432b91ac`, branch `release/phase50-a2j-hero-20260915`.
 - GitHub release branch: `release/phase50-a2w-service-seo-20261010`.
 - Deploy only with `scripts/host/phase50_a2w_service_seo_deploy.sh`, passing the fresh verified Host baseline as its second argument and the exact live GitHub release SHA as its first.
-- `PRODUCTION_VERIFIED` only after the runner's quota/reserve, MySQL identity, empty migration plan, verified source/env/database backup, fast-forward, restart, and live Home/Store social-link smoke all pass.
+- `PRODUCTION_VERIFIED` after the runner's quota/reserve, MySQL identity, empty migration plan, verified source/env/database backup, fast-forward, restart, and live Home/Store social-link smoke all passed.
