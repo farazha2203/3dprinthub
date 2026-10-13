@@ -1,6 +1,6 @@
 # Phase50.A2Z — Public social links and shared site footer
 
-Owner correction (2026-10-13): A, the original contact/map block, is the footer. Delete invented B; use A across all page shells, map aligned at top with address and branded social links under map. Initial deploy passed at 7142fac07f9cb3c6f9043575bbddcf5c627e69cd; browser inspection exposed stale main.css cache. The shared page shells now version the stylesheet URL; final browser verification follows the successor deploy.
+Owner correction (2026-10-13) PRODUCTION_VERIFIED at 76f12e22c3ba62913ad0701abac986c9a7bbfb50: A is the original contact/map footer; invented B was removed. A appears once across page shells, with map aligned at top, address and branded social links beneath it. Versioned stylesheet URLs fix the stale-cache issue found in browser review. Browser confirms loaded map, 28px icons, mobile panel sizing/order and shared Store footer. Rollback: /home/sfkilvrs/3dprinthub-deploy-backups/20261013-200026-phase50-a2w-service-seo.
 
 Date: 2026-10-13
 Status: PRODUCTION_VERIFIED at runtime SHA `dd1d679a9033146849283a7851dceaa6396fa695`.

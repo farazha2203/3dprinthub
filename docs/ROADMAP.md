@@ -986,3 +986,5 @@ Status: PRODUCTION_VERIFIED at exact runtime SHA `f9d7968d0e157326bff3c060cfa672
 - Status: `PRODUCTION_VERIFIED` at runtime SHA `dd1d679a9033146849283a7851dceaa6396fa695`; the existing single footer is restyled with scoped dark/high-contrast CSS; empty feedback is suppressed; populated reviews remain before footer; public smoke passed.
 ## 2026-10-13 — Social links footer-only
 - Status: `PRODUCTION_VERIFIED` at runtime SHA `90011a529c74875faeebdefd583781645939cddb`; header shortcuts removed while Home contact cards and shared-footer links remain; public smoke passed.
+## 2026-10-13 — Original footer A / PRODUCTION_VERIFIED
+Owner-designated contact/map A is the shared footer; dark B removed. Map at top, address and branded WhatsApp/Instagram icons beneath it. Home, Store and customer page shells share it once; header social links absent; empty reviews hidden. Runtime 76f12e22c3ba62913ad0701abac986c9a7bbfb50; release/phase50-a2w-service-seo-20261010. Local and live/browser verification passed; versioned CSS resolves cache. Rollback /home/sfkilvrs/3dprinthub-deploy-backups/20261013-200026-phase50-a2w-service-seo.
