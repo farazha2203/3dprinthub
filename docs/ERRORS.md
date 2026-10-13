@@ -2539,3 +2539,9 @@ Date: 2026-10-10. The first GitHub-first runner passed the dedicated tunnel, exa
 
 ## ERR-50-056 — Successor deploy gate incorrectly required runner self-modification
 Date: 2026-10-10. The first deploy attempt for the owner-requested public equipment-disclosure removal stopped at `required_delta_missing:scripts/host/phase50_a2w_service_seo_deploy.sh`, before backup or Production mutation. The successor gate unconditionally required its own runner and contract test to change even when the source delta was an ordinary permitted template/content fix. Corrected the gate to require its contract test only when the runner itself changes, while preserving the runner/test pairing and all allowlist, baseline, exact GitHub SHA, backup, DB identity, no-migration, fast-forward and post-deploy smoke gates. Contract tests 6/6 and service regressions 22/22 passed. The subsequent deploy succeeded at exact SHA `f9d7968d0e157326bff3c060cfa67230432b91ac`; no source promotion occurred during the failed attempt.
+# ERR-49-218 — Existing shared footer loses theme and empty feedback creates blank sections
+- Symptom: Home appears to have a missing/white footer and shows a large customer-feedback empty state even when there are no reviews.
+- Root cause: global light-theme CSS uses `!important` overrides on slate background/text utilities, overriding the existing dark footer; both feedback templates emitted empty-state sections.
+- Correct fix: scope contrast styles to `.site-footer`; conditionally render each feedback section only when its records exist. Keep exactly one shared footer and real reviews before it.
+- Verification: HomePageTests 10/10, runner contract 7/7, Django/migration/compile/Bash/diff checks PASS. Production verification pending exact GitHub release.
+- Prevention: never create a duplicate footer to address styling; test empty and non-empty review states and count the shared footer.

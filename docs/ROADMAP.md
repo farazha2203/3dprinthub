@@ -982,3 +982,6 @@ Status: PRODUCTION_VERIFIED within A2Y at runtime SHA `f9d7968d0e157326bff3c060c
 
 ## 2026-10-10 — Phase50.A2Y service verticals
 Status: PRODUCTION_VERIFIED at exact runtime SHA `f9d7968d0e157326bff3c060cfa67230432b91ac`. Adds pages for custom figures, rare automotive parts, rare motorcycle parts, rare appliance parts and architectural maquettes; strengthens the studio-props page with article H2s and matching catalog cards. Figure matching includes genuine general-section products without bulk retagging. Public equipment/model specifications were removed; tests and production smoke reject their presence. Home, Isfahan navigation and sitemap expose all six verticals. Local regressions PASS; exact GitHub deploy, fresh rollback and all-eight-URL public smoke PASS. No DB mutation, migration, Instagram publication or Search Console change. Owner URL Inspection/request indexing remains the next SEO operation; no ranking/indexing guarantee.
+## 2026-10-13 Footer and customer feedback correction
+- Status: `LOCAL_TESTED`; the existing single footer is restyled with scoped dark/high-contrast CSS; empty testimonial/review sections are suppressed; populated reviews remain before footer.
+- Regression gates pass locally. Exact GitHub push and Production verification are next.

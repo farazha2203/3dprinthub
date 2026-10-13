@@ -1,5 +1,6 @@
 {% load rating_tags %}
 
+{% if testimonials %}
 <section class="py-24 bg-slate-900">
     <div class="container mx-auto px-6">
         <div class="text-center mb-12">
@@ -34,11 +35,8 @@
                         </div>
                     </div>
                 </div>
-            {% empty %}
-                <div class="col-span-full rounded-3xl border border-dashed border-slate-700 p-10 text-center text-slate-400">
-                    هنوز رضایت مشتری ثبت نشده است.
-                </div>
             {% endfor %}
         </div>
     </div>
 </section>
+{% endif %}

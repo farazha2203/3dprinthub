@@ -1,7 +1,13 @@
 # Phase50.A2Z — Public social links and shared site footer
 
 Date: 2026-10-13
-Status: PRODUCTION_VERIFIED
+Status: LOCAL_TESTED (footer/reviews correction); prior social-contact slice remains PRODUCTION_VERIFIED.
+
+## Owner correction: existing footer and feedback visibility
+- Do not add another footer. Keep the single shared `site-footer.html`.
+- Scoped dark-background/light-text CSS is required because global light-theme overrides otherwise make the existing footer appear white and visually blend into the page.
+- Hide the testimonials and order-reviews sections completely when their respective querysets are empty; render real feedback above the shared footer.
+- Local regression covers empty/populated data and one-footer ordering. Runtime deploy/verification is pending this correction's exact pushed SHA.
 
 ## Requested delta
 - Make the configured WhatsApp number a `wa.me` link and show Instagram in the desktop header, mobile menu, contact section, and a consistent footer. Prefer `SiteSetting.instagram`, then an Instagram URL from SEO `same_as`, then the already owner-verified `@3dprinthub_ir` Organization-schema profile.

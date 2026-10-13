@@ -1,3 +1,4 @@
+{% if order_reviews %}
 <section id="customer-reviews" class="py-24 bg-white">
     <div class="container mx-auto px-6">
         <div class="text-center mb-12">
@@ -47,11 +48,8 @@
                         {{ review.created_at|date:"Y/m/d" }}
                     </div>
                 </article>
-            {% empty %}
-                <div class="col-span-full rounded-3xl border border-dashed border-slate-300 p-10 text-center text-slate-500">
-                    هنوز بازخوردی از سفارشات ثبت نشده است.
-                </div>
             {% endfor %}
         </div>
     </div>
 </section>
+{% endif %}

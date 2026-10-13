@@ -6,7 +6,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
 
-from .models import CustomerProfile, Material, Order, Quote, OrderReview, SiteSetting
+from .models import CustomerProfile, Material, Order, Quote, OrderReview, SiteSetting, Testimonial
 
 
 class WebsiteTestHelpers:
@@ -139,6 +139,34 @@ class HomePageTests(TestCase, WebsiteTestHelpers):
         response = self.client.get(reverse("website:home"))
 
         self.assertContains(response, 'href="https://www.instagram.com/3dprinthub_ir/"')
+
+    def test_empty_customer_feedback_sections_are_hidden_and_footer_is_single(self):
+        response = self.client.get(reverse("website:home"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'id="customer-reviews"')
+        self.assertNotContains(response, "تجربه مشتریان از همکاری با ما")
+        self.assertNotContains(response, "هنوز بازخوردی از سفارشات ثبت نشده است")
+        self.assertEqual(response.content.count(b'<footer class="site-footer'), 1)
+        self.assertLess(response.content.index(b"</main>"), response.content.index(b'<footer class="site-footer'))
+
+    def test_real_customer_feedback_is_rendered_before_the_existing_footer(self):
+        Testimonial.objects.create(customer_name="مشتری آزمایشی", text="بازخورد واقعی آزمایشی")
+        user = self.create_user(phone="09128887777")
+        order = self.create_order(customer=user, phone="09128887777")
+        OrderReview.objects.create(
+            order=order,
+            customer=user,
+            rating=5,
+            comment="سفارش به‌موقع و باکیفیت تحویل شد",
+            is_approved=True,
+            display_on_site=True,
+        )
+        response = self.client.get(reverse("website:home"))
+
+        self.assertContains(response, "بازخورد واقعی آزمایشی")
+        self.assertContains(response, "سفارش به‌موقع و باکیفیت تحویل شد")
+        self.assertLess(response.content.index(b'id="customer-reviews"'), response.content.index(b'<footer class="site-footer'))
 
     def test_header_shows_customer_login_link_for_anonymous_user(self):
         response = self.client.get(reverse("website:home"))

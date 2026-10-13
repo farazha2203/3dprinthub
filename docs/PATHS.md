@@ -287,3 +287,7 @@ This section supersedes older Production-HEAD examples above; historical entries
 - Isolated checkout: `D:\projects\.worktrees\3dprinthub\isfahan-seo-release-20261010`; branch `release/phase50-a2w-service-seo-20261010`.
 - Candidate URL: `https://3dprinthub.ir/store/services/studio-props-and-photography-decor/`.
 - Local-only until exact GitHub and dedicated Host release gates pass; production remains at verified runtime SHA `06f37f75cf01c1de3ddfeb06aafe97536f69d5b8`.
+## 2026-10-13 — Existing footer correction
+- Isolated checkout: `D:\projects\3DPrintHub-contact-current`.
+- Release branch: `release/phase50-a2w-service-seo-20261010`; active work branch: `codex/site-contact-social-current`.
+- Use only `scripts/host/phase50_a2w_service_seo_deploy.sh` through the dedicated 3dprinthub router for deployment.
