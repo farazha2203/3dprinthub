@@ -317,3 +317,5 @@ Official cPanel docs: Disk Usage can report stale values after deletion; account
 - cPanel quota/reserves, protected source/.env/full MySQL backup checksums, gzip validation, correct MySQL identity and empty migration plan passed. No DB writes or migrations.
 - All eight service routes passed post-restart public smoke, including negative assertions against equipment/model details. Verified rollback: `/home/sfkilvrs/3dprinthub-deploy-backups/20261010-151538-phase50-a2w-service-seo`.
 - No direct source edits, alternate tunnel, Instagram action, or Search Console mutation.
+## 2026-10-13 — Footer correction deployment boundary
+The correction is Local-tested only until pushed to the exact release branch. Deploy through the project-specific reverse tunnel and guarded A2W runner only; preserve its fresh quota, backup, MySQL identity, empty-migration, exact-SHA and live smoke gates. No direct Host source edits.

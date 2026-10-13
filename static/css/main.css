@@ -452,6 +452,31 @@ table tr:hover {
     background: #FF9800;
     color: #ffffff;
 }
+
+/* Keep the existing public footer visually distinct from the light-page palette. */
+.site-footer {
+    background-color: #111827 !important;
+    color: #e2e8f0 !important;
+    border-top: 1px solid #334155;
+}
+
+.site-footer .text-slate-200,
+.site-footer .text-slate-300,
+.site-footer .text-slate-400 {
+    color: #cbd5e1 !important;
+}
+
+.site-footer .text-slate-500 {
+    color: #94a3b8 !important;
+}
+
+.site-footer a {
+    color: #f8fafc;
+}
+
+.site-footer a:hover {
+    color: #fdba74;
+}
 /* PHASE 19: unified form typography and Google authentication */
 html,body,button,input,textarea,select,option{font-family:"IRANSans",Tahoma,Arial,sans-serif}.google-auth-button{display:flex;width:100%;align-items:center;justify-content:center;gap:.75rem;border:1px solid #cbd5e1;border-radius:1rem;padding:.85rem 1rem;background:#fff;color:#0f172a;font-weight:900;transition:.2s}.google-auth-button:hover{border-color:#94a3b8;background:#f8fafc}.google-auth-button svg{width:1.5rem;height:1.5rem}
 

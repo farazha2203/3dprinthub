@@ -31,11 +31,22 @@ def run(base, check_social=False):
             html = body.decode("utf-8", "replace")
             if 'aria-label="پاورقی و راه‌های ارتباطی 3DprintHub"' not in html:
                 raise RuntimeError("shared_footer_missing:" + path)
+            if html.count('<footer class="site-footer') != 1:
+                raise RuntimeError("public_footer_count_invalid:" + path)
             if not re.search(r'href=["\']https://wa\.me/\d+["\']', html):
                 raise RuntimeError("clickable_whatsapp_missing:" + path)
             if not re.search(r'href=["\']https?://(?:www\.)?instagram\.com/3dprinthub_ir/?["\']', html):
                 raise RuntimeError("instagram_profile_link_missing:" + path)
+            if path == "/" and "هنوز بازخوردی از سفارشات ثبت نشده است" in html:
+                raise RuntimeError("empty_customer_feedback_should_be_hidden")
             print("SOCIAL_SHELL=PASS", path)
+        css_status, css_body, _ = fetch(base + "/static/css/main.css")
+        if css_status != 200:
+            raise RuntimeError("public_theme_css_unavailable")
+        css = css_body.decode("utf-8", "replace")
+        for required in (".site-footer {", "background-color: #111827 !important;", ".site-footer .text-slate-400"):
+            if required not in css:
+                raise RuntimeError("public_footer_theme_rule_missing:" + required)
         print("SOCIAL_CONTACT_SMOKE=PASS")
     urls = set(sitemap_page_urls(base + "/sitemap.xml"))
     for path, title_terms in EXPECTED.items():

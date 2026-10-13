@@ -1,3 +1,10 @@
+## 2026-10-13 — A2Z existing footer + customer feedback correction / LOCAL_TESTED
+Status: `LOCAL_TESTED`; GitHub/Production pending.
+
+Owner clarified that the existing shared footer is the only footer; do not create another. The white/unstyled appearance came from global light-theme CSS overriding `.bg-slate-950` and slate text colors. The Home page also rendered explicit empty-state testimonial/review sections. Scoped CSS now restores contrast only inside `.site-footer`; both review sections render only when approved/available records exist, and actual reviews remain before the shared footer. Added regressions for empty and populated feedback and one-footer ordering. No screenshot/media capture or other workflows changed.
+
+Local checks: HomePageTests 10/10; deploy-runner contract 7/7; Django check PASS with known warnings; migration drift none; compile, Bash syntax, and diff checks PASS. Exact GitHub and Host release/verification remain pending. Next: push the reviewed delta and deploy through the dedicated 3DPrintHub runner; verify live CSS, hidden empty feedback, one readable footer, and populated review ordering.
+
 ## 2026-10-13 — PHASE50.A2Z PUBLIC SOCIAL CONTACT / PRODUCTION_VERIFIED
 Status: `PRODUCTION_VERIFIED`.
 
