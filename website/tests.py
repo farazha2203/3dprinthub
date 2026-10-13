@@ -88,7 +88,7 @@ class HomePageTests(TestCase, WebsiteTestHelpers):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "website/index.html")
 
-    def test_social_links_render_from_site_settings_on_home_and_mobile(self):
+    def test_social_links_are_in_shared_footer_not_header_and_contact_cards_remain(self):
         SiteSetting.objects.create(
             whatsapp="09121234567",
             instagram="https://www.instagram.com/3dprinthub_ir/",
@@ -96,10 +96,15 @@ class HomePageTests(TestCase, WebsiteTestHelpers):
         response = self.client.get(reverse("website:home"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'href="https://wa.me/989121234567"', count=4)
-        self.assertContains(response, 'href="https://www.instagram.com/3dprinthub_ir/"', count=4)
+        self.assertContains(response, 'href="https://wa.me/989121234567"', count=2)
+        self.assertContains(response, 'href="https://www.instagram.com/3dprinthub_ir/"', count=2)
         self.assertContains(response, 'aria-label="پاورقی و راه‌های ارتباطی 3DprintHub"')
         self.assertContains(response, 'id="mobile-menu"')
+        header = response.content.split(b"</header>", 1)[0]
+        self.assertNotIn(b"https://wa.me/", header)
+        self.assertNotIn(b"instagram.com/3dprinthub_ir", header)
+        self.assertContains(response, "گفت‌وگو در واتساپ")
+        self.assertContains(response, "صفحه اینستاگرام 3DprintHub")
 
     def test_shared_footer_is_present_on_store_and_customer_shell(self):
         SiteSetting.objects.create(

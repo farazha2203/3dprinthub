@@ -47,3 +47,7 @@ Status: PRODUCTION_VERIFIED at runtime SHA `dd1d679a9033146849283a7851dceaa6396f
 - GitHub release branch: `release/phase50-a2w-service-seo-20261010`.
 - Deploy only with `scripts/host/phase50_a2w_service_seo_deploy.sh`, passing the fresh verified Host baseline as its second argument and the exact live GitHub release SHA as its first.
 - `PRODUCTION_VERIFIED` after the runner's quota/reserve, MySQL identity, empty migration plan, verified source/env/database backup, fast-forward, restart, and live Home/Store social-link smoke all passed.
+## Follow-up: social links only in the existing footer
+- Owner confirms the Home contact cards remain; remove only header/mobile-menu social shortcuts.
+- Keep the one shared footer's Instagram/WhatsApp links across the page shells. No footer duplication or contact-section edits.
+- Local test verifies the links are absent in the header and retained in contact/footer. Deploy status remains pending until the exact SHA smoke passes.

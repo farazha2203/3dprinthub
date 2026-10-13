@@ -2545,3 +2545,7 @@ Date: 2026-10-10. The first deploy attempt for the owner-requested public equipm
 - Correct fix: scope contrast styles to `.site-footer`; conditionally render each feedback section only when its records exist. Keep exactly one shared footer and real reviews before it.
 - Verification: HomePageTests 10/10, runner contract 7/7, Django/migration/compile/Bash/diff checks PASS. Deployed at `dd1d679a9033146849283a7851dceaa6396fa695`; live public smoke PASS. Initial deploy attempt correctly failed closed before promotion due to missing two partials in the release allowlist; allowlist/test contract was fixed, then release passed.
 - Prevention: never create a duplicate footer to address styling; test empty and non-empty review states and count the shared footer.
+# ERR-49-219 — Social shortcuts duplicated in header and contact section
+- Symptom: Instagram/WhatsApp appeared twice above the footer (header and Home contact cards), despite already being available in the footer.
+- Correct behavior: remove only desktop/mobile header shortcuts; preserve Home contact cards and the existing shared footer links on every page.
+- Verification: regression asserts no social URLs in the header and two instances each on Home (contact + footer); guarded Production smoke pending.

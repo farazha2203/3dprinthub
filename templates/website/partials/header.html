@@ -21,8 +21,6 @@
       </nav>
 
       <div class="hidden lg:flex items-center gap-2 md:gap-3">
-        {% if public_whatsapp_url %}<a href="{{ public_whatsapp_url }}" target="_blank" rel="noopener noreferrer" aria-label="واتساپ 3DprintHub" class="inline-flex items-center rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-500">واتساپ</a>{% endif %}
-        {% if public_instagram_url %}<a href="{{ public_instagram_url }}" target="_blank" rel="noopener noreferrer" aria-label="اینستاگرام 3DprintHub" class="inline-flex items-center rounded-xl border border-fuchsia-300 px-3 py-2 text-xs font-bold text-fuchsia-700 hover:bg-fuchsia-50">اینستاگرام</a>{% endif %}
         {% if request.user.is_authenticated %}
           {% with profile=customer_profile %}
             <details class="relative group">
@@ -92,7 +90,6 @@
           <a href="{% url 'website:customer_login' %}" class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50 font-bold">ورود مشتری</a>
           <a href="{% url 'website:customer_register' %}" class="mobile-menu-link rounded-2xl px-4 py-3 hover:bg-orange-50">ثبت‌نام مشتری</a>
         {% endif %}
-        {% if public_whatsapp_url or public_instagram_url %}<div class="h-px bg-slate-200 my-2"></div><div class="grid grid-cols-2 gap-2">{% if public_whatsapp_url %}<a href="{{ public_whatsapp_url }}" target="_blank" rel="noopener noreferrer" class="rounded-xl bg-emerald-600 px-3 py-3 text-center font-bold text-white">واتساپ</a>{% endif %}{% if public_instagram_url %}<a href="{{ public_instagram_url }}" target="_blank" rel="noopener noreferrer" class="rounded-xl bg-fuchsia-50 px-3 py-3 text-center font-bold text-fuchsia-700">اینستاگرام</a>{% endif %}</div>{% endif %}
       </nav>
     </div>
   </div>
