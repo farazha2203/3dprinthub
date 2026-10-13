@@ -2543,5 +2543,5 @@ Date: 2026-10-10. The first deploy attempt for the owner-requested public equipm
 - Symptom: Home appears to have a missing/white footer and shows a large customer-feedback empty state even when there are no reviews.
 - Root cause: global light-theme CSS uses `!important` overrides on slate background/text utilities, overriding the existing dark footer; both feedback templates emitted empty-state sections.
 - Correct fix: scope contrast styles to `.site-footer`; conditionally render each feedback section only when its records exist. Keep exactly one shared footer and real reviews before it.
-- Verification: HomePageTests 10/10, runner contract 7/7, Django/migration/compile/Bash/diff checks PASS. Production verification pending exact GitHub release.
+- Verification: HomePageTests 10/10, runner contract 7/7, Django/migration/compile/Bash/diff checks PASS. Deployed at `dd1d679a9033146849283a7851dceaa6396fa695`; live public smoke PASS. Initial deploy attempt correctly failed closed before promotion due to missing two partials in the release allowlist; allowlist/test contract was fixed, then release passed.
 - Prevention: never create a duplicate footer to address styling; test empty and non-empty review states and count the shared footer.

@@ -1322,4 +1322,4 @@ Phase50.A2U owner-authorized safe Host quota recovery 2026-10-09: four 46,832,89
 ## 2026-10-13 — Existing footer and feedback visibility (LOCAL_TESTED)
 - Corrected the existing single shared footer's contrast under global light-theme overrides; no second footer added.
 - Empty customer feedback sections are hidden; real reviews remain above the footer.
-- Added tests and live-smoke assertions; deploy pending.
+- Added tests and live-smoke assertions; published at runtime SHA `dd1d679a9033146849283a7851dceaa6396fa695`; public smoke passed.

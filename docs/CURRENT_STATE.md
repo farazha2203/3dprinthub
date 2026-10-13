@@ -1,9 +1,9 @@
-## 2026-10-13 — A2Z existing footer + customer feedback correction / LOCAL_TESTED
-Status: `LOCAL_TESTED`; GitHub/Production pending.
+## 2026-10-13 — A2Z existing footer + customer feedback correction / PRODUCTION_VERIFIED
+Status: `PRODUCTION_VERIFIED` at runtime SHA `dd1d679a9033146849283a7851dceaa6396fa695` on GitHub release branch `release/phase50-a2w-service-seo-20261010`.
 
 Owner clarified that the existing shared footer is the only footer; do not create another. The white/unstyled appearance came from global light-theme CSS overriding `.bg-slate-950` and slate text colors. The Home page also rendered explicit empty-state testimonial/review sections. Scoped CSS now restores contrast only inside `.site-footer`; both review sections render only when approved/available records exist, and actual reviews remain before the shared footer. Added regressions for empty and populated feedback and one-footer ordering. No screenshot/media capture or other workflows changed.
 
-Local checks: HomePageTests 10/10; deploy-runner contract 7/7; Django check PASS with known warnings; migration drift none; compile, Bash syntax, and diff checks PASS. Exact GitHub and Host release/verification remain pending. Next: push the reviewed delta and deploy through the dedicated 3DPrintHub runner; verify live CSS, hidden empty feedback, one readable footer, and populated review ordering.
+Local checks: HomePageTests 10/10; deploy-runner contract 7/7; Django check PASS with known warnings; migration drift none; compile, Bash syntax, and diff checks PASS. Production deploy passed exact-SHA, cPanel quota/reserves, verified full source/.env/MySQL rollback, zero migration, ff-only promotion and restart. Live `SOCIAL_CONTACT_SMOKE=PASS` verified Home/Store single footer, footer CSS, empty feedback hidden, and all eight service pages. Host is clean at the exact runtime SHA. Backup: `/home/sfkilvrs/3dprinthub-deploy-backups/20261013-180246-phase50-a2w-service-seo`. No duplicate footer or customer data changes. The first deploy attempt failed closed on the runner allowlist before Host source promotion; the allowlist was corrected and contract tests passed before the successful run.
 
 ## 2026-10-13 — PHASE50.A2Z PUBLIC SOCIAL CONTACT / PRODUCTION_VERIFIED
 Status: `PRODUCTION_VERIFIED`.

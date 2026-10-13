@@ -291,3 +291,4 @@ This section supersedes older Production-HEAD examples above; historical entries
 - Isolated checkout: `D:\projects\3DPrintHub-contact-current`.
 - Release branch: `release/phase50-a2w-service-seo-20261010`; active work branch: `codex/site-contact-social-current`.
 - Use only `scripts/host/phase50_a2w_service_seo_deploy.sh` through the dedicated 3dprinthub router for deployment.
+- 2026-10-13 footer/reviews runtime SHA: `dd1d679a9033146849283a7851dceaa6396fa695`; rollback `/home/sfkilvrs/3dprinthub-deploy-backups/20261013-180246-phase50-a2w-service-seo`.
