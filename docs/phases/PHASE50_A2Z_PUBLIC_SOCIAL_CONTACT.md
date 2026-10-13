@@ -50,4 +50,4 @@ Status: PRODUCTION_VERIFIED at runtime SHA `dd1d679a9033146849283a7851dceaa6396f
 ## Follow-up: social links only in the existing footer
 - Owner confirms the Home contact cards remain; remove only header/mobile-menu social shortcuts.
 - Keep the one shared footer's Instagram/WhatsApp links across the page shells. No footer duplication or contact-section edits.
-- Local test verifies the links are absent in the header and retained in contact/footer. Deploy status remains pending until the exact SHA smoke passes.
+- Local test and live public HTML verify the links are absent in the header and retained in contact/footer. Production runtime SHA `90011a529c74875faeebdefd583781645939cddb`; Instagram Organization schema remains intact.

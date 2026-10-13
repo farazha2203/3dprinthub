@@ -1323,5 +1323,5 @@ Phase50.A2U owner-authorized safe Host quota recovery 2026-10-09: four 46,832,89
 - Corrected the existing single shared footer's contrast under global light-theme overrides; no second footer added.
 - Empty customer feedback sections are hidden; real reviews remain above the footer.
 - Added tests and live-smoke assertions; published at runtime SHA `dd1d679a9033146849283a7851dceaa6396fa695`; public smoke passed.
-## 2026-10-13 — Social links placement (LOCAL_TESTED)
-- Removed duplicate Instagram/WhatsApp links from desktop and mobile headers. Existing shared footer links and Home contact cards remain. Deployment pending.
+## 2026-10-13 — Social links placement (PRODUCTION_VERIFIED)
+- Removed duplicate Instagram/WhatsApp links from desktop and mobile headers. Existing shared footer links and Home contact cards remain. Runtime SHA `90011a529c74875faeebdefd583781645939cddb`; live smoke passed.

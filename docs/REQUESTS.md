@@ -1107,4 +1107,4 @@ Owner requests Persian SEO service pages and relevant catalog examples for studi
 ## Owner request — correct existing footer and hide empty customer feedback (2026-10-13)
 Status: `PRODUCTION_VERIFIED` at runtime SHA `dd1d679a9033146849283a7851dceaa6396fa695`. Preserve the existing single footer with dark/high-contrast style, hide testimonials/reviews when empty, and keep actual feedback above it. Local regressions and live public smoke passed.
 ## Owner correction — social shortcuts belong only in the shared footer (2026-10-13)
-Status: `LOCAL_TESTED`; Production pending. Keep Home contact cards. Remove WhatsApp/Instagram shortcuts from desktop and mobile headers; retain links in the single shared footer on all pages.
+Status: `PRODUCTION_VERIFIED` at runtime SHA `90011a529c74875faeebdefd583781645939cddb`. Home contact cards and shared-footer links remain; desktop/mobile header shortcuts are absent; public HTML smoke passed.

@@ -2548,4 +2548,4 @@ Date: 2026-10-10. The first deploy attempt for the owner-requested public equipm
 # ERR-49-219 — Social shortcuts duplicated in header and contact section
 - Symptom: Instagram/WhatsApp appeared twice above the footer (header and Home contact cards), despite already being available in the footer.
 - Correct behavior: remove only desktop/mobile header shortcuts; preserve Home contact cards and the existing shared footer links on every page.
-- Verification: regression asserts no social URLs in the header and two instances each on Home (contact + footer); guarded Production smoke pending.
+- Verification: regression asserts no social URLs in the header and two Home links each (contact + footer); live public HTML and guarded smoke passed at runtime SHA `90011a529c74875faeebdefd583781645939cddb`.

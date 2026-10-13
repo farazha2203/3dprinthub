@@ -985,4 +985,4 @@ Status: PRODUCTION_VERIFIED at exact runtime SHA `f9d7968d0e157326bff3c060cfa672
 ## 2026-10-13 Footer and customer feedback correction
 - Status: `PRODUCTION_VERIFIED` at runtime SHA `dd1d679a9033146849283a7851dceaa6396fa695`; the existing single footer is restyled with scoped dark/high-contrast CSS; empty feedback is suppressed; populated reviews remain before footer; public smoke passed.
 ## 2026-10-13 — Social links footer-only
-- Move Instagram/WhatsApp shortcuts out of desktop/mobile headers; keep the existing shared footer links and Home contact cards. Local-tested; guarded Production deploy pending.
+- Status: `PRODUCTION_VERIFIED` at runtime SHA `90011a529c74875faeebdefd583781645939cddb`; header shortcuts removed while Home contact cards and shared-footer links remain; public smoke passed.
