@@ -59,6 +59,8 @@ class A2WDeployRunnerContractTests(unittest.TestCase):
             "templates/website/partials/header.html",
             "templates/website/partials/contact.html",
             "templates/website/partials/site-footer.html",
+            "templates/website/partials/testimonials.html",
+            "templates/website/partials/order-reviews.html",
             "static/css/main.css",
             "templates/store/base.html",
             "templates/website/customer/account_base.html",
