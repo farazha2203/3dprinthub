@@ -1,6 +1,6 @@
 # Phase50.A2Z — Public social links and shared site footer
 
-Date: 2026-10-13  
+Date: 2026-10-13
 Status: LOCAL_TESTED / GITHUB_PROMOTION_NEXT
 
 ## Requested delta
