@@ -44,7 +44,7 @@ def run(base, check_social=False):
         if css_status != 200:
             raise RuntimeError("public_theme_css_unavailable")
         css = css_body.decode("utf-8", "replace")
-        for required in (".site-footer {", "background-color: #111827 !important;", ".site-footer .text-slate-400"):
+        for required in (".contact-footer {", ".footer-social-links {", ".contact-footer .contact-map iframe"):
             if required not in css:
                 raise RuntimeError("public_footer_theme_rule_missing:" + required)
         print("SOCIAL_CONTACT_SMOKE=PASS")

@@ -1,3 +1,6 @@
+## 2026-10-13 — Owner footer A restoration / LOCAL_TESTED
+Requested delta: remove the invented dark footer B entirely; use the original contact/map area A as the shared footer across public and customer pages. Map aligns at the top, address and branded WhatsApp/Instagram SVG links sit beneath it. Home renders A once after customer feedback. Header social links remain removed. No DB/media changes. Home regression 10/10 and runner contract 7/7 passed; GitHub release and guarded deploy are next. Production currently remains at 90011a529c74875faeebdefd583781645939cddb.
+
 ## 2026-10-13 — A2Z existing footer + customer feedback correction / PRODUCTION_VERIFIED
 Status: `PRODUCTION_VERIFIED` at runtime SHA `dd1d679a9033146849283a7851dceaa6396fa695` on GitHub release branch `release/phase50-a2w-service-seo-20261010`.
 

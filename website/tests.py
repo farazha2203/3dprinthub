@@ -96,8 +96,8 @@ class HomePageTests(TestCase, WebsiteTestHelpers):
         response = self.client.get(reverse("website:home"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'href="https://wa.me/989121234567"', count=2)
-        self.assertContains(response, 'href="https://www.instagram.com/3dprinthub_ir/"', count=2)
+        self.assertContains(response, 'href="https://wa.me/989121234567"', count=1)
+        self.assertContains(response, 'href="https://www.instagram.com/3dprinthub_ir/"', count=1)
         self.assertContains(response, 'aria-label="پاورقی و راه‌های ارتباطی 3DprintHub"')
         self.assertContains(response, 'id="mobile-menu"')
         header = response.content.split(b"</header>", 1)[0]
@@ -110,15 +110,22 @@ class HomePageTests(TestCase, WebsiteTestHelpers):
         SiteSetting.objects.create(
             whatsapp="+98 912 123 4567",
             instagram="https://www.instagram.com/3dprinthub_ir/",
+            map_embed_url='<iframe title="نقشه آزمایشی" src="https://www.google.com/maps/embed"></iframe>',
+            address="آدرس آزمون اصفهان",
         )
         store_response = self.client.get(reverse("store:product_list"))
         user = self.create_user(phone="09129999999")
         self.client.login(username=user.username, password="StrongPass123!")
         customer_response = self.client.get(reverse("website:customer_dashboard"))
 
-        self.assertContains(store_response, "راه‌های ارتباطی")
+        self.assertContains(store_response, 'class="contact-map"')
         self.assertContains(store_response, 'href="https://wa.me/989121234567"')
-        self.assertContains(customer_response, "راه‌های ارتباطی")
+        self.assertContains(customer_response, 'class="contact-map"')
+        for response in (store_response, customer_response):
+            self.assertContains(response, 'title="نقشه آزمایشی"', count=1)
+            self.assertContains(response, "آدرس آزمون اصفهان", count=1)
+            self.assertEqual(response.content.count(b'<footer class="site-footer'), 1)
+            self.assertContains(response, 'class="footer-social-links"')
 
     def test_footer_is_present_on_standalone_customer_pages(self):
         for route in (
