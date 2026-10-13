@@ -5,6 +5,15 @@
 
 **Prevention:** isolated Django worktrees use the canonical local environment through a secret-safe process boundary; never solve this by committing or logging credentials.
 
+## 2026-10-13 — A2Z guarded deploy bootstrap uses the Host's pre-release runner
+**Observed:** the existing Host A2W runner stopped before backup or source promotion at `unexpected_release_file:docs/phases/PHASE50_A2Z_PUBLIC_SOCIAL_CONTACT.md`, even though the successor runner committed to GitHub had the new phase path in its allowlist.
+
+**Root cause:** the Host correctly executes the runner already present at its verified baseline; that older runner cannot authorize a new phase path before it promotes the successor runner. This is a runner-bootstrap boundary, not a failed product/contact smoke or tunnel outage.
+
+**Correct fix:** keep the Host worktree clean and execute the exact runner blob from the already verified GitHub target commit via the dedicated project router, after verifying fetched `FETCH_HEAD` equals the requested target SHA. The script pins the production root and still performs its full existing quota, allowlist, backup, DB, migration, fast-forward, restart, and public-smoke gates. Never edit the Host checkout or weaken the allowlist to bypass this boundary.
+
+**Verification:** the first attempt stopped before backup/source promotion; no Host source, DB, or public site changed. The exact target-blob runner must pass all gates before release is considered deployed.
+
 ## ERR-49-213 - Full fresh Hero follow-up rollback hit Host quota after source bundle creation
 **Date:** 2026-09-21
 **Observed:** final A2X Hero follow-up pre-deploy backup created a valid ~13 MB source bundle and `.env`, then the required MySQL gzip stopped with `OSError: [Errno 122] Disk quota exceeded`. Source promotion had not started; Production remained clean at `143848eeeeac7be8ec64c33ab7aa4c95c9f42165`.
