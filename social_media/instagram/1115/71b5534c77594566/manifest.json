@@ -1,0 +1,14 @@
+{
+  "asset_revision": "71b5534c77594566",
+  "feed_sha256": [
+    "0fd9007f5c2edc3ab336ee748e78cb59f283f09e812184767a418941164fb623"
+  ],
+  "product_id": 1115,
+  "purpose": "Buffer public media compatibility",
+  "site_product_id": 101,
+  "site_revision": 1,
+  "source_media_urls": [
+    "https://makerworld.bblmw.com/makerworld/model/US3cfc75b7907ee6/design/3f4508dfc2b96194.png"
+  ],
+  "story_sha256": ""
+}
