@@ -1,0 +1,16 @@
+{
+  "asset_revision": "2c047a28b1286673",
+  "feed_sha256": [
+    "b82904f356859b0e032a87ac6e566928daf3593668b36635017727ed20562310",
+    "ed2ea366dd369b451dc7b4506285cfdb1a98f2235d23bc613aeb60610d45e758"
+  ],
+  "product_id": 1102,
+  "purpose": "Buffer public media compatibility",
+  "site_product_id": 86,
+  "site_revision": 4,
+  "source_media_urls": [
+    "https://makerworld.bblmw.com/makerworld/model/DSM00000003239024/design/2ef4c2898e4313d4.png?x-oss-process=image/format,webp",
+    "https://makerworld.bblmw.com/makerworld/model/USaa345d354a7ac0/design/27643e28cf99babe.jpg?x-oss-process=image/resize,w_1000/format,webp"
+  ],
+  "story_sha256": ""
+}
