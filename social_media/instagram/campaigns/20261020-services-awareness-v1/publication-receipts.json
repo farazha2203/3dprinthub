@@ -1,0 +1,108 @@
+{
+  "account": "3dprinthub_ir",
+  "campaign": "20261020-services-awareness-v1",
+  "items": [
+    {
+      "asset": "https://raw.githubusercontent.com/farazha2203/3dprinthub/social-assets-buffer/social_media/instagram/campaigns/20261020-services-awareness-v1/post-01.jpg",
+      "instagram_url": "https://www.instagram.com/p/DetXZmLlsbQ/",
+      "kind": "post",
+      "name": "post-01",
+      "provider": "Buffer",
+      "provider_post_id": "6ad721189aa7670040a48376",
+      "provider_status": "sent",
+      "sha256": "9e5e8614f75b46693ee81e9daf0816cfef6ae3470d899850e407e6329b264f7d"
+    },
+    {
+      "asset": "https://raw.githubusercontent.com/farazha2203/3dprinthub/social-assets-buffer/social_media/instagram/campaigns/20261020-services-awareness-v1/post-02.jpg",
+      "instagram_url": "https://www.instagram.com/p/DetXcwAlv8-/",
+      "kind": "post",
+      "name": "post-02",
+      "provider": "Buffer",
+      "provider_post_id": "6ad72131ec8e66c062007c85",
+      "provider_status": "sent",
+      "sha256": "c8b1e3a68967204fb1746a1f316d8bee068715ff11053949ce10145f985fab74"
+    },
+    {
+      "asset": "https://raw.githubusercontent.com/farazha2203/3dprinthub/social-assets-buffer/social_media/instagram/campaigns/20261020-services-awareness-v1/post-03.jpg",
+      "instagram_url": "https://www.instagram.com/p/DetXfQXlpQ5/",
+      "kind": "post",
+      "name": "post-03",
+      "provider": "Buffer",
+      "provider_post_id": "6ad72146c4a5f1eea4c648f3",
+      "provider_status": "sent",
+      "sha256": "345d496e0833bda55e93a2c729b2ba16b2328f77d2229c51370ea2ee9c989457"
+    },
+    {
+      "asset": "https://raw.githubusercontent.com/farazha2203/3dprinthub/social-assets-buffer/social_media/instagram/campaigns/20261020-services-awareness-v1/post-04.jpg",
+      "instagram_url": "https://www.instagram.com/p/DetXiHbFoRT/",
+      "kind": "post",
+      "name": "post-04",
+      "provider": "Buffer",
+      "provider_post_id": "6ad7215eec8e66c062008d08",
+      "provider_status": "sent",
+      "sha256": "a3bdcdeb156acb6a7b18f23c7a1d8df2cca9f838e739fd7859f0181cc1907a4c"
+    },
+    {
+      "asset": "https://raw.githubusercontent.com/farazha2203/3dprinthub/social-assets-buffer/social_media/instagram/campaigns/20261020-services-awareness-v1/post-05.jpg",
+      "instagram_url": "https://www.instagram.com/p/DetXk-RFmfR/",
+      "kind": "post",
+      "name": "post-05",
+      "provider": "Buffer",
+      "provider_post_id": "6ad72175ed43fb48e28cc571",
+      "provider_status": "sent",
+      "sha256": "d596f6fac394dc6b83171b2bce004d4637917256f8f4c4dbceadfc3a21b85b7a"
+    },
+    {
+      "asset": "https://raw.githubusercontent.com/farazha2203/3dprinthub/social-assets-buffer/social_media/instagram/campaigns/20261020-services-awareness-v1/story-01.jpg",
+      "instagram_url": "https://www.instagram.com/stories/3dprinthub_ir/4011965871530788962",
+      "kind": "story",
+      "name": "story-01",
+      "provider": "Buffer",
+      "provider_post_id": "6ad72126ed43fb48e28cac55",
+      "provider_status": "sent",
+      "sha256": "c551ed8da252683cd57fcd3df3e6ecacc2677daa58ff7b2734722ba6020b8d8d"
+    },
+    {
+      "asset": "https://raw.githubusercontent.com/farazha2203/3dprinthub/social-assets-buffer/social_media/instagram/campaigns/20261020-services-awareness-v1/story-02.jpg",
+      "instagram_url": "https://www.instagram.com/stories/3dprinthub_ir/4011966054293483968",
+      "kind": "story",
+      "name": "story-02",
+      "provider": "Buffer",
+      "provider_post_id": "6ad7213bcc45f42ffeb2eacb",
+      "provider_status": "sent",
+      "sha256": "db17725b64bbe79a58422f745e6b2a52903cae3065b419f7e2c900b7400f94ce"
+    },
+    {
+      "asset": "https://raw.githubusercontent.com/farazha2203/3dprinthub/social-assets-buffer/social_media/instagram/campaigns/20261020-services-awareness-v1/story-03.jpg",
+      "instagram_url": "https://www.instagram.com/stories/3dprinthub_ir/4011966240780523259",
+      "kind": "story",
+      "name": "story-03",
+      "provider": "Buffer",
+      "provider_post_id": "6ad72152ec8e66c0620088d7",
+      "provider_status": "sent",
+      "sha256": "f37d59dfa5f00d4427f068868409f8bb4141d43c2b17f81bcb5d0e97ab573e68"
+    },
+    {
+      "asset": "https://raw.githubusercontent.com/farazha2203/3dprinthub/social-assets-buffer/social_media/instagram/campaigns/20261020-services-awareness-v1/story-04.jpg",
+      "instagram_url": "https://www.instagram.com/stories/3dprinthub_ir/4011966446964184127",
+      "kind": "story",
+      "name": "story-04",
+      "provider": "Buffer",
+      "provider_post_id": "6ad7216a9aa7670040a49e64",
+      "provider_status": "sent",
+      "sha256": "c49edab5a5595a3b260581212118cc179aa6fd3b0493e08e33c3039341a6523e"
+    },
+    {
+      "asset": "https://raw.githubusercontent.com/farazha2203/3dprinthub/social-assets-buffer/social_media/instagram/campaigns/20261020-services-awareness-v1/story-05.jpg",
+      "instagram_url": "https://www.instagram.com/stories/3dprinthub_ir/4011966634113966321",
+      "kind": "story",
+      "name": "story-05",
+      "provider": "Buffer",
+      "provider_post_id": "6ad72181ec8e66c062009492",
+      "provider_status": "sent",
+      "sha256": "45eac33d33e7d7e451fc07c49f8306da6a357e021662d0430c78be4bec6f0dcf"
+    }
+  ],
+  "media_branch": "social-assets-buffer",
+  "notes": "Buffer firstComment paid feature disabled; informative copy appended to each Feed caption. Sending is not equivalent to sent."
+}
