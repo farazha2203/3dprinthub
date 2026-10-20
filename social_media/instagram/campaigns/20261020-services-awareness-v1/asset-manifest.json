@@ -1,0 +1,20 @@
+{
+  "campaign": "20261020-services-awareness-v1",
+  "platform": "Instagram via Buffer",
+  "format": "minimal white / multi-accent / Nastaliq headlines / IRANSans copy",
+  "asset_provenance": "3DPrintHub verified local assets (sample visuals); not claimed real previous customer deliveries",
+  "posts": 5,
+  "stories": 5,
+  "assets": {
+    "post-01.jpg": "9e5e8614f75b46693ee81e9daf0816cfef6ae3470d899850e407e6329b264f7d",
+    "post-02.jpg": "c8b1e3a68967204fb1746a1f316d8bee068715ff11053949ce10145f985fab74",
+    "post-03.jpg": "345d496e0833bda55e93a2c729b2ba16b2328f77d2229c51370ea2ee9c989457",
+    "post-04.jpg": "a3bdcdeb156acb6a7b18f23c7a1d8df2cca9f838e739fd7859f0181cc1907a4c",
+    "post-05.jpg": "d596f6fac394dc6b83171b2bce004d4637917256f8f4c4dbceadfc3a21b85b7a",
+    "story-01.jpg": "c551ed8da252683cd57fcd3df3e6ecacc2677daa58ff7b2734722ba6020b8d8d",
+    "story-02.jpg": "db17725b64bbe79a58422f745e6b2a52903cae3065b419f7e2c900b7400f94ce",
+    "story-03.jpg": "f37d59dfa5f00d4427f068868409f8bb4141d43c2b17f81bcb5d0e97ab573e68",
+    "story-04.jpg": "c49edab5a5595a3b260581212118cc179aa6fd3b0493e08e33c3039341a6523e",
+    "story-05.jpg": "45eac33d33e7d7e451fc07c49f8306da6a357e021662d0430c78be4bec6f0dcf"
+  }
+}
