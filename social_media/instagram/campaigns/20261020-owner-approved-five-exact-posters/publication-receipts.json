@@ -1,0 +1,64 @@
+{
+  "campaign": "20261020-owner-approved-five-exact-posters",
+  "account": "3dprinthub_ir",
+  "verified_sent_count": 5,
+  "verified_by": "Buffer recent-posts live read-back",
+  "stories": "NOT SENT; the owner already published Stories manually",
+  "items": [
+    {
+      "source": "D:/3dprint-post/1.png",
+      "published_file": "post-01.png",
+      "sha256": "5040084bba113cb6046511fb48eedc4eb79ede5912eff5a514bd620dbe7e41d2",
+      "provider": "Buffer GraphQL API",
+      "provider_post_id": "6ad86d6e3da373fe60f3f8df",
+      "status": "sent",
+      "instagram_url": "https://www.instagram.com/p/Dev5rFpFSjo/",
+      "caption_sha256": "483b038b3024dbbc806700abd3c53312adcc0d5aef8eeb124a8e38dbc6f3ab76",
+      "image_alt_text": "پوستر تبلیغاتی سفید و سبز 3DPrintHub با تیتر «قطعه نایاب دارید؟» و تصاویر نمونه براکت، قاب پلاستیکی، چرخ‌دنده، بست و قطعات جایگزین خودرو و لوازم خانگی؛ معرفی مهندسی معکوس و ساخت سفارشی قطعات پلاستیکی."
+    },
+    {
+      "source": "D:/3dprint-post/2.png",
+      "published_file": "post-02.png",
+      "sha256": "4ba27b93d88a306641b81f6e5918c9d51f4126b8b8bf83ab78624c806aba4989",
+      "provider": "Buffer GraphQL API",
+      "provider_post_id": "6ad86d7a3da373fe60f3fed3",
+      "status": "sent",
+      "instagram_url": "https://www.instagram.com/p/Dev5spLlZgW/",
+      "caption_sha256": "741c0c7dc77872599468c89fa9f23d80edae5da52d987198bd2dbad235ed4f08",
+      "image_alt_text": "پوستر سفید و نارنجی 3DPrintHub با تیتر «کاربردهای متنوع» و تصاویر گلدان دکوراتیو، ارگانایزر لوازم خانه، فیگور فضانورد، هولدر موبایل خودرو و نگهدارنده‌های رومیزی برای سفارش چاپ سه‌بعدی."
+    },
+    {
+      "source": "D:/3dprint-post/3.png",
+      "published_file": "post-03.png",
+      "sha256": "3265f686ae73cdfc2ef865f71d48ccace6d8cbd2bd4af8ab5dd2237490ed2bba",
+      "provider": "Buffer GraphQL API",
+      "provider_post_id": "6ad86d85d2a22f9ba693beb9",
+      "status": "sent",
+      "instagram_url": "https://www.instagram.com/p/Dev5vGDFhMY/",
+      "caption_sha256": "174fb20056b25435f7fb43ce551185e1b3a55df482cf41d63a85c488fafb7812",
+      "image_alt_text": "پوستر سفید و بنفش 3DPrintHub با عنوان «متریال مناسب برای هر نیاز» شامل رول‌های فیلامنت PLA، PETG، ABS، ASA، TPU و نمونه‌های چرخ‌دنده، براکت، گلدان و قطعه انعطاف‌پذیر."
+    },
+    {
+      "source": "D:/3dprint-post/4.png",
+      "published_file": "post-04.png",
+      "sha256": "980d47075f22691b27e0f2014c92283e771d8eb11227d1c580540992039543ee",
+      "provider": "Buffer GraphQL API",
+      "provider_post_id": "6ad86d92b8dc5f69a3878c8c",
+      "status": "sent",
+      "instagram_url": "https://www.instagram.com/p/Dev5vksFsj8/",
+      "caption_sha256": "d9314a2ac7008e130f7438b39dc811c020c2a3b245d0345d2bc9ffa2a837415f",
+      "image_alt_text": "پوستر سفید با تم سرمه‌ای و طلایی 3DPrintHub و عنوان «چاپ سه‌بعدی سفارشی» با تصاویر ماکت ساختمان، گلدان مارپیچی آبی، اژدهای طلایی، براکت مکانیکی و استند موبایل."
+    },
+    {
+      "source": "D:/3dprint-post/5.png",
+      "published_file": "post-05.png",
+      "sha256": "0851dc2fe10222605f7201cafd0dff7e1a7a52943c219b9dc7aa810a9810efae",
+      "provider": "Buffer GraphQL API",
+      "provider_post_id": "6ad86d9d3da373fe60f40622",
+      "status": "sent",
+      "instagram_url": "https://www.instagram.com/p/Dev5w4ylj4g/",
+      "caption_sha256": "524f00953bd54c9b718fa6dd107104aafbee29fb4e8246202874385b4d7db97b",
+      "image_alt_text": "پوستر سفید و قرمز 3DPrintHub با تیتر «مدل دلخواهت را بفرست» شامل لپ‌تاپ با مدل‌های MakerWorld، فیگور اژدهای نارنجی، گلدان، چرخ‌دنده و نظم‌دهنده چاپ سه‌بعدی."
+    }
+  ]
+}
