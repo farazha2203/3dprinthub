@@ -1,0 +1,49 @@
+{
+  "campaign": "20261021-services-60s",
+  "account": "3dprinthub_ir",
+  "kind": "instagram_reel",
+  "validated": "local-media-files-and-8-frames",
+  "duration_seconds": 59.83,
+  "video": {
+    "container": "mp4",
+    "codec": "h264",
+    "audio": "aac",
+    "resolution": "1080x1920",
+    "fps": 24,
+    "mime": "video/mp4"
+  },
+  "source_owner_image_sha256": [
+    "5040084bba113cb6046511fb48eedc4eb79ede5912eff5a514bd620dbe7e41d2",
+    "4ba27b93d88a306641b81f6e5918c9d51f4126b8b8bf83ab78624c806aba4989",
+    "3265f686ae73cdfc2ef865f71d48ccace6d8cbd2bd4af8ab5dd2237490ed2bba",
+    "980d47075f22691b27e0f2014c92283e771d8eb11227d1c580540992039543ee",
+    "0851dc2fe10222605f7201cafd0dff7e1a7a52943c219b9dc7aa810a9810efae"
+  ],
+  "files": [
+    {
+      "file": "reel_3dprinthub_services_60s.mp4",
+      "bytes": 5728614,
+      "sha256": "4c5a34ab3d814652e5e4a7557ec5e72860276487e6f35379fdef0e0e9111c6aa"
+    },
+    {
+      "file": "reel_cover.png",
+      "bytes": 918461,
+      "sha256": "aea4a0f5420ba3bbd55e5fcbf7da9fa7f71e588bbfa2b33a461afb2717d99b65"
+    },
+    {
+      "file": "narration_fa_dilara.mp3",
+      "bytes": 320544,
+      "sha256": "9897178af3f5625f08ee9166dd98df405f5b71d0b89b0dd787dc5c16f617c2e6"
+    },
+    {
+      "file": "narration_text.txt",
+      "bytes": 1335,
+      "sha256": "8ddf6af480c49641180b04acc5b246559f6b000228daf0162b7b1cec896ea2b5"
+    },
+    {
+      "file": "reel-metadata.json",
+      "bytes": 3255,
+      "sha256": "e194e711ab3f7d318cb65aecbb19d8b57334ad9fa0d57b58a9b3969b144bed18"
+    }
+  ]
+}
