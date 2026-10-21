@@ -1,3 +1,13 @@
+## 2026-10-21 — 3DPrintHub public Instagram Reel 60s PRODUCTION_VERIFIED
+
+- Owner requested a 30s or 60s explanatory clip and Instagram Reel for the full 3DPrintHub offering; 60s selected for coverage.
+- Exactly the five approved source posters from `D:/3dprint-post/1.png..5.png` served as the visual source. No unrelated product photos were substituted. 8-scene minimalist kinetic-typography promo, white background/color accents, Nastaliq/IRANSans, Persian voice-over and self-generated music.
+- Local verification: 59.83s, 1080×1920, 24fps, H.264/AAC, 8 distinct nonblank QA samples and verified original poster hashes. Reel video SHA-256: `4c5a34ab3d814652e5e4a7557ec5e72860276487e6f35379fdef0e0e9111c6aa`.
+- Publisher media path: immutable commit-pinned GitHub/jsDelivr mirror (verified HTTP 200 video/mp4, content-length and full-byte SHA-256). Buffer account `3dprinthub_ir`, postType `reel`, shareToFeed=true, AI attribution=true.
+- Buffer submission `6ad872e03da373fe60f5b22f` reached **sent** with independent post-readback: https://www.instagram.com/reel/Dev8VgSieic/.
+- Branch `social-assets-buffer`, Reel asset commit `a8cb982d4765df0d68285f169ce8a0144d4f13df`; final publication-receipt and docs commit follows this asset commit. Canonical WIP Windows/Host Site Production and Catalog DB were not modified, no site deploy.
+- QA complete, provider receipt and public Reel verified. No Reel duplicate, Story repost, or old campaign re-publication. All Instagram publishing is complete for this request.
+
 ## 2026-09-19 - Phase50.A.2O failed-republish identity preservation LOCAL_TESTED
 The first changed-condition #625 retry after the A2M/A2N Production release exposed a Windows-side resilience defect, not another Host data bug. The receiver correctly rolled back on the then-stale parity rule, but Windows overwrote the last verified Site linkage/ACK with the failed ACK and reset `server_product_id/server_product_revision` to zero. That made the next retry lose the existing Product identity even though Site Product #39 still existed.
 

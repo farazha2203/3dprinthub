@@ -1,3 +1,7 @@
+## 2026-10-21 — Instagram 60-second Services Reel
+
+Added branded, Persian-narrated motion-graphics Reel derived from the five owner-approved service posters; eight animated scenes, original synthesized background music and validated 1080×1920 H.264/AAC MP4. Published on the already verified Instagram account via Buffer `type=reel` with relevant Persian keyword caption, eight hashtags, pinned CDN media and AI-generated artwork disclosure. Production read-back: sent, Instagram Reel URL https://www.instagram.com/reel/Dev8VgSieic/. No Product/Host deployment.
+
 ## 2026-09-19 - Failed re-publish identity resilience
 - Failed Site imports no longer erase the last verified Windows Site Product/slider ids, revisions or successful ACK.
 - Failure receipts and `product_sync_error` remain complete, so diagnostics are preserved without degrading the next retry into a new/unknown Product path.

@@ -1,6 +1,6 @@
 # 3DPrintHub — Services Awareness Reel (2026-10-21)
 
-Status: **RENDERED, LOCAL_QA_PASSED, publication verification pending**.
+Status: **PRODUCTION_VERIFIED — Instagram Reel sent**. Link: https://www.instagram.com/reel/Dev8VgSieic/
 
 This 59.83-second original motion-graphics Instagram Reel introduces the full 3DPrintHub service offering in Persian:
 1. Unavailable/broken plastic replacement components and reverse engineering.

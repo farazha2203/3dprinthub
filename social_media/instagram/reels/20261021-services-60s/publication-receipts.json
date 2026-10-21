@@ -1,0 +1,20 @@
+{
+  "campaign": "20261021-services-60s",
+  "account": "3dprinthub_ir",
+  "provider": "Buffer GraphQL API",
+  "provider_post_id": "6ad872e03da373fe60f5b22f",
+  "status": "sent",
+  "status_verified_at_utc": "2026-10-21T08:08:57.609341+00:00",
+  "instagram_reel_url": "https://www.instagram.com/reel/Dev8VgSieic/",
+  "type": "reel",
+  "share_to_feed": true,
+  "is_ai_generated_disclosed": true,
+  "story_or_feed_photo_repost": false,
+  "duration_seconds": 59.83,
+  "video_width": 1080,
+  "video_height": 1920,
+  "video_sha256": "4c5a34ab3d814652e5e4a7557ec5e72860276487e6f35379fdef0e0e9111c6aa",
+  "caption_sha256": "5e6a988f999f954f03ec05c19e82c0d4e8bafd32515db1c021a9924eac70c807",
+  "media_url": "https://cdn.jsdelivr.net/gh/farazha2203/3dprinthub@a8cb982d4765df0d68285f169ce8a0144d4f13df/social_media/instagram/reels/20261021-services-60s/reel_3dprinthub_services_60s.mp4",
+  "media_host": "GitHub commit-pinned jsDelivr video/mp4"
+}

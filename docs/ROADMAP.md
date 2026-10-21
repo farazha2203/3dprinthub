@@ -1,3 +1,12 @@
+## 2026-10-21 — Services awareness Reel delivery
+
+- [x] Confirm owner's Reel request and original five approved service posters.
+- [x] Produce 60-second 9:16 white-background kinetic media with 8 service scenes and Persian narration; local render/codec/frame QA.
+- [x] Commit original final video and metadata to `social-assets-buffer` and verify exact public bytes.
+- [x] Correct GitHub raw MP4 content-type compatibility by using commit-pinned jsDelivr; verify video/mp4 and SHA-256.
+- [x] Buffer shareNow Instagram Reel publish and independent `sent` link verification.
+- [x] Preserve Site/Production/Catalog/WIP and do not repost existing product/feed/Story content.
+
 ## 2026-09-19 - Phase50.A.2O re-publish resilience + Instagram acceptance
 - [x] Verify Production is exact clean `36a69e76...` and Hero 50.9/no-shadow is live.
 - [x] Browser-verify desktop Slicebox transition and mobile nonzero Hero/no document overflow.

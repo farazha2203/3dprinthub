@@ -1,3 +1,7 @@
+## Owner request — 2026-10-21: Full-service Instagram Reel (CLOSED)
+
+Owner asked whether a 30s or 1-minute 3DPrintHub advertisement could be generated and posted as a Reel explaining all services. Delivered a ~60s branded video from the exact previously approved five service posters; Persian narration, animation, subtitles/headlines, materials, MakerWorld workflow and order CTA. Published Reel and verified `sent`. No Stories or old Feed posts altered.
+
 ## 2026-09-19 - Owner: finish homepage frame, Instagram SEO and remaining publish phases
 Status: `HERO PRODUCTION_PASS / A2O LOCAL_TESTED / PRODUCT+SOCIAL ACCEPTANCE NEXT`.
 

@@ -1,3 +1,12 @@
+## 2026-10-21 — services Reel delivery paths
+
+- Original owner-approved designs: `D:\3dprint-post\1.png` through `5.png`.
+- Clean GitHub media worktree: `D:\projects\3DPrintHub-a2z-a2r-converge-social-assets` branch `social-assets-buffer`.
+- Final Reel: `social_media/instagram/reels/20261021-services-60s/reel_3dprinthub_services_60s.mp4` and co-located manifest, narration, cover, metadata and receipts.
+- Local render scripts, QA intermediates, rollback and cache: per-user `%LOCALAPPDATA%\3DPrintHub\CatalogCenter`, not deployed.
+- Provider URL: commit-pinned CDN mirror of `a8cb982d...` immutable media; Reel URL https://www.instagram.com/reel/Dev8VgSieic/.
+- Production Host paths/ports, tunnel and database unchanged.
+
 ## 2026-09-15 Product #628 re-entry acceptance paths
 - Windows runtime/GitHub: `6e306e5353a6d6cd9d434894870839e533fa9622`.
 - Fresh Catalog rollback: `D:\projects\3dprinthub-backups\product628-prepublish-20260915-135143\catalog-before-product628.sqlite3`.

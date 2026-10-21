@@ -1,3 +1,11 @@
+## ERR-SOCIAL-20261021 — GitHub raw MP4 served application/octet-stream, not video/mp4
+
+**Observed:** immutable GitHub raw URL for the locally validated 59.83s H.264/AAC Reel returned HTTP 200 and expected length but `Content-Type: application/octet-stream` with `nosniff`. This is not a safe provider-compatible video MIME.
+**Root cause:** raw.githubusercontent.com generic binary delivery for MP4 (unlike project PNG derivatives).
+**Fix:** use immutable commit-pinned jsDelivr `/gh/farazha2203/3dprinthub@a8cb982d.../` for the exact GitHub file. HEAD proved HTTP 200, `Content-Type: video/mp4`, full size 5,728,614 bytes; full GET SHA-256 equalled canonical local video.
+**Verification:** Buffer GraphQL Reel was accepted; independent read-back confirmed `sent` and the public Reel link.
+**Prevention:** do not assume GitHub raw MP4 is accepted by external social providers. Verify true video MIME, byte identity, immutability, Reel post-type, successful provider receipt and post-delivery `sent` before declaring publication. Never retry an ambiguous createPost unconditionally.
+
 ## ERR-49-182 - Failed re-publish erased the last verified Windows Site identity
 **Date:** 2026-09-19
 **Observed:** after a controlled #625 retry failed closed on a parity mismatch, Local Product #625 changed from the existing Site linkage (#39 / revision 7) to `server_product_id=0`, `server_product_revision=0`, and replaced its good public ACK with the failed ACK. The Site transaction itself had rolled back and Product #39 still existed.
