@@ -1004,3 +1004,7 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - [x] Read-only Host probe confirms 4/4 protected photo URLs return valid JPEGs and four gallery cards render (eight href/src URL occurrences).
 - [ ] Correct the deploy-runner gallery occurrence assertion and promote its guard/docs-only successor from exact Host baseline `505c3a46eaf03b31440152b15850620ee77541e6`.
 - [ ] Verify all four photos in authenticated admin browser and close docs with final SHA/backup evidence.
+- [x] Browser refresh verified the dedicated Order gallery now uses secure URLs; identified remaining inline/current-file links.
+- [x] Route inline thumbnail and current-file widget through protected preview; focused tests now cover 6 cases.
+- [ ] Commit/push and guarded no-database-write Host deploy from exact baseline `17d60f732797751e3ea09fa3e132e8682b9786e0`.
+- [ ] Refresh authenticated admin order page and verify all photo presentations use secure route and render.

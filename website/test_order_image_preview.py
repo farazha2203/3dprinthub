@@ -6,9 +6,15 @@ from PIL import Image
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db import models
 from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 
+from website.admin import (
+    OrderReferencePhotoAdmin,
+    Phase10OrderReferencePhotoInline,
+    SecureOrderImageClearableFileInput,
+)
 from website.models import Order, OrderImage, OrderReferencePhoto
 
 
@@ -97,3 +103,18 @@ class OrderImagePreviewTests(TestCase):
         self.assertIn(self._url("reference", self.reference_photo.pk), gallery)
         self.assertEqual(gallery.count(self._url("reference", self.reference_photo.pk)), 2)
         self.assertNotIn("/media/orders/", gallery)
+
+    def test_reference_photo_inline_and_current_file_link_use_protected_preview(self):
+        inline = Phase10OrderReferencePhotoInline(Order, admin.site)
+        preview = str(inline.preview(self.reference_photo))
+        field = SecureOrderImageClearableFileInput().render(
+            "image", self.reference_photo.image, attrs={"id": "id_reference_image"}
+        )
+
+        self.assertIn(self._url("reference", self.reference_photo.pk), preview)
+        self.assertIn(self._url("reference", self.reference_photo.pk), field)
+        self.assertNotIn("/media/orders/", preview + field)
+        self.assertIs(
+            OrderReferencePhotoAdmin.formfield_overrides[models.ImageField]["widget"],
+            SecureOrderImageClearableFileInput,
+        )

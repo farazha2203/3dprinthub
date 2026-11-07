@@ -1333,3 +1333,4 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 ## 2026-11-07 — Protected previews for service-order uploads
 - Order images and reference photos now use an authenticated owner/staff preview endpoint; Admin gallery, order-image inline, and reference-photo thumbnail use that route instead of inaccessible public media URLs.
 - Local ownership/privacy/media tests pass 5/5. Production promotion is pending. No uploaded file or order data changed.
+- Browser verification found remaining legacy links in the reference-photo inline preview and the Django clearable-image widget. Both now use the protected route; the local regression suite covers the inline thumbnail and current-file widget too (6/6 PASS). This admin-render follow-up still needs GitHub promotion and live-browser verification.

@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib import admin, messages
+from django.db import models
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.urls import path, reverse
@@ -279,11 +280,39 @@ class FAQAdmin(admin.ModelAdmin):
     list_editable = ["is_active", "sort_order"]
 
 
+class _SecureOrderImageFileValue:
+    def __init__(self, value, url):
+        self.value = value
+        self.url = url
+
+    def __str__(self):
+        return str(self.value)
+
+
+class SecureOrderImageClearableFileInput(forms.ClearableFileInput):
+
+    def get_context(self, name, value, attrs):
+        context = super().get_context(name, value, attrs)
+        instance = getattr(value, "instance", None)
+        if instance is not None and getattr(instance, "pk", None):
+            kind = {
+                "orderimage": "order",
+                "orderreferencephoto": "reference",
+            }.get(instance._meta.model_name)
+            if kind:
+                preview_url = reverse(
+                    "website:order_image_preview", args=[kind, instance.pk]
+                )
+                context["widget"]["value"] = _SecureOrderImageFileValue(value, preview_url)
+        return context
+
+
 class OrderImageInline(admin.TabularInline):
     model = OrderImage
     extra = 0
     fields = ("image_preview", "image")
     readonly_fields = ("image_preview",)
+    formfield_overrides = {models.ImageField: {"widget": SecureOrderImageClearableFileInput}}
 
     @admin.display(description="پیش‌نمایش")
     def image_preview(self, obj):
@@ -681,12 +710,14 @@ class Phase10OrderReferencePhotoInline(admin.TabularInline):
     extra = 0
     fields = ("preview", "view_type", "image", "note", "created_at")
     readonly_fields = ("preview", "created_at")
+    formfield_overrides = {models.ImageField: {"widget": SecureOrderImageClearableFileInput}}
 
     @admin.display(description="پیش‌نمایش")
     def preview(self, obj):
         if not obj or not obj.image:
             return "-"
-        return _phase10_format_html('<a href="{}" target="_blank"><img src="{}" class="admin-order-thumb" alt="{}"></a>', obj.image.url, obj.image.url, obj.get_view_type_display())
+        preview_url = _phase10_reverse("website:order_image_preview", args=["reference", obj.pk])
+        return _phase10_format_html('<a href="{}" target="_blank"><img src="{}" class="admin-order-thumb" alt="{}"></a>', preview_url, preview_url, obj.get_view_type_display())
 
 
 _phase10_order_admin = admin.site._registry.get(Order)
@@ -736,6 +767,7 @@ class OrderIntakeDetailAdmin(admin.ModelAdmin):
 @admin.register(OrderReferencePhoto)
 class OrderReferencePhotoAdmin(admin.ModelAdmin):
     list_display = ("thumbnail", "order", "view_type", "created_at")
+    formfield_overrides = {models.ImageField: {"widget": SecureOrderImageClearableFileInput}}
 
     @admin.display(description="تصویر")
     def thumbnail(self, obj):

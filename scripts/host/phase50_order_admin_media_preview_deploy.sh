@@ -6,7 +6,7 @@ PY=/home/sfkilvrs/virtualenv/3dprinthub/3.12/bin/python
 HOST_BRANCH=release/phase50-a2j-hero-20260915
 GITHUB_BRANCH=release/phase50-a2w-service-seo-20261010
 EXPECTED_DB=sfkilvrs_EmiAdmin_3dprinthub
-EXPECTED_BASELINE=505c3a46eaf03b31440152b15850620ee77541e6
+EXPECTED_BASELINE=17d60f732797751e3ea09fa3e132e8682b9786e0
 [ "$#" -eq 1 ] || { echo target_sha_required >&2; exit 1; }
 TARGET_SHA="$1"
 BACKUP_BASE=/home/sfkilvrs/3dprinthub-deploy-backups
@@ -64,7 +64,7 @@ git merge-base --is-ancestor "$EXPECTED_BASELINE" "$FETCHED" || fail target_not_
 git diff --name-only "$EXPECTED_BASELINE" "$FETCHED" > "$TMP_DELTA"
 while IFS= read -r path; do
   [ -n "$path" ] || continue
-  case "$path" in website/admin.py|website/support_chat.py|website/urls.py|website/test_order_image_preview.py|docs/*|PROJECT_CONTEXT.md|scripts/host/phase50_order_admin_media_preview_deploy.sh) ;; *) fail "unexpected_target_delta:$path" ;; esac
+  case "$path" in website/admin.py|website/test_order_image_preview.py|docs/*|PROJECT_CONTEXT.md|scripts/host/phase50_order_admin_media_preview_deploy.sh) ;; *) fail "unexpected_target_delta:$path" ;; esac
 done < "$TMP_DELTA"
 git show "$EXPECTED_BASELINE:website/support_chat.py" | grep -q 'def order_image_preview' || fail protected_preview_not_in_baseline
 git show "$EXPECTED_BASELINE:website/urls.py" | grep -q 'secure-order-images/' || fail protected_route_not_in_baseline
@@ -97,13 +97,20 @@ from django.contrib.auth import get_user_model
 from django.contrib.admin.sites import AdminSite
 from django.test import RequestFactory
 from django.urls import reverse,resolve
-from website.admin import OrderAdmin
+from website.admin import OrderAdmin,Phase10OrderReferencePhotoInline,SecureOrderImageClearableFileInput
 from website.models import Order,OrderReferencePhoto
 from website.support_chat import order_image_preview
 order=Order.objects.get(pk=1); photos=list(OrderReferencePhoto.objects.filter(order=order).order_by("id"))
 if len(photos)!=4: raise SystemExit("order_1_reference_photo_count_mismatch")
 gallery=str(OrderAdmin(Order,AdminSite()).media_gallery(order))
 if gallery.count("secure-order-images/reference/")!=8: raise SystemExit("protected_gallery_links_mismatch")
+inline=Phase10OrderReferencePhotoInline(Order,AdminSite())
+for photo in photos:
+    expected=reverse("website:order_image_preview",args=["reference",photo.pk])
+    preview=str(inline.preview(photo))
+    widget=str(SecureOrderImageClearableFileInput().render("image",photo.image,attrs={"id":"order-image-"+str(photo.pk)}))
+    if expected not in preview or "/media/orders/" in preview: raise SystemExit("inline_preview_url_mismatch")
+    if expected not in widget or "/media/orders/" in widget: raise SystemExit("current_image_widget_url_mismatch")
 staff=get_user_model().objects.filter(is_superuser=True,is_staff=True).order_by("id").first()
 if staff is None: raise SystemExit("staff_permission_probe_user_missing")
 factory=RequestFactory()
@@ -119,6 +126,7 @@ for photo in photos:
     finally: response.close()
 print("ORDER_1_PROTECTED_REFERENCE_PREVIEWS=4/4")
 print("ORDER_1_ADMIN_GALLERY=RENDERED")
+print("ORDER_1_INLINE_AND_CURRENT_FILE_LINKS=PROTECTED_4/4")
 PY
 "$PY" manage.py check
 "$PY" manage.py makemigrations --check --dry-run
