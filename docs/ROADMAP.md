@@ -995,3 +995,11 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - [ ] Commit/push the exact tested release descendant to GitHub A2W.
 - [ ] Run guarded no-migration/no-DB-write deployment with verified source/environment rollback backup.
 - [ ] Verify order #1 attachment gallery rendering and the authenticated admin detail URL; update status with exact SHA and backup evidence.
+## 2026-11-07 — Order #1 protected uploaded-image preview
+- [x] Verify upload records and physical files on Host read-only; identify restricted `/media/orders/` namespace.
+- [x] Implement protected owner/staff preview route and update admin gallery/thumbnail URLs.
+- [x] Test owner and staff access, deny another customer, verify admin gallery uses protected URLs; 5/5 Local tests pass.
+- [x] Run Django check, migration drift, Python compile, Bash syntax and diff hygiene.
+- [ ] Commit/push exact release descendant to GitHub A2W.
+- [ ] Guarded no-migration/no-DB-write promotion with verified source/environment backup.
+- [ ] Verify all four photos in authenticated admin browser and close docs with SHA/backup evidence.

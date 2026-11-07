@@ -289,7 +289,8 @@ class OrderImageInline(admin.TabularInline):
     def image_preview(self, obj):
         if not obj or not obj.image:
             return "-"
-        return format_html('<a href="{}" target="_blank"><img src="{}" class="admin-order-thumb" alt="پیش‌نمایش"></a>', obj.image.url, obj.image.url)
+        preview_url = reverse("website:order_image_preview", args=["order", obj.pk])
+        return format_html('<a href="{}" target="_blank"><img src="{}" class="admin-order-thumb" alt="پیش‌نمایش"></a>', preview_url, preview_url)
 
 
 class QuoteInline(admin.StackedInline):
@@ -391,9 +392,11 @@ class OrderAdmin(admin.ModelAdmin):
             return "-"
         cards = []
         for image in obj.images.all():
-            cards.append(format_html('<a class="admin-media-card" href="{}" target="_blank"><img src="{}" alt="تصویر عمومی"><span>تصویر سفارش</span></a>', image.image.url, image.image.url))
+            preview_url = reverse("website:order_image_preview", args=["order", image.pk])
+            cards.append(format_html('<a class="admin-media-card" href="{}" target="_blank"><img src="{}" alt="تصویر سفارش"><span>تصویر سفارش</span></a>', preview_url, preview_url))
         for image in obj.reference_photos.all():
-            cards.append(format_html('<a class="admin-media-card" href="{}" target="_blank"><img src="{}" alt="{}"><span>{}</span></a>', image.image.url, image.image.url, image.get_view_type_display(), image.get_view_type_display()))
+            preview_url = reverse("website:order_image_preview", args=["reference", image.pk])
+            cards.append(format_html('<a class="admin-media-card" href="{}" target="_blank"><img src="{}" alt="{}"><span>{}</span></a>', preview_url, preview_url, image.get_view_type_display(), image.get_view_type_display()))
         for attachment in obj.attachments.all():
             download_url = reverse("website:order_attachment_download", args=[attachment.public_token])
             preview_url = reverse("website:order_attachment_preview", args=[attachment.public_token])
@@ -738,7 +741,8 @@ class OrderReferencePhotoAdmin(admin.ModelAdmin):
     def thumbnail(self, obj):
         if not obj.image:
             return "-"
-        return _phase10_format_html('<a href="{}" target="_blank"><img src="{}" class="admin-order-thumb" alt="پیش‌نمایش"></a>', obj.image.url, obj.image.url)
+        preview_url = _phase10_reverse("website:order_image_preview", args=["reference", obj.pk])
+        return _phase10_format_html('<a href="{}" target="_blank"><img src="{}" class="admin-order-thumb" alt="پیش‌نمایش"></a>', preview_url, preview_url)
     list_filter = ("view_type", "created_at")
     search_fields = ("order__phone", "order__first_name", "order__last_name", "note")
     raw_id_fields = ("order",)

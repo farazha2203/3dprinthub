@@ -2559,3 +2559,11 @@ The original contact/map area A is the owner-designated footer; adding dark B du
 **Root cause:** `website.models.OrderAttachment.extension` uses `Path(...).suffix.lower()` without importing `Path`, causing `NameError` during admin page rendering.
 
 **Fix:** import `Path` from `pathlib`; add focused extension/type regressions. No model fields, schema, or order/media data change. Local focused tests pass 2/2; Django check and no-migration check pass with existing warnings. Production deployment and live verification are pending; follow `docs/phases/PHASE50_ORDER_ADMIN_ATTACHMENT_500_20261107.md` and use its exact-baseline GitHub-first runner.
+## 2026-11-07 — Order #1 uploaded reference images show Not Found
+**Observed:** after the admin 500 was fixed, the order form loaded but four reference-photo previews were broken and direct `/media/orders/reference/...` links returned Not Found.
+
+**Read-only Production verification:** order #1 has four `OrderReferencePhoto` images and one attachment; each file exists in its configured storage. Effective `MEDIA_ROOT` is `/home/sfkilvrs/3dprinthub/media`.
+
+**Root cause:** Production's deliberately restricted public `/media/` route does not serve the `orders/` namespace. Admin gallery and thumbnail widgets incorrectly referenced `ImageField.url` as if these uploads were public files.
+
+**Fix:** serve only validated image types through a login-protected route that authorizes the order owner or staff with `website.view_order`; update admin previews to use the protected URL. Keep public media allowlists unchanged. Local access tests 5/5 pass; production deployment and browser verification are pending. No data or file changes.

@@ -1,6 +1,6 @@
 # Phase50 — Service Order #1 admin attachment 500
 
-Status: `LOCAL_TESTED / GITHUB_UPDATE_PENDING / PRODUCTION_UNCHANGED`.
+Status: `PRODUCTION_VERIFIED` at runtime SHA `d1f4ecc9d5f69997df8ef6ddfc053c35cc40e04f`.
 
 ## Request and verified cause
 
@@ -34,9 +34,17 @@ The owner reports that dashboard order `website.Order #1` is visible but its adm
 - Production promotion must prove exact Host branch/HEAD/clean state, expected MySQL identity, empty migration plan, order #1 plus attachment presence, GitHub target ancestry, verified source/environment backup, and read-only post-restart `OrderAdmin.media_gallery(order)` rendering.
 - Deployment must perform no database write, migration, media operation, collectstatic, or unrelated release.
 
+## Production verification
+
+- GitHub A2W release and Host runtime were fast-forwarded to `d1f4ecc9d5f69997df8ef6ddfc053c35cc40e04f` through the dedicated 3DPrintHub route.
+- Verified rollback bundle and `.env` checksums: `/home/sfkilvrs/3dprinthub-deploy-backups/20261107-152822-phase50-order-admin-attachment-500`.
+- MySQL identity passed, migration plan was empty, order #1 plus its single attachment remained present, and the read-only admin gallery rendered.
+- The authenticated admin URL opened successfully. A follow-up visual review found the existing reference-image URLs were still 404; that separate issue is tracked in `docs/phases/PHASE50_ORDER_ADMIN_MEDIA_PREVIEW_20261107.md`.
+- No order/customer/file rows or media were changed.
+
 ## Exact identities and remaining work
 
 - Host baseline: `76f12e22c3ba62913ad0701abac986c9a7bbfb50`, branch label `release/phase50-a2j-hero-20260915`.
 - This Host commit is an ancestor of GitHub `release/phase50-a2w-service-seo-20261010`; the similarly named A2J GitHub branch is divergent and must not be used for this promotion.
 - Local fix worktree: `D:\projects\3DPrintHub-order-hotfix-prod-20261107`; branch `fix/phase50-order-admin-attachment-path-prod-20261107`.
-- Remaining: commit and push the narrow release descendant, run the guarded Host promotion, verify the admin rendering and live URL, then close documentation with exact SHA/backup evidence.
+- This attachment-path 500 fix is complete. The reference-photo preview follow-up remains a separate scoped phase.
