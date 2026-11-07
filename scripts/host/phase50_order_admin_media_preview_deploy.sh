@@ -66,9 +66,9 @@ while IFS= read -r path; do
   [ -n "$path" ] || continue
   case "$path" in website/admin.py|website/test_order_image_preview.py|docs/*|PROJECT_CONTEXT.md|scripts/host/phase50_order_admin_media_preview_deploy.sh) ;; *) fail "unexpected_target_delta:$path" ;; esac
 done < "$TMP_DELTA"
-git show "$EXPECTED_BASELINE:website/support_chat.py" | grep -q 'def order_image_preview' || fail protected_preview_not_in_baseline
-git show "$EXPECTED_BASELINE:website/urls.py" | grep -q 'secure-order-images/' || fail protected_route_not_in_baseline
-git show "$EXPECTED_BASELINE:website/admin.py" | grep -q 'order_image_preview' || fail protected_admin_preview_not_in_baseline
+git grep -q 'def order_image_preview' "$EXPECTED_BASELINE" -- website/support_chat.py || fail protected_preview_not_in_baseline
+git grep -q 'secure-order-images/' "$EXPECTED_BASELINE" -- website/urls.py || fail protected_route_not_in_baseline
+git grep -q 'order_image_preview' "$EXPECTED_BASELINE" -- website/admin.py || fail protected_admin_preview_not_in_baseline
 if grep -Eq '(^|/)migrations/[0-9]{4}_[^/]+\.py$|^requirements[^/]*\.txt$|^config/settings' "$TMP_DELTA"; then fail forbidden_schema_dependency_or_settings_delta; fi
 printf '%s\n' 'NO_SCHEMA_DEPENDENCY_OR_SETTINGS_DELTA=PASS'
 
