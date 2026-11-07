@@ -1008,4 +1008,4 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - [x] Route inline thumbnail and current-file widget through protected preview; focused tests now cover 6 cases.
 - [x] Commit/push and guarded no-database-write Host deploy from exact baseline `17d60f732797751e3ea09fa3e132e8682b9786e0`; code runtime `a8796c465e8139ee89e0f109350211e70bab1611` passes.
 - [x] Refresh authenticated admin order page; all four 720x1280 photos decode, all 20 references use protected URLs, and zero `/media/orders/` references remain.
-- [ ] Promote documentation closeout from exact runtime baseline and record final current branch/SHA.
+- [x] Promote documentation closeout `29495708ac58c13fe600d998c7c23c0fcc4d8b80` from exact runtime baseline; Host source clean, no migration/data/media changes.
