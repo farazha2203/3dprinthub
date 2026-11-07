@@ -988,3 +988,10 @@ Status: PRODUCTION_VERIFIED at exact runtime SHA `f9d7968d0e157326bff3c060cfa672
 - Status: `PRODUCTION_VERIFIED` at runtime SHA `90011a529c74875faeebdefd583781645939cddb`; header shortcuts removed while Home contact cards and shared-footer links remain; public smoke passed.
 ## 2026-10-13 — Original footer A / PRODUCTION_VERIFIED
 Owner-designated contact/map A is the shared footer; dark B removed. Map at top, address and branded WhatsApp/Instagram icons beneath it. Home, Store and customer page shells share it once; header social links absent; empty reviews hidden. Runtime 76f12e22c3ba62913ad0701abac986c9a7bbfb50; release/phase50-a2w-service-seo-20261010. Local and live/browser verification passed; versioned CSS resolves cache. Rollback /home/sfkilvrs/3dprinthub-deploy-backups/20261013-200026-phase50-a2w-service-seo.
+## 2026-11-07 — Service Order #1 admin 500
+- [x] Read-only reproduce the exact Host failure and identify missing `pathlib.Path` import.
+- [x] Implement isolated model import and focused attachment extension regressions; Local 2/2 PASS.
+- [x] Confirm Django checks, no migration drift, Python compile, runner syntax, and diff hygiene.
+- [ ] Commit/push the exact tested release descendant to GitHub A2W.
+- [ ] Run guarded no-migration/no-DB-write deployment with verified source/environment rollback backup.
+- [ ] Verify order #1 attachment gallery rendering and the authenticated admin detail URL; update status with exact SHA and backup evidence.

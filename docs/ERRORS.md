@@ -2551,3 +2551,11 @@ Date: 2026-10-10. The first deploy attempt for the owner-requested public equipm
 - Verification: regression asserts no social URLs in the header and two Home links each (contact + footer); live public HTML and guarded smoke passed at runtime SHA `90011a529c74875faeebdefd583781645939cddb`.
 ## 2026-10-13 — Footer A/B misunderstanding and stale stylesheet cache
 The original contact/map area A is the owner-designated footer; adding dark B duplicated the visual footer. Removed B, reused A across page shells, top-aligned map with branded links beneath it. Browser then exposed unversioned main.css cache (icons rendered at 538px); versioned CSS links corrected icons to 28px and map to 320px tall. Local 10/10 and runner 7/7, public smoke and browser verification passed at runtime 76f12e22c3ba62913ad0701abac986c9a7bbfb50. Prevention: follow the annotated owner layout and verify computed layout after publication.
+## 2026-11-07 — Service Order #1 admin detail HTTP 500
+**Observed:** dashboard lists service order #1, but `/admin/website/order/1/change/` returns HTTP 500.
+
+**Production read-only reproduction:** order #1 exists with attachment records. `OrderAdmin.customer_summary` and `technical_preview` render; `OrderAdmin.media_gallery` fails when it checks `attachment.is_image`.
+
+**Root cause:** `website.models.OrderAttachment.extension` uses `Path(...).suffix.lower()` without importing `Path`, causing `NameError` during admin page rendering.
+
+**Fix:** import `Path` from `pathlib`; add focused extension/type regressions. No model fields, schema, or order/media data change. Local focused tests pass 2/2; Django check and no-migration check pass with existing warnings. Production deployment and live verification are pending; follow `docs/phases/PHASE50_ORDER_ADMIN_ATTACHMENT_500_20261107.md` and use its exact-baseline GitHub-first runner.
