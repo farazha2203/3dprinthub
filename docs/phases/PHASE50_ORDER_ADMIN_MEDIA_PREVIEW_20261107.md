@@ -1,6 +1,6 @@
 # Phase50 — Protected order upload image previews
 
-Status: `INLINE_WIDGET_FIX_LOCAL_TESTED / PRODUCTION_BASELINE_17d60f73 / DEPLOY_PENDING`.
+Status: `PRODUCTION_VERIFIED` at runtime SHA `a8796c465e8139ee89e0f109350211e70bab1611`.
 
 ## Request and verified cause
 
@@ -43,4 +43,4 @@ After the order #1 admin page was repaired, the owner showed broken previews for
 - GitHub source lineage: `release/phase50-a2w-service-seo-20261010`, which contains the exact Host baseline.
 - Worktree: `D:\projects\3DPrintHub-order-media-preview-20261107`, branch `fix/phase50-order-admin-media-preview-20261107`.
 - First promotion fast-forwarded to `505c3a46eaf03b31440152b15850620ee77541e6`, created verified rollback bundle and `.env` checksums at `/home/sfkilvrs/3dprinthub-deploy-backups/20261107-154308-phase50-order-admin-media-preview`, and restarted Passenger. The runner's gallery assertion initially counted one URL per photo, but the HTML correctly contains the same protected URL twice (image `src` and clickable `href`). Follow-up Host read-only probe confirmed all four endpoints return `200 image/jpeg` with JPEG bytes and the gallery contains four cards/eight URL occurrences.
-- Runner/gallery verification is complete at `17d60f732797751e3ea09fa3e132e8682b9786e0`; browser refresh showed a remaining admin inline/widget display issue and identified the final current diff. Deploy the inline/current-file widget fix from this baseline, then confirm all four images in the authenticated browser. Record final SHA/backup evidence afterward.
+- Runtime promotion from `17d60f732797751e3ea09fa3e132e8682b9786e0` completed at `a8796c465e8139ee89e0f109350211e70bab1611`; verified rollback root `/home/sfkilvrs/3dprinthub-deploy-backups/20261107-155548-phase50-order-admin-media-preview`. Host runner confirms 4/4 protected endpoint responses, gallery, inline thumbnails, current-file widget links, empty migration plan and clean Host tree. Authenticated browser confirms all four images decoded at 720x1280, 20 protected URL occurrences, and zero `/media/orders/` links. No database or upload mutation occurred. Remaining: promote this documentation closeout from exact runtime baseline.

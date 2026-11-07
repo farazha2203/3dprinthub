@@ -1332,5 +1332,5 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - Add regressions for image, PDF, unknown extension, and stored-name fallback. No schema or data change. Local tests pass 2/2; Production deployment is pending.
 ## 2026-11-07 — Protected previews for service-order uploads
 - Order images and reference photos now use an authenticated owner/staff preview endpoint; Admin gallery, order-image inline, and reference-photo thumbnail use that route instead of inaccessible public media URLs.
-- Local ownership/privacy/media tests pass 5/5. Production promotion is pending. No uploaded file or order data changed.
-- Browser verification found remaining legacy links in the reference-photo inline preview and the Django clearable-image widget. Both now use the protected route; the local regression suite covers the inline thumbnail and current-file widget too (6/6 PASS). This admin-render follow-up still needs GitHub promotion and live-browser verification.
+- Browser verification found remaining legacy links in the reference-photo inline preview and the Django clearable-image widget. Both now use the protected route; local regression suite 6/6 PASS.
+- Production runtime `a8796c465e8139ee89e0f109350211e70bab1611` is verified; four photos load in the authenticated admin page and no `/media/orders/` references remain. No uploaded file or order data changed.

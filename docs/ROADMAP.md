@@ -1006,5 +1006,6 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - [ ] Verify all four photos in authenticated admin browser and close docs with final SHA/backup evidence.
 - [x] Browser refresh verified the dedicated Order gallery now uses secure URLs; identified remaining inline/current-file links.
 - [x] Route inline thumbnail and current-file widget through protected preview; focused tests now cover 6 cases.
-- [ ] Commit/push and guarded no-database-write Host deploy from exact baseline `17d60f732797751e3ea09fa3e132e8682b9786e0`.
-- [ ] Refresh authenticated admin order page and verify all photo presentations use secure route and render.
+- [x] Commit/push and guarded no-database-write Host deploy from exact baseline `17d60f732797751e3ea09fa3e132e8682b9786e0`; code runtime `a8796c465e8139ee89e0f109350211e70bab1611` passes.
+- [x] Refresh authenticated admin order page; all four 720x1280 photos decode, all 20 references use protected URLs, and zero `/media/orders/` references remain.
+- [ ] Promote documentation closeout from exact runtime baseline and record final current branch/SHA.

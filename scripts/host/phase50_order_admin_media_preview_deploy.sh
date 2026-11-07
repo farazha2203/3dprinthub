@@ -6,7 +6,7 @@ PY=/home/sfkilvrs/virtualenv/3dprinthub/3.12/bin/python
 HOST_BRANCH=release/phase50-a2j-hero-20260915
 GITHUB_BRANCH=release/phase50-a2w-service-seo-20261010
 EXPECTED_DB=sfkilvrs_EmiAdmin_3dprinthub
-EXPECTED_BASELINE=17d60f732797751e3ea09fa3e132e8682b9786e0
+EXPECTED_BASELINE=a8796c465e8139ee89e0f109350211e70bab1611
 [ "$#" -eq 1 ] || { echo target_sha_required >&2; exit 1; }
 TARGET_SHA="$1"
 BACKUP_BASE=/home/sfkilvrs/3dprinthub-deploy-backups
