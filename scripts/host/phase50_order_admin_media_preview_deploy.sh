@@ -6,7 +6,7 @@ PY=/home/sfkilvrs/virtualenv/3dprinthub/3.12/bin/python
 HOST_BRANCH=release/phase50-a2j-hero-20260915
 GITHUB_BRANCH=release/phase50-a2w-service-seo-20261010
 EXPECTED_DB=sfkilvrs_EmiAdmin_3dprinthub
-EXPECTED_BASELINE=d1f4ecc9d5f69997df8ef6ddfc053c35cc40e04f
+EXPECTED_BASELINE=505c3a46eaf03b31440152b15850620ee77541e6
 [ "$#" -eq 1 ] || { echo target_sha_required >&2; exit 1; }
 TARGET_SHA="$1"
 BACKUP_BASE=/home/sfkilvrs/3dprinthub-deploy-backups
@@ -66,9 +66,9 @@ while IFS= read -r path; do
   [ -n "$path" ] || continue
   case "$path" in website/admin.py|website/support_chat.py|website/urls.py|website/test_order_image_preview.py|docs/*|PROJECT_CONTEXT.md|scripts/host/phase50_order_admin_media_preview_deploy.sh) ;; *) fail "unexpected_target_delta:$path" ;; esac
 done < "$TMP_DELTA"
-for path in website/admin.py website/support_chat.py website/urls.py; do
-  git diff --quiet "$EXPECTED_BASELINE" "$FETCHED" -- "$path" && fail "required_runtime_delta_missing:$path"
-done
+git show "$EXPECTED_BASELINE:website/support_chat.py" | grep -q 'def order_image_preview' || fail protected_preview_not_in_baseline
+git show "$EXPECTED_BASELINE:website/urls.py" | grep -q 'secure-order-images/' || fail protected_route_not_in_baseline
+git show "$EXPECTED_BASELINE:website/admin.py" | grep -q 'order_image_preview' || fail protected_admin_preview_not_in_baseline
 if grep -Eq '(^|/)migrations/[0-9]{4}_[^/]+\.py$|^requirements[^/]*\.txt$|^config/settings' "$TMP_DELTA"; then fail forbidden_schema_dependency_or_settings_delta; fi
 printf '%s\n' 'NO_SCHEMA_DEPENDENCY_OR_SETTINGS_DELTA=PASS'
 
@@ -103,7 +103,7 @@ from website.support_chat import order_image_preview
 order=Order.objects.get(pk=1); photos=list(OrderReferencePhoto.objects.filter(order=order).order_by("id"))
 if len(photos)!=4: raise SystemExit("order_1_reference_photo_count_mismatch")
 gallery=str(OrderAdmin(Order,AdminSite()).media_gallery(order))
-if gallery.count("secure-order-images/reference/")!=4: raise SystemExit("protected_gallery_links_mismatch")
+if gallery.count("secure-order-images/reference/")!=8: raise SystemExit("protected_gallery_links_mismatch")
 staff=get_user_model().objects.filter(is_superuser=True,is_staff=True).order_by("id").first()
 if staff is None: raise SystemExit("staff_permission_probe_user_missing")
 factory=RequestFactory()

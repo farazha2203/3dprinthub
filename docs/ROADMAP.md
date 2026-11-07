@@ -1000,6 +1000,7 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - [x] Implement protected owner/staff preview route and update admin gallery/thumbnail URLs.
 - [x] Test owner and staff access, deny another customer, verify admin gallery uses protected URLs; 5/5 Local tests pass.
 - [x] Run Django check, migration drift, Python compile, Bash syntax and diff hygiene.
-- [ ] Commit/push exact release descendant to GitHub A2W.
-- [ ] Guarded no-migration/no-DB-write promotion with verified source/environment backup.
-- [ ] Verify all four photos in authenticated admin browser and close docs with SHA/backup evidence.
+- [x] Commit/push runtime successor `505c3a46eaf03b31440152b15850620ee77541e6` to GitHub A2W and promote with verified source/environment backup.
+- [x] Read-only Host probe confirms 4/4 protected photo URLs return valid JPEGs and four gallery cards render (eight href/src URL occurrences).
+- [ ] Correct the deploy-runner gallery occurrence assertion and promote its guard/docs-only successor from exact Host baseline `505c3a46eaf03b31440152b15850620ee77541e6`.
+- [ ] Verify all four photos in authenticated admin browser and close docs with final SHA/backup evidence.

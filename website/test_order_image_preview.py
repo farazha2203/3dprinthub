@@ -95,4 +95,5 @@ class OrderImagePreviewTests(TestCase):
 
         self.assertIn(self._url("order", self.order_image.pk), gallery)
         self.assertIn(self._url("reference", self.reference_photo.pk), gallery)
+        self.assertEqual(gallery.count(self._url("reference", self.reference_photo.pk)), 2)
         self.assertNotIn("/media/orders/", gallery)

@@ -1,6 +1,6 @@
 # Phase50 — Protected order upload image previews
 
-Status: `LOCAL_TESTED / GITHUB_UPDATE_PENDING / PRODUCTION_RUNTIME_AT_d1f4ecc9`.
+Status: `LOCAL_TESTED / PRODUCTION_CODE_AT_505c3a46 / FINAL_RUNNER_PROBE_PENDING`.
 
 ## Request and verified cause
 
@@ -38,7 +38,8 @@ After the order #1 admin page was repaired, the owner showed broken previews for
 
 ## Exact identities
 
-- Current Host/runtime baseline: `d1f4ecc9d5f69997df8ef6ddfc053c35cc40e04f`, Host branch label `release/phase50-a2j-hero-20260915`.
+- Initial Host/runtime baseline: `d1f4ecc9d5f69997df8ef6ddfc053c35cc40e04f`; first promoted runtime SHA `505c3a46eaf03b31440152b15850620ee77541e6`, Host branch label `release/phase50-a2j-hero-20260915`.
 - GitHub source lineage: `release/phase50-a2w-service-seo-20261010`, which contains the exact Host baseline.
 - Worktree: `D:\projects\3DPrintHub-order-media-preview-20261107`, branch `fix/phase50-order-admin-media-preview-20261107`.
-- Remaining: commit/push, guarded Host promotion, authenticated browser check of the four images, and exact backup/SHA documentation closure.
+- First promotion fast-forwarded to `505c3a46eaf03b31440152b15850620ee77541e6`, created verified rollback bundle and `.env` checksums at `/home/sfkilvrs/3dprinthub-deploy-backups/20261107-154308-phase50-order-admin-media-preview`, and restarted Passenger. The runner's gallery assertion initially counted one URL per photo, but the HTML correctly contains the same protected URL twice (image `src` and clickable `href`). Follow-up Host read-only probe confirmed all four endpoints return `200 image/jpeg` with JPEG bytes and the gallery contains four cards/eight URL occurrences.
+- The follow-up candidate updates only deployment verification/docs/tests: the protected runtime is already present on Host baseline `505c3a46…`; the runner verifies that baseline contains the runtime route and restricts the successor delta. Then rerun its complete post-deploy check and verify all four images in the authenticated admin browser. Record final SHA/backup evidence afterward.
