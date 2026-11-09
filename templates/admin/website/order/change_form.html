@@ -1,0 +1,11 @@
+{% extends "admin/change_form.html" %}
+{% block content %}
+  {% if order_finance_panel %}
+    <div dir="rtl" style="margin:16px 0;padding:20px;background:#fffaf0;border:1px solid #cdbb9c;border-radius:14px">
+      <h2>حساب مالی سفارش، تخفیف و تسویه</h2>
+      {{ order_finance_panel }}
+      <p style="margin-top:10px">تخفیف را در بخش پیش‌فاکتور همین صفحه وارد کنید. پس از ذخیره، مبلغ نهایی و مانده به‌روز می‌شود.</p>
+    </div>
+  {% endif %}
+  {{ block.super }}
+{% endblock %}

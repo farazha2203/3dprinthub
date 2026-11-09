@@ -315,6 +315,13 @@ class QuoteInline(admin.StackedInline):
     ]
     readonly_fields = ["price_preview"]
 
+    def get_readonly_fields(self, request, obj=None):
+        fields = list(super().get_readonly_fields(request, obj))
+        if obj and obj.pk and Quote.objects.filter(order=obj, payments__status="paid").exists():
+            fields += ["material", "weight_grams", "print_time_minutes", "machine_hourly_rate",
+                       "labor_fee", "design_fee", "post_processing_fee", "shipping_fee", "discount"]
+        return fields
+
     def price_preview(self, obj):
         if not obj or not obj.pk:
             return "بعد از ذخیره پیش‌فاکتور محاسبه می‌شود."
@@ -334,6 +341,28 @@ class QuoteInline(admin.StackedInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
+    change_form_template = "admin/website/order/change_form.html"
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        from .order_finance_admin import order_finance_summary
+        obj = self.get_object(request, object_id)
+        context = dict(extra_context or {})
+        context["order_finance_panel"] = order_finance_summary(obj) if obj else ""
+        return super().change_view(request, object_id, form_url, extra_context=context)
+
+    def get_urls(self):
+        from .order_finance_admin import record_manual_receipt_view
+        return [
+            path("<int:order_id>/record-receipt/", self.admin_site.admin_view(
+                lambda request, order_id: record_manual_receipt_view(self, request, order_id)
+            ), name="website_order_record_receipt"),
+        ] + super().get_urls()
+
+    @admin.display(description="حساب مالی / سوابق دریافت")
+    def finance_summary(self, obj):
+        from .order_finance_admin import order_finance_summary
+        return order_finance_summary(obj)
+
     list_display = [
         "first_name",
         "last_name",
@@ -350,7 +379,20 @@ class OrderAdmin(admin.ModelAdmin):
     search_fields = ["first_name", "last_name", "phone", "description"]
     list_filter = ["status", "service_type", "material", "customer", "created_at"]
     readonly_fields = ["public_token", "quote_link", "customer_summary", "technical_preview", "media_gallery"]
+
+    def get_readonly_fields(self, request, obj=None):
+        fields = list(super().get_readonly_fields(request, obj))
+        if obj and Quote.objects.filter(order=obj, payments__status="paid").exists():
+            fields += ["material", "quantity"]
+        return fields
     inlines = [OrderImageInline, QuoteInline]
+    fieldsets = (
+        ("اطلاعات سفارش", {"fields": (
+            "customer", "first_name", "last_name", "phone", "service_type", "material",
+            "color", "quantity", "description", "status", "public_token", "quote_link",
+        )}),
+        ("مشخصات فنی و مستندات", {"fields": ("customer_summary", "technical_preview", "media_gallery")}),
+    )
 
     @admin.display(description="خلاصه مشتری")
     def customer_summary(self, obj):
@@ -483,6 +525,13 @@ class QuoteAdmin(admin.ModelAdmin):
         }),
     )
 
+    def get_readonly_fields(self, request, obj=None):
+        fields = list(super().get_readonly_fields(request, obj))
+        if obj and obj.pk and obj.payments.filter(status="paid").exists():
+            fields += ["material", "weight_grams", "print_time_minutes", "machine_hourly_rate",
+                       "labor_fee", "design_fee", "post_processing_fee", "shipping_fee", "discount"]
+        return fields
+
     class Media:
         css = {"all": ("admin/phase49-admin-tabs.css",)}
         js = ("admin/phase49-admin-tabs.js",)
@@ -514,7 +563,7 @@ class PaymentAdmin(admin.ModelAdmin):
         "idempotency_key", "callback_token", "authority", "ref_id", "gateway_amount", "gateway_currency",
         "checkout_url", "provider_status_code", "provider_message", "request_payload", "raw_response",
         "callback_payload", "client_ip", "user_agent", "initiated_at", "callback_received_at", "verified_at",
-        "failed_at", "retry_count", "receipt_preview", "created_at", "updated_at", "paid_at",
+        "failed_at", "retry_count", "receipt_preview", "created_at", "updated_at", "paid_at", "status",
     ]
     actions = ["mark_selected_paid", "mark_selected_failed"]
 
@@ -527,7 +576,7 @@ class PaymentAdmin(admin.ModelAdmin):
 
     @admin.action(description="تأیید پرداخت‌های انتخاب‌شده")
     def mark_selected_paid(self, request, queryset):
-        eligible = queryset.filter(method="bank_transfer").exclude(status="paid")
+        eligible = queryset.filter(method="bank_transfer", status__in=["pending", "awaiting_review"])
         for payment in eligible:
             payment.mark_paid(
                 ref_id=payment.ref_id,
@@ -537,7 +586,7 @@ class PaymentAdmin(admin.ModelAdmin):
                     "reviewed_by_user_id": request.user.pk,
                 },
             )
-        skipped = queryset.exclude(method="bank_transfer").count()
+        skipped = queryset.exclude(method="bank_transfer", status__in=["pending", "awaiting_review"]).count()
         if skipped:
             self.message_user(request, "پرداخت آنلاین فقط از طریق Verify درگاه تأیید می‌شود و دستی تأیید نشد.", level=messages.WARNING)
 

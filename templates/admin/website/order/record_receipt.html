@@ -1,0 +1,24 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div dir="rtl" style="max-width:850px;margin:1rem auto;line-height:2">
+  <p><a href="{{ change_url }}">بازگشت به سفارش</a></p>
+  <h2>ثبت دریافت وجه و تسویه سفارش شماره {{ order.pk }}</h2>
+  <div style="background:#f5f1eb;border:1px solid #d7c4aa;border-radius:12px;padding:18px;color:#503e2b">
+    <p>مبلغ نهایی: <strong>{{ quote.total_price }} تومان</strong></p>
+    <p>دریافت‌های تأییدشده: <strong>{{ quote.paid_amount }} تومان</strong></p>
+    <p>مبالغ در انتظار بررسی: <strong>{{ quote.pending_amount }} تومان</strong></p>
+    <p>مانده حساب: <strong>{{ quote.remaining_amount }} تومان</strong></p>
+    <p>سقف دریافت جدید: <strong>{{ quote.available_payment_amount }} تومان</strong></p>
+  </div>
+  <p>ثبت دریافت تنها برای واریز دستی است. درگاه بانکی فقط از طریق پاسخ معتبر درگاه تأیید می‌شود.</p>
+  <form method="post">{% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+      <div style="margin:14px 0"><label style="display:block;font-weight:700" for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }} {{ field.errors }}
+      {% if field.help_text %}<small style="display:block">{{ field.help_text }}</small>{% endif %}</div>
+    {% endfor %}
+    <button type="submit" class="default" style="padding:10px 24px">ثبت دریافت وجه</button>
+  </form>
+</div>
+{% endblock %}
