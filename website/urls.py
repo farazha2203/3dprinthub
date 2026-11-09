@@ -117,6 +117,7 @@ from .support_chat import (
     customer_support_view,
     order_attachment_download,
     order_attachment_preview,
+    order_image_preview,
     support_attachment_download,
     support_attachment_preview,
     support_messages_api,
@@ -133,6 +134,11 @@ urlpatterns += [
     path("secure-support-files/<uuid:token>/preview/", support_attachment_preview, name="support_attachment_preview"),
     path("secure-order-files/<uuid:token>/download/", order_attachment_download, name="order_attachment_download"),
     path("secure-order-files/<uuid:token>/preview/", order_attachment_preview, name="order_attachment_preview"),
+    path(
+        "secure-order-images/<str:image_kind>/<int:image_id>/preview/",
+        order_image_preview,
+        name="order_image_preview",
+    ),
 ]
 # END PHASE 19 CUSTOMER SUPPORT CHAT AND PRIVATE ATTACHMENTS
 

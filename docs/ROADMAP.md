@@ -1005,3 +1005,18 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - [ ] Rebase/integrate exact Production branch head `29495708...`, rerun focused and no-drift gates.
 - [ ] Verify Host account quota, fresh MySQL/env/source backups/rollback, guard exact migration plan and deploy with production UI tests.
 - [ ] Add formal credit-note, refund, disputed payment reversal and adjustment approval (separate phase).
+
+## 2026-11-07 — Order #1 protected uploaded-image preview
+- [x] Verify upload records and physical files on Host read-only; identify restricted `/media/orders/` namespace.
+- [x] Implement protected owner/staff preview route and update admin gallery/thumbnail URLs.
+- [x] Test owner and staff access, deny another customer, verify admin gallery uses protected URLs; 5/5 Local tests pass.
+- [x] Run Django check, migration drift, Python compile, Bash syntax and diff hygiene.
+- [x] Commit/push runtime successor `505c3a46eaf03b31440152b15850620ee77541e6` to GitHub A2W and promote with verified source/environment backup.
+- [x] Read-only Host probe confirms 4/4 protected photo URLs return valid JPEGs and four gallery cards render (eight href/src URL occurrences).
+- [ ] Correct the deploy-runner gallery occurrence assertion and promote its guard/docs-only successor from exact Host baseline `505c3a46eaf03b31440152b15850620ee77541e6`.
+- [ ] Verify all four photos in authenticated admin browser and close docs with final SHA/backup evidence.
+- [x] Browser refresh verified the dedicated Order gallery now uses secure URLs; identified remaining inline/current-file links.
+- [x] Route inline thumbnail and current-file widget through protected preview; focused tests now cover 6 cases.
+- [x] Commit/push and guarded no-database-write Host deploy from exact baseline `17d60f732797751e3ea09fa3e132e8682b9786e0`; code runtime `a8796c465e8139ee89e0f109350211e70bab1611` passes.
+- [x] Refresh authenticated admin order page; all four 720x1280 photos decode, all 20 references use protected URLs, and zero `/media/orders/` references remain.
+- [ ] Promote documentation closeout from exact runtime baseline and record final current branch/SHA.

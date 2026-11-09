@@ -1115,3 +1115,8 @@ Owner showed that order #1 is listed on the dashboard but the admin detail view 
 
 ## 2026-11-09 — Owner: service Order #1 admin payment/discount/settlement cycle
 Owner reported `https://3dprinthub.ir/admin/website/order/1/change/` does not allow settling, recording customer receipts/discounts, and has unreliable calculations. Work authorized through connected Windows device and dedicated site tunnel. Implemented isolated order finance admin and stable amount snapshot on sent/accepted Quote with tested 65-case local regression; not deployed yet. Changes preserve real Order #1 data; Host read-only count 1 draft Quote, 0 payments. Next safe target: verified migration/backup + live UAT. No claim of production availability before rollout.
+
+## 2026-11-07 — Display the order's uploaded reference photos
+Owner reported that the repaired order page still did not display uploaded reference photos. All four image files and the STEP attachment are present; the image links incorrectly used a public media route that intentionally excludes order uploads. Protected image previews are implemented for the customer who owns the order and authorized staff. Local tests pass 5/5; Production deployment and visual verification remain.
+Browser refresh confirmed the main gallery now works but found legacy public links in the inline thumbnail and current-file widget. Both have been corrected in a follow-up with local 6/6 tests; final Host promotion and visual check remain.
+Production verified at runtime `a8796c465e8139ee89e0f109350211e70bab1611`: all four reference photos render in the authenticated order page, and no public `/media/orders/` references remain. No order or upload data changed.

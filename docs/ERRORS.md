@@ -2559,3 +2559,19 @@ The original contact/map area A is the owner-designated footer; adding dark B du
 **Root cause:** `website.models.OrderAttachment.extension` uses `Path(...).suffix.lower()` without importing `Path`, causing `NameError` during admin page rendering.
 
 **Fix:** import `Path` from `pathlib`; add focused extension/type regressions. No model fields, schema, or order/media data change. Local focused tests pass 2/2; Django check and no-migration check pass with existing warnings. Production deployment and live verification are pending; follow `docs/phases/PHASE50_ORDER_ADMIN_ATTACHMENT_500_20261107.md` and use its exact-baseline GitHub-first runner.
+## 2026-11-07 — Order #1 uploaded reference images show Not Found
+**Observed:** after the admin 500 was fixed, the order form loaded but four reference-photo previews were broken and direct `/media/orders/reference/...` links returned Not Found.
+
+**Read-only Production verification:** order #1 has four `OrderReferencePhoto` images and one attachment; each file exists in its configured storage. Effective `MEDIA_ROOT` is `/home/sfkilvrs/3dprinthub/media`.
+
+**Root cause:** Production's deliberately restricted public `/media/` route does not serve the `orders/` namespace. Admin gallery and thumbnail widgets incorrectly referenced `ImageField.url` as if these uploads were public files.
+
+**Fix:** serve only validated image types through a login-protected route that authorizes the order owner or staff with `website.view_order`; update admin previews to use the protected URL. Keep public media allowlists unchanged. Local access tests 5/5 pass; production deployment and browser verification are pending. No data or file changes.
+
+**Deployment probe correction:** the first Host promotion reached `505c3a46eaf03b31440152b15850620ee77541e6` and all four protected endpoints returned valid JPEGs. The runner then failed a gallery assertion because each card intentionally embeds one URL in both `href` and `img src`, yielding eight occurrences for four photos. Read-only Host rendering confirmed the cards and endpoints are correct. The follow-up changes the expected count to eight and validates the already-deployed runtime in its exact baseline; no rollback or data repair was needed.
+
+**Browser verification follow-up:** after runtime `17d60f732797751e3ea09fa3e132e8682b9786e0` rendered the dedicated gallery through protected URLs, the order inline still showed legacy `/media/orders/...` links in the custom inline preview and Django's default clearable-file widget. Replace both with the authorized preview route, keeping upload/replace behavior available; add tests for the inline thumbnail and Current-file link. This narrow admin-only successor is Local-tested 6/6 and is not yet deployed.
+
+**Resolution verified:** runtime `a8796c465e8139ee89e0f109350211e70bab1611` fixes the inline preview and current-file widget. Host runner verified 4/4 image responses, protected gallery/inline/widget rendering, empty migration plan and clean worktree. Authenticated browser confirmed four decoded images (720x1280) and zero `/media/orders/` references. Backup: `/home/sfkilvrs/3dprinthub-deploy-backups/20261107-155548-phase50-order-admin-media-preview`.
+
+**Documentation-closeout runner guard:** an initial docs-only promotion stopped before backup or merge because `git show ... | grep -q` under `pipefail` treated grep's early pipe close as failure. No Host state changed. Replaced the pipe with `git grep` against the exact baseline; re-run the GitHub-first closeout runner.

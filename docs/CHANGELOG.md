@@ -1336,3 +1336,8 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - Prevented duplicate manual bank references across orders, false paid order status, overpayment, and editing paid receipt/settled quote amounts.
 - Added Website migration 0025 with nullable immutable pricing snapshot columns (no historical data backfill). Finalizing a new Quote freezes material unit rate, quantity, costs, discount, total and timestamp; draft quotes remain live-priced.
 - Passed 65/65 local tests across quote pricing, manual/gateway payments and website regressions. Production remains unchanged; release pending verified full MySQL backup, migration preflight and exact Host HEAD integration.
+
+## 2026-11-07 — Protected previews for service-order uploads
+- Order images and reference photos now use an authenticated owner/staff preview endpoint; Admin gallery, order-image inline, and reference-photo thumbnail use that route instead of inaccessible public media URLs.
+- Browser verification found remaining legacy links in the reference-photo inline preview and the Django clearable-image widget. Both now use the protected route; local regression suite 6/6 PASS.
+- Production runtime `a8796c465e8139ee89e0f109350211e70bab1611` is verified; four photos load in the authenticated admin page and no `/media/orders/` references remain. No uploaded file or order data changed.

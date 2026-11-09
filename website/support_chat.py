@@ -11,7 +11,14 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
-from .models import CustomerProfile, OrderAttachment, SupportConversation, SupportMessage
+from .models import (
+    CustomerProfile,
+    OrderAttachment,
+    OrderImage,
+    OrderReferencePhoto,
+    SupportConversation,
+    SupportMessage,
+)
 
 
 CHAT_ALLOWED_EXTENSIONS = {
@@ -32,6 +39,40 @@ def _can_access_order_file(user, order):
     if user.is_staff:
         return user.has_perm("website.view_order")
     return order.customer_id == user.id
+
+
+@login_required
+@require_GET
+def order_image_preview(request, image_kind, image_id):
+    image_models = {
+        "order": OrderImage,
+        "reference": OrderReferencePhoto,
+    }
+    model = image_models.get(image_kind)
+    if model is None:
+        raise Http404("تصویر سفارش پیدا نشد")
+    record = get_object_or_404(model.objects.select_related("order"), pk=image_id)
+    if not _can_access_order_file(request.user, record.order) or not record.image:
+        raise Http404("تصویر سفارش پیدا نشد")
+
+    filename = Path(record.image.name).name
+    content_type = mimetypes.guess_type(filename)[0] or ""
+    if content_type not in {"image/jpeg", "image/png", "image/webp", "image/gif", "image/bmp", "image/tiff"}:
+        raise Http404("پیش‌نمایش این تصویر در دسترس نیست")
+    try:
+        image_file = record.image.open("rb")
+    except (FileNotFoundError, OSError, ValueError):
+        raise Http404("تصویر سفارش پیدا نشد")
+
+    response = FileResponse(
+        image_file,
+        as_attachment=False,
+        filename=filename,
+        content_type=content_type,
+    )
+    response["X-Content-Type-Options"] = "nosniff"
+    response["Cache-Control"] = "private, no-store, max-age=0"
+    return response
 
 
 def _customer_conversation_or_404(user, token):
