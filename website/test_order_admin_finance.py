@@ -71,3 +71,15 @@ class ServiceOrderAdminFinanceTests(TestCase):
         self.assertContains(response, "مانده قابل وصول")
         self.assertNotContains(response, 'name="quantity"')
         self.assertNotContains(response, 'name="material"')
+
+    def test_draft_quote_finance_admin_renders_without_action_or_html_error(self):
+        from django.contrib import admin
+        from .order_finance_admin import order_finance_summary
+        Quote.objects.filter(pk=self.quote.pk).update(status="draft", pricing_snapshot_at=None)
+        order = Order.objects.get(pk=self.order.pk)
+        panel = str(order_finance_summary(order))
+        self.assertIn("قیمت هنوز تثبیت نشده است", panel)
+        self.assertNotIn("record-receipt/", panel)
+        response = self.client.get(reverse("admin:website_order_change", args=[order.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "قیمت هنوز تثبیت نشده است")

@@ -68,7 +68,7 @@ def order_finance_summary(obj):
         pricing_status = format_html('<p><strong>قیمت توافق‌شده در تاریخ {} تثبیت شده است.</strong></p>', quote.pricing_snapshot_at.strftime('%Y-%m-%d %H:%M'))
         receipt_action = format_html('<p><a class="button" href="{}">ثبت دریافت وجه / تسویه سفارش</a></p>', url)
     else:
-        pricing_status = format_html('<p><strong>قیمت هنوز تثبیت نشده است؛ ابتدا پیش‌فاکتور را نهایی کنید.</strong></p>')
+        pricing_status = format_html('<p><strong>{}</strong></p>', 'قیمت هنوز تثبیت نشده است؛ ابتدا پیش‌فاکتور را نهایی کنید.')
         receipt_action = ""
     payments = quote.payments.order_by("-created_at")[:15]
     history = format_html_join(
