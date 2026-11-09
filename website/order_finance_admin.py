@@ -11,6 +11,26 @@ from .models import Order, Quote, Payment
 from .payment_services import PaymentFlowError
 
 
+class ManagedOrderAdminForm(forms.ModelForm):
+    """Prevent a manual order-status change from impersonating a payment."""
+
+    class Meta:
+        model = Order
+        fields = "__all__"
+
+    def clean_status(self):
+        status = self.cleaned_data["status"]
+        if status == "paid":
+            quote = Quote.objects.filter(order_id=self.instance.pk).first() if self.instance.pk else None
+            if not quote or not quote.pricing_snapshot_at or quote.total_price <= 0 or quote.paid_amount < quote.total_price:
+                raise forms.ValidationError("وضعیت پرداخت‌شده فقط پس از تسویه واقعی ثبت‌شده در دفتر مالی مجاز است.")
+        if status == "cancelled" and self.instance.pk:
+            quote = Quote.objects.filter(order_id=self.instance.pk).first()
+            if quote and quote.paid_amount:
+                raise forms.ValidationError("سفارش دارای دریافت تأییدشده را بدون فرآیند مستند استرداد لغو نکنید.")
+        return status
+
+
 class AdminManualReceiptForm(forms.Form):
     amount = forms.IntegerField(label="مبلغ دریافتی (تومان)", min_value=1)
     payment_kind = forms.ChoiceField(label="نوع دریافت", choices=Payment.PAYMENT_KIND_CHOICES)
@@ -44,6 +64,12 @@ def order_finance_summary(obj):
         ((label, f"{int(value):,}") for label, value in rows),
     )
     url = reverse("admin:website_order_record_receipt", args=[obj.pk])
+    if quote.pricing_snapshot_at:
+        pricing_status = format_html('<p><strong>قیمت توافق‌شده در تاریخ {} تثبیت شده است.</strong></p>', quote.pricing_snapshot_at.strftime('%Y-%m-%d %H:%M'))
+        receipt_action = format_html('<p><a class="button" href="{}">ثبت دریافت وجه / تسویه سفارش</a></p>', url)
+    else:
+        pricing_status = format_html('<p><strong>قیمت هنوز تثبیت نشده است؛ ابتدا پیش‌فاکتور را نهایی کنید.</strong></p>')
+        receipt_action = ""
     payments = quote.payments.order_by("-created_at")[:15]
     history = format_html_join(
         "", "<li>{} تومان | {} | {} | {}</li>",
@@ -51,10 +77,9 @@ def order_finance_summary(obj):
          for p in payments),
     )
     return format_html(
-        '<section dir="rtl" style="max-width:650px"><div class="order-finance-summary">{}</div>'
-        '<p><a class="button" href="{}">ثبت دریافت وجه / تسویه سفارش</a></p>'
-        '<h4>سوابق دریافت (۱۵ مورد آخر)</h4><ul>{}</ul></section>',
-        output, url, history,
+        '<section dir="rtl" style="max-width:650px">{}<div class="order-finance-summary">{}</div>'
+        '{}<h4>سوابق دریافت (۱۵ مورد آخر)</h4><ul>{}</ul></section>',
+        pricing_status, output, receipt_action, history,
     )
 
 
@@ -81,15 +106,15 @@ def record_manual_receipt_view(model_admin, request, order_id):
                     amount = form.cleaned_data["amount"]
                     if amount > quote.available_payment_amount:
                         raise PaymentFlowError("مبلغ دریافتی بیش از مانده آزاد سفارش است؛ صفحه را تازه کنید.")
-                    if not quote.total_price:
-                        raise PaymentFlowError("ابتدا مبلغ نهایی پیش‌فاکتور را مشخص کنید.")
-                    if quote.status not in {"sent", "accepted"}:
-                        raise PaymentFlowError("پیش‌فاکتور باید ارسال یا تأیید شده باشد.")
+                    if not quote.total_price or not quote.pricing_snapshot_at:
+                        raise PaymentFlowError("ابتدا قیمت نهایی پیش‌فاکتور را تثبیت کنید.")
+                    if quote.status != "accepted":
+                        raise PaymentFlowError("پیش‌فاکتور باید توسط مشتری تأیید شده باشد.")
                     reference = form.cleaned_data["ref_id"].strip()
-                    if Payment.objects.filter(quote=quote, method="bank_transfer", ref_id=reference).exclude(
+                    if Payment.objects.filter(method="bank_transfer", ref_id=reference).exclude(
                         status__in=["failed", "cancelled"]
                     ).exists():
-                        raise PaymentFlowError("شناسه واریز برای این سفارش قبلاً ثبت شده است.")
+                        raise PaymentFlowError("این شناسه واریز قبلاً برای یک سفارش ثبت شده است.")
                     payment = Payment.objects.create(
                         quote=quote, amount=amount,
                         payment_kind=form.cleaned_data["payment_kind"],

@@ -73,8 +73,8 @@ def start_quote_gateway_payment(*, quote: Quote, payment_kind: str, request, sit
 
     with transaction.atomic():
         locked_quote = Quote.objects.select_for_update().select_related("order", "order__customer").get(pk=quote.pk)
-        if locked_quote.status != "accepted" or not locked_quote.total_price:
-            raise PaymentFlowError("این پیش‌فاکتور در حال حاضر قابل پرداخت نیست.")
+        if locked_quote.status != "accepted" or not locked_quote.total_price or not locked_quote.pricing_snapshot_at:
+            raise PaymentFlowError("این پیش‌فاکتور هنوز دارای قیمت قطعی ثبت‌شده و قابل پرداخت نیست.")
         _expire_stale_gateway_attempts(locked_quote)
         amounts = quote_payment_amounts(locked_quote)
         amount = int(amounts.get(payment_kind, 0) or 0)
@@ -196,6 +196,8 @@ def mark_payment_paid(payment: Payment, ref_id: str = "", *, provider_status_cod
             return locked
         if locked.status in {"refunded"}:
             raise PaymentFlowError("پرداخت مستردشده را نمی‌توان دوباره تأیید کرد.")
+        if not locked.quote.pricing_snapshot_at:
+            raise PaymentFlowError("ثبت دریافت تأییدشده بدون قیمت قطعی پیش‌فاکتور مجاز نیست.")
         locked.status = "paid"
         if ref_id:
             locked.ref_id = str(ref_id)

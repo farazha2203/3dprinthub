@@ -995,3 +995,13 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - [ ] Commit/push the exact tested release descendant to GitHub A2W.
 - [ ] Run guarded no-migration/no-DB-write deployment with verified source/environment rollback backup.
 - [ ] Verify order #1 attachment gallery rendering and the authenticated admin detail URL; update status with exact SHA and backup evidence.
+
+## 2026-11-09 — Website service order financial cycle
+- [x] Audit live DB without personal data (Order 1, draft Quote 1, Payments 0) and identify catalog-dependent quote pricing bug.
+- [x] Develop order-level cash-receipt/settlement and financial overview using ledger-backed Payment.
+- [x] Add immutable quote pricing snapshot (schema migration 0025); no historical repricing/backfill.
+- [x] Prevent manual 'paid' status and changes to agreed quote/paid receipt amounts; reject duplicate cross-order bank references.
+- [x] Initial focused + website regression 65/65 pass.
+- [ ] Rebase/integrate exact Production branch head `29495708...`, rerun focused and no-drift gates.
+- [ ] Verify Host account quota, fresh MySQL/env/source backups/rollback, guard exact migration plan and deploy with production UI tests.
+- [ ] Add formal credit-note, refund, disputed payment reversal and adjustment approval (separate phase).

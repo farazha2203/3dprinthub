@@ -1330,3 +1330,9 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 ## 2026-11-07 — Fix service order admin attachment rendering
 - Import `pathlib.Path` required by `OrderAttachment.extension`; this removes the reproducible NameError behind order #1's admin detail 500.
 - Add regressions for image, PDF, unknown extension, and stored-name fallback. No schema or data change. Local tests pass 2/2; Production deployment is pending.
+
+## 2026-11-09 — Service order finance workflow and agreed price snapshots (LOCAL_TESTED)
+- Added admin order summary including quote total, discount, receipts, pending amounts, remaining debt and a protected manual receipt form with reviewer-annotated ledger entries.
+- Prevented duplicate manual bank references across orders, false paid order status, overpayment, and editing paid receipt/settled quote amounts.
+- Added Website migration 0025 with nullable immutable pricing snapshot columns (no historical data backfill). Finalizing a new Quote freezes material unit rate, quantity, costs, discount, total and timestamp; draft quotes remain live-priced.
+- Passed 65/65 local tests across quote pricing, manual/gateway payments and website regressions. Production remains unchanged; release pending verified full MySQL backup, migration preflight and exact Host HEAD integration.

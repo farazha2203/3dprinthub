@@ -311,13 +311,13 @@ class QuoteInline(admin.StackedInline):
         "status",
         "valid_until",
         "deposit_percent",
-        "price_preview",
+        "price_preview", "pricing_snapshot_at", "pricing_snapshot_total",
     ]
-    readonly_fields = ["price_preview"]
+    readonly_fields = ["price_preview", "pricing_snapshot_at", "pricing_snapshot_total"]
 
     def get_readonly_fields(self, request, obj=None):
         fields = list(super().get_readonly_fields(request, obj))
-        if obj and obj.pk and Quote.objects.filter(order=obj, payments__status="paid").exists():
+        if obj and obj.pk and Quote.objects.filter(order=obj, pricing_snapshot_at__isnull=False).exists():
             fields += ["material", "weight_grams", "print_time_minutes", "machine_hourly_rate",
                        "labor_fee", "design_fee", "post_processing_fee", "shipping_fee", "discount"]
         return fields
@@ -341,6 +341,8 @@ class QuoteInline(admin.StackedInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
+    from .order_finance_admin import ManagedOrderAdminForm
+    form = ManagedOrderAdminForm
     change_form_template = "admin/website/order/change_form.html"
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
@@ -375,16 +377,23 @@ class OrderAdmin(admin.ModelAdmin):
         "created_at",
         "quote_link",
     ]
-    list_editable = ["status"]
+    # Finance state is ledger-driven; do not allow list-edit 'paid' without a receipt.
+    list_editable = []
     search_fields = ["first_name", "last_name", "phone", "description"]
     list_filter = ["status", "service_type", "material", "customer", "created_at"]
     readonly_fields = ["public_token", "quote_link", "customer_summary", "technical_preview", "media_gallery"]
 
     def get_readonly_fields(self, request, obj=None):
         fields = list(super().get_readonly_fields(request, obj))
-        if obj and Quote.objects.filter(order=obj, payments__status="paid").exists():
+        if obj and Quote.objects.filter(order=obj, pricing_snapshot_at__isnull=False).exists():
             fields += ["material", "quantity"]
         return fields
+
+    def has_delete_permission(self, request, obj=None):
+        if obj and Quote.objects.filter(order=obj, payments__isnull=False).exists():
+            return False
+        return super().has_delete_permission(request, obj)
+
     inlines = [OrderImageInline, QuoteInline]
     fieldsets = (
         ("اطلاعات سفارش", {"fields": (
@@ -490,10 +499,8 @@ class QuoteAdmin(admin.ModelAdmin):
     list_filter = ["status", "material", "created_at"]
     search_fields = ["order__first_name", "order__last_name", "order__phone"]
     readonly_fields = [
-        "material_cost_display",
-        "machine_cost_display",
-        "subtotal_display",
-        "total_price_display",
+        "material_cost_display", "machine_cost_display", "subtotal_display",
+        "total_price_display", "pricing_snapshot_at", "pricing_snapshot_total",
     ]
 
     fieldsets = (
@@ -514,10 +521,8 @@ class QuoteAdmin(admin.ModelAdmin):
         }),
         ("نتیجه محاسبه", {
             "fields": (
-                "material_cost_display",
-                "machine_cost_display",
-                "subtotal_display",
-                "total_price_display",
+                "material_cost_display", "machine_cost_display", "subtotal_display", "total_price_display",
+                "pricing_snapshot_at", "pricing_snapshot_total",
             )
         }),
         ("توضیحات", {
@@ -527,10 +532,15 @@ class QuoteAdmin(admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         fields = list(super().get_readonly_fields(request, obj))
-        if obj and obj.pk and obj.payments.filter(status="paid").exists():
-            fields += ["material", "weight_grams", "print_time_minutes", "machine_hourly_rate",
+        if obj and obj.pk and obj.pricing_snapshot_at is not None:
+            fields += ["order", "material", "weight_grams", "print_time_minutes", "machine_hourly_rate",
                        "labor_fee", "design_fee", "post_processing_fee", "shipping_fee", "discount"]
         return fields
+
+    def has_delete_permission(self, request, obj=None):
+        if obj and obj.payments.exists():
+            return False
+        return super().has_delete_permission(request, obj)
 
     class Media:
         css = {"all": ("admin/phase49-admin-tabs.css",)}
@@ -566,6 +576,20 @@ class PaymentAdmin(admin.ModelAdmin):
         "failed_at", "retry_count", "receipt_preview", "created_at", "updated_at", "paid_at", "status",
     ]
     actions = ["mark_selected_paid", "mark_selected_failed"]
+
+    def has_add_permission(self, request):
+        # All payment records must be created through the protected receipt/gateway flow.
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        # Retain the financial receipt history, including failed and pending attempts.
+        return False
+
+    def get_readonly_fields(self, request, obj=None):
+        fields = list(super().get_readonly_fields(request, obj))
+        if obj:
+            fields += ["quote", "amount", "payment_kind", "method", "provider", "receipt_image"]
+        return fields
 
     @admin.display(description="رسید")
     def receipt_preview(self, obj):

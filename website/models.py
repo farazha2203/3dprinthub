@@ -530,6 +530,18 @@ class Order(models.Model):
     def __str__(self):
         return f"{self.first_name} {self.last_name} - {self.phone}"
 
+    def clean(self):
+        super().clean()
+        if self.pk and Quote.objects.filter(order_id=self.pk, pricing_snapshot_at__isnull=False).exists():
+            original = type(self).objects.filter(pk=self.pk).first()
+            if original and (self.quantity != original.quantity or self.material_id != original.material_id):
+                from django.core.exceptions import ValidationError
+                raise ValidationError("تعداد یا متریال سفارش دارای پیش‌فاکتور قطعی، بدون اصلاحیه مالی قابل تغییر نیست.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        return super().save(*args, **kwargs)
+
     def get_quote_url(self):
         return reverse("website:quote_detail", kwargs={"token": self.public_token})
 
@@ -659,8 +671,33 @@ class Quote(models.Model):
         verbose_name="درصد بیعانه",
     )
 
+    # Immutable monetary agreement once a quote is sent or accepted.
+    # Nullable for existing draft/legacy quotes; never backfill historical prices blindly.
+    pricing_snapshot_at = models.DateTimeField(null=True, blank=True, editable=False, verbose_name="زمان تثبیت قیمت")
+    pricing_snapshot_material_rate = models.DecimalField(max_digits=18, decimal_places=4, null=True, blank=True, editable=False, verbose_name="نرخ ثابت هر گرم متریال")
+    pricing_snapshot_quantity = models.PositiveIntegerField(null=True, blank=True, editable=False, verbose_name="تعداد قطعات در زمان قیمت گذاری")
+    pricing_snapshot_material_cost = models.PositiveBigIntegerField(null=True, blank=True, editable=False, verbose_name="هزینه ثابت متریال")
+    pricing_snapshot_machine_cost = models.PositiveBigIntegerField(null=True, blank=True, editable=False, verbose_name="هزینه ثابت دستگاه")
+    pricing_snapshot_subtotal = models.PositiveBigIntegerField(null=True, blank=True, editable=False, verbose_name="جمع ثابت قبل از تخفیف")
+    pricing_snapshot_discount = models.PositiveBigIntegerField(null=True, blank=True, editable=False, verbose_name="تخفیف ثابت")
+    pricing_snapshot_total = models.PositiveBigIntegerField(null=True, blank=True, editable=False, verbose_name="مبلغ نهایی توافق شده")
+
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ایجاد")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="آخرین بروزرسانی")
+
+    def clean(self):
+        super().clean()
+        from .quote_pricing_policy import validate_quote_pricing
+        validate_quote_pricing(self)
+
+    def save(self, *args, **kwargs):
+        from .quote_pricing_policy import FINAL_QUOTE_STATUSES, SNAPSHOT_FIELDS, take_quote_pricing_snapshot
+        self.clean()
+        if self.status in FINAL_QUOTE_STATUSES and self.pricing_snapshot_at is None:
+            take_quote_pricing_snapshot(self)
+            if kwargs.get("update_fields") is not None:
+                kwargs["update_fields"] = set(kwargs["update_fields"]) | set(SNAPSHOT_FIELDS)
+        return super().save(*args, **kwargs)
 
     @property
     def tolerance_amount(self):
@@ -699,6 +736,8 @@ class Quote(models.Model):
 
     @property
     def material_price_per_kg(self):
+        if self.pricing_snapshot_material_rate is not None:
+            return int(Decimal(self.pricing_snapshot_material_rate) * Decimal("1000"))
         material = self.selected_material
         if not material:
             return 0
@@ -709,6 +748,8 @@ class Quote(models.Model):
 
     @property
     def material_price_per_gram(self):
+        if self.pricing_snapshot_material_rate is not None:
+            return Decimal(self.pricing_snapshot_material_rate)
         material = self.selected_material
         if not material:
             return 0
@@ -726,6 +767,8 @@ class Quote(models.Model):
 
     @property
     def material_cost(self):
+        if self.pricing_snapshot_material_cost is not None:
+            return int(self.pricing_snapshot_material_cost)
         value = self.material_price_per_gram * self.weight_grams * Decimal(self.order.quantity)
         return int(value.quantize(Decimal("1"), rounding=ROUND_HALF_UP))
 
@@ -747,11 +790,15 @@ class Quote(models.Model):
 
     @property
     def machine_cost(self):
+        if self.pricing_snapshot_machine_cost is not None:
+            return int(self.pricing_snapshot_machine_cost)
         value = Decimal(self.machine_hourly_rate) * self.print_hours * Decimal(self.order.quantity)
         return int(value.quantize(Decimal("1"), rounding=ROUND_HALF_UP))
 
     @property
     def subtotal(self):
+        if self.pricing_snapshot_subtotal is not None:
+            return int(self.pricing_snapshot_subtotal)
         return (
             self.material_cost
             + self.machine_cost
@@ -763,6 +810,8 @@ class Quote(models.Model):
 
     @property
     def total_price(self):
+        if self.pricing_snapshot_total is not None:
+            return int(self.pricing_snapshot_total)
         total = self.subtotal - self.discount
         if total < 0:
             return 0
@@ -875,6 +924,18 @@ class Payment(models.Model):
     @property
     def is_terminal(self):
         return self.status in {"paid", "failed", "cancelled"}
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            previous = type(self).objects.filter(pk=self.pk).values(
+                "status", "quote_id", "amount", "payment_kind", "method", "authority", "ref_id"
+            ).first()
+            if previous and previous["status"] == "paid":
+                frozen = ("status", "quote_id", "amount", "payment_kind", "method", "authority", "ref_id")
+                if any(getattr(self, name) != previous[name] for name in frozen):
+                    from django.core.exceptions import ValidationError
+                    raise ValidationError("دریافت تأییدشده قابل تغییر نیست؛ اصلاح مالی باید با سند جدید ثبت شود.")
+        return super().save(*args, **kwargs)
 
     def mark_paid(self, ref_id="", *, provider_status_code=None, provider_message="", metadata=None):
         from .payment_services import mark_payment_paid
