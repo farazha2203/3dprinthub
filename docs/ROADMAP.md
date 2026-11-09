@@ -1027,6 +1027,6 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - [x] Add explicit `per_piece` versus `batch` mode with default preserving legacy calculations, admin label and public quote explanation.
 - [x] Block publication of mutable draft quote prices; include time basis in immutable sent/accepted price agreement.
 - [x] Add additive `website.0026_quote_print_time_scope` and tests; 80/80 regressions PASS.
-- [ ] Push dedicated time-basis branch and release through full backup + SHA-pinned single-migration runner after exact Host baseline verification.
-- [ ] Verify order #1 remains unchanged under `per_piece` and that batch what-if uses NO database write.
+- [x] Push dedicated time-basis branch `df1be383` and release through full source/.env/MySQL checksum-backed SHA-pinned runner; Migration 0026 PASS, Home/Store HTTP 200.
+- [x] Verify real order #1 stays at `per_piece` / 805000 Toman, batch 325000 Toman is computed in memory only; Private Quote detail GET 200, draft amount is not shown and 0 payment/ledger records remain.
 - [ ] Product owner decides whether order #1 actual 200-minute slicer estimate describes each piece or the entire job before any price/discount change.

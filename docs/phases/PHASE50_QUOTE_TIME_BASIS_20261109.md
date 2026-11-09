@@ -1,5 +1,5 @@
 # 2026-11-09 — Service Quote print-time basis
-Status: LOCAL_TESTED (80/80 regressions PASS; Django checks, migration drift, and Bash syntax PASS); GitHub/Production release pending.
+Status: PRODUCTION_VERIFIED at runtime SHA `df1be38355da6f3fa16ce5f480e5da81b5ae239a`; 80/80 Local tests PASS, guarded Host migration 0026 / backup / HTML checks / public smoke PASS.
 
 ## Requested delta
 Prevent ambiguous production-job time from inflating the machine component of multi-piece quotes. An operator must explicitly choose whether the entered slicing time refers to **each piece** or **the entire printed batch**. The price agreement and payment ledger from the previous finance release must remain correct.
@@ -32,3 +32,14 @@ Order #1: quantity 4; piece weight 20 g; entered print time 200 minutes; current
 
 ## Regression gates and release
 Local 80/80 (including legacy finance/payments and secure order image preview) PASS. Django check and no migration drift PASS with pre-existing warnings; Bash syntax and git diff hygiene PASS. Deploy runner is fail-closed on real order #1 unchanged in the database. GitHub SHA and actual Production rollout/verification must be added only after execution.
+
+## Production verification closeout — 2026-11-09
+- Runtime code: `df1be38355da6f3fa16ce5f480e5da81b5ae239a`.
+- Guarded runner: `QUOTE_TIME_BASIS_DEPLOY=PASS` with GitHub SHA, FF-only and strict allowed delta.
+- Migration: exactly `website.0026_quote_print_time_scope`, successfully applied; no other pending schema work.
+- Verified full source/env/MySQL rollback: `/home/sfkilvrs/3dprinthub-deploy-backups/20261109-184700-quote-time-basis`.
+- Independent read-only Host Order #1 admin and private Quote GET: both 200, draft panel visible, final-price table hidden until acceptance.
+- Old per_piece interpretation and amount remain the same (805000 Toman); optional batch comparison is in-memory only (325000 Toman).
+- Payment and ledger records remain zero; Django checks/no-drift and Home/Store HTTP 200 PASS.
+- 80/80 Local regressions PASS, including new admin field/lock tests.
+- **Remaining user decision:** Whether entered 200-minute slicing estimate means 200 minutes *each* or 200 minutes *for all four pieces*; do not alter real quote until verified.

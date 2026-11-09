@@ -1350,3 +1350,9 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - Sent/accepted quotes lock the mode and snapshotted money figures. Additive `website.0026_quote_print_time_scope` keeps existing data in per-piece mode without repricing.
 - Example quantity 4/200 minutes: existing total 805000 Toman, optional batch total 325000 Toman (what-if only). No writes to the real order.
 - Focused+website tests 80/80 PASS; production release gated by the exact 3b6a74a7 Host baseline and a new verified full backup.
+
+## 2026-11-09 — Quote time basis PRODUCTION_VERIFIED
+- Runtime SHA `df1be38355da6f3fa16ce5f480e5da81b5ae239a` deployed from GitHub with exact sha/allowlist; one additive Website migration 0026 applied without historical repricing.
+- Source/env/full MySQL backup checksums/gzip verified at `/home/sfkilvrs/3dprinthub-deploy-backups/20261109-184700-quote-time-basis`.
+- Order #1 Admin GET 200 and private Quote GET 200 via read-only Host Django execution; customer draft does not expose unconfirmed price, no new payments or ledger entries.
+- Order #1 remains `per_piece` / 805000 Toman. Batch what-if=325000 Toman without save. Home/Store HTTP 200; 80/80 local regression tests PASS.
