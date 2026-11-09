@@ -1,6 +1,6 @@
 # 2026-11-09 Service Order Admin Finance — LOCAL TEST CANDIDATE
 
-Status: LOCAL_TESTED (65/65 focused and website regressions PASS; Django check PASS with pre-existing warnings); one additive schema migration 0025 pending; NOT DEPLOYED.
+Status: LOCAL_TESTED (69/69 post-merge regressions PASS; Django check PASS with pre-existing warnings); Production HEAD `29495708` integrated by merge `b60203b0`; additive schema migration 0025 pending; NOT DEPLOYED.
 
 ## Requested change
 The Django Website Order admin lacked an integrated manual-receipt and reconciliation workflow. Service Quote had a discount and computed paid/remaining values, but Order admin did not expose a trusted receipt form or payment history.
@@ -24,4 +24,4 @@ Baseline: d1f4ecc9 (existing November 7 attachment hotfix).
 - Auditable credit notes, refunds and amendments remain a separate financial design; do not rewrite paid rows.
 - The dynamic Quote cost formula includes labor/design/post-processing/shipping once per quote; confirm per-unit vs per-order tariff policy with owner before changing the pricing contract.
 - New manual form uses an operator confirmation checkbox, not bank-side automatic validation.
-- Local regression gate: 65/65 passed. Need Production HEAD 29495708 integration, migration-plan preflight, full verified MySQL/env/source backup, guarded staged rollout, and live admin UI/UAT. Do not overwrite actual order #1 or use another project's tunnel.
+- Post-merge local regression gate: 69/69 passed, including the deployed order-image protection tests. Prepared `scripts/host/phase50_order_finance_snapshot_deploy.sh` with explicit Production HEAD, target-SHA allowlist, nullable migration plan, full source/env/MySQL backup and public/admin smoke. Need backed-up guarded rollout and live admin UI/UAT. Do not overwrite actual order #1 or use another project's tunnel.

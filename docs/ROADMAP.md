@@ -1002,7 +1002,7 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - [x] Add immutable quote pricing snapshot (schema migration 0025); no historical repricing/backfill.
 - [x] Prevent manual 'paid' status and changes to agreed quote/paid receipt amounts; reject duplicate cross-order bank references.
 - [x] Initial focused + website regression 65/65 pass.
-- [ ] Rebase/integrate exact Production branch head `29495708...`, rerun focused and no-drift gates.
+- [x] Integrate exact Production branch head `29495708...` by non-destructive merge `b60203b0`; 69/69 post-merge tests PASS.
 - [ ] Verify Host account quota, fresh MySQL/env/source backups/rollback, guard exact migration plan and deploy with production UI tests.
 - [ ] Add formal credit-note, refund, disputed payment reversal and adjustment approval (separate phase).
 

@@ -1341,3 +1341,5 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - Order images and reference photos now use an authenticated owner/staff preview endpoint; Admin gallery, order-image inline, and reference-photo thumbnail use that route instead of inaccessible public media URLs.
 - Browser verification found remaining legacy links in the reference-photo inline preview and the Django clearable-image widget. Both now use the protected route; local regression suite 6/6 PASS.
 - Production runtime `a8796c465e8139ee89e0f109350211e70bab1611` is verified; four photos load in the authenticated admin page and no `/media/orders/` references remain. No uploaded file or order data changed.
+
+2026-11-09 addendum: Integrated current live SHA `29495708` into finance release branch with a preserving merge `b60203b0`; 69/69 post-merge regressions PASS, including secure attachment previews. Added a single-use fail-closed, migration-aware Host release runner requiring full checked source/env/database backups. Not yet deployed.
