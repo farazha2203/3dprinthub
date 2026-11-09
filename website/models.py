@@ -601,6 +601,18 @@ class Quote(models.Model):
         verbose_name="زمان چاپ به دقیقه"
     )
 
+    PRINT_TIME_SCOPE_CHOICES = [
+        ("per_piece", "برای هر قطعه"),
+        ("batch", "برای کل تیراژ / یک چاپ گروهی"),
+    ]
+    print_time_scope = models.CharField(
+        max_length=12,
+        choices=PRINT_TIME_SCOPE_CHOICES,
+        default="per_piece",
+        verbose_name="مبنای زمان چاپ",
+        help_text="اگر زمان اسلایسر مربوط به چاپ هم‌زمان همه قطعات است، «کل تیراژ» را انتخاب کنید؛ در حالت هر قطعه، هزینه زمان در تعداد ضرب می‌شود.",
+    )
+
     machine_hourly_rate = models.PositiveIntegerField(
         default=0,
         verbose_name="هزینه ساعتی دستگاه به تومان"
@@ -789,10 +801,20 @@ class Quote(models.Model):
         return Decimal(self.billable_print_minutes) / Decimal(60)
 
     @property
+    def total_billable_machine_minutes(self):
+        """Aggregate machine minutes, respecting whether slicer time is batch-wide."""
+        base = self.billable_print_minutes
+        if not base:
+            return 0
+        multiplier = self.order.quantity if self.print_time_scope == "per_piece" else 1
+        return int(base * multiplier)
+
+    @property
     def machine_cost(self):
         if self.pricing_snapshot_machine_cost is not None:
             return int(self.pricing_snapshot_machine_cost)
-        value = Decimal(self.machine_hourly_rate) * self.print_hours * Decimal(self.order.quantity)
+        value = (Decimal(self.machine_hourly_rate)
+                 * Decimal(self.total_billable_machine_minutes) / Decimal(60))
         return int(value.quantize(Decimal("1"), rounding=ROUND_HALF_UP))
 
     @property

@@ -31,17 +31,18 @@
   <section class="qcard rounded-[2rem] p-6 md:p-8 mb-6">
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6"><div><h2 class="text-2xl font-black">جزئیات قیمت‌گذاری</h2><p class="text-slate-400 mt-2">وزن، زمان چاپ، متریال و هزینه‌های جانبی توسط سیستم یا کارشناس محاسبه می‌شوند.</p></div><span class="px-4 py-2 rounded-2xl bg-slate-800 text-cyan-300">{{ quote.get_status_display }}</span></div>
 
-    {% if quote.status == 'draft' and not quote.total_price %}
+    {% if quote.status == 'draft' %}
       <div class="rounded-3xl border border-orange-400/30 bg-orange-400/10 p-6"><h3 class="text-xl font-black text-orange-300">در حال قیمت‌گذاری کارشناسی</h3><p class="text-slate-300 leading-8 mt-3">لینک، تصاویر و اطلاعات محصول برای مدیریت ارسال شده است. پس از تعیین وزن، زمان چاپ و متریال، مبلغ کل و بیعانه در همین صفحه نمایش داده می‌شود.</p></div>
     {% else %}
       <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div class="rounded-2xl bg-slate-900 p-4"><small class="text-slate-400">متریال</small><b class="block mt-1">{% if quote.selected_material %}{{ quote.selected_material.name }}{% else %}نامشخص{% endif %}</b></div>
         <div class="rounded-2xl bg-slate-900 p-4"><small class="text-slate-400">وزن هر قطعه</small><b class="block mt-1">{{ quote.weight_grams }} گرم</b></div>
-        <div class="rounded-2xl bg-slate-900 p-4"><small class="text-slate-400">زمان چاپ</small><b class="block mt-1">{{ quote.print_time_minutes }} دقیقه</b></div>
+        <div class="rounded-2xl bg-slate-900 p-4"><small class="text-slate-400">زمان چاپ ({{ quote.get_print_time_scope_display }})</small><b class="block mt-1">{{ quote.print_time_minutes }} دقیقه</b></div>
         <div class="rounded-2xl bg-slate-900 p-4"><small class="text-slate-400">تعداد</small><b class="block mt-1">{{ order.quantity }}</b></div>
       </div>
       <div class="overflow-x-auto rounded-3xl border border-slate-800"><table class="w-full min-w-[650px] text-sm"><tbody class="divide-y divide-slate-800">
         <tr><td class="p-4 text-slate-400">هزینه متریال</td><td class="p-4">{{ quote.material_cost|intcomma }} تومان</td></tr>
+        <tr><td class="p-4 text-slate-400">زمان قابل محاسبه دستگاه</td><td class="p-4">{{ quote.total_billable_machine_minutes|intcomma }} دقیقه</td></tr>
         <tr><td class="p-4 text-slate-400">هزینه دستگاه</td><td class="p-4">{{ quote.machine_cost|intcomma }} تومان</td></tr>
         <tr><td class="p-4 text-slate-400">اپراتوری و ساخت</td><td class="p-4">{{ quote.labor_fee|intcomma }} تومان</td></tr>
         {% if quote.design_fee %}<tr><td class="p-4 text-slate-400">طراحی/مهندسی معکوس</td><td class="p-4">{{ quote.design_fee|intcomma }} تومان</td></tr>{% endif %}

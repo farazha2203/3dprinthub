@@ -295,3 +295,9 @@ This section supersedes older Production-HEAD examples above; historical entries
 - 2026-10-13 footer-only social placement runtime SHA: `90011a529c74875faeebdefd583781645939cddb`; rollback `/home/sfkilvrs/3dprinthub-deploy-backups/20261013-185649-phase50-a2w-service-seo`.
 ## 2026-10-13 — Original footer A / PRODUCTION_VERIFIED
 Owner-designated contact/map A is the shared footer; dark B removed. Map at top, address and branded WhatsApp/Instagram icons beneath it. Home, Store and customer page shells share it once; header social links absent; empty reviews hidden. Runtime 76f12e22c3ba62913ad0701abac986c9a7bbfb50; release/phase50-a2w-service-seo-20261010. Local and live/browser verification passed; versioned CSS resolves cache. Rollback /home/sfkilvrs/3dprinthub-deploy-backups/20261013-200026-phase50-a2w-service-seo.
+
+## 2026-11-09 — Service Quote print-time basis bounded release
+- Clean isolated Local worktree: `D:\projects\3DPrintHub-quote-time-basis-20261109`, branch `fix/website-quote-time-basis-20261109`, based on Production-verified finance source `3b6a74a7659a82f8dae440795afc90ee20c25d99`.
+- Verified dedicated Windows router: `D:\projects\.chatgpt-gateway\project-host.ps1 -Project 3dprinthub`; Production root `/home/sfkilvrs/3dprinthub`, Host branch `release/phase50-a2j-hero-20260915`.
+- GitHub-first SHA-pinned deploy runner `scripts/host/phase50_quote_time_basis_deploy.sh`; additive migration `website.0026_quote_print_time_scope` only. Do not touch unrelated project routes.
+- Latest Production finance hotfix verified backup `/home/sfkilvrs/3dprinthub-deploy-backups/20261109-182334-finance-draft-html-hotfix`.

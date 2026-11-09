@@ -330,6 +330,7 @@ class QuoteInline(admin.StackedInline):
         "material",
         "weight_grams",
         "print_time_minutes",
+        "print_time_scope",
         "machine_hourly_rate",
         "labor_fee",
         "design_fee",
@@ -348,7 +349,7 @@ class QuoteInline(admin.StackedInline):
     def get_readonly_fields(self, request, obj=None):
         fields = list(super().get_readonly_fields(request, obj))
         if obj and obj.pk and Quote.objects.filter(order=obj, pricing_snapshot_at__isnull=False).exists():
-            fields += ["material", "weight_grams", "print_time_minutes", "machine_hourly_rate",
+            fields += ["material", "weight_grams", "print_time_minutes", "print_time_scope", "machine_hourly_rate",
                        "labor_fee", "design_fee", "post_processing_fee", "shipping_fee", "discount"]
         return fields
 
@@ -359,6 +360,8 @@ class QuoteInline(admin.StackedInline):
         html = f"""
         <div style="line-height:2">
             <strong>هزینه متریال:</strong> {obj.material_cost:,} تومان<br>
+            <strong>مبنای محاسبه زمان:</strong> {obj.get_print_time_scope_display()}<br>
+            <strong>زمان قابل محاسبه دستگاه:</strong> {obj.total_billable_machine_minutes:,} دقیقه<br>
             <strong>هزینه دستگاه:</strong> {obj.machine_cost:,} تومان<br>
             <strong>جمع قبل از تخفیف:</strong> {obj.subtotal:,} تومان<br>
             <strong>مبلغ نهایی:</strong> <span style="color:#0a7;font-weight:bold">{obj.total_price:,} تومان</span>
@@ -522,6 +525,7 @@ class QuoteAdmin(admin.ModelAdmin):
         "material",
         "weight_grams",
         "print_time_minutes",
+        "print_time_scope",
         "machine_hourly_rate",
         "status",
         "total_price_display",
@@ -543,6 +547,7 @@ class QuoteAdmin(admin.ModelAdmin):
             "fields": (
                 "weight_grams",
                 "print_time_minutes",
+                "print_time_scope",
                 "machine_hourly_rate",
                 "labor_fee",
                 "design_fee",
@@ -565,7 +570,7 @@ class QuoteAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         fields = list(super().get_readonly_fields(request, obj))
         if obj and obj.pk and obj.pricing_snapshot_at is not None:
-            fields += ["order", "material", "weight_grams", "print_time_minutes", "machine_hourly_rate",
+            fields += ["order", "material", "weight_grams", "print_time_minutes", "print_time_scope", "machine_hourly_rate",
                        "labor_fee", "design_fee", "post_processing_fee", "shipping_fee", "discount"]
         return fields
 

@@ -1343,3 +1343,10 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - Production runtime `a8796c465e8139ee89e0f109350211e70bab1611` is verified; four photos load in the authenticated admin page and no `/media/orders/` references remain. No uploaded file or order data changed.
 
 2026-11-09 addendum: Integrated current live SHA `29495708` into finance release branch with a preserving merge `b60203b0`; 69/69 post-merge regressions PASS, including secure attachment previews. Added a single-use fail-closed, migration-aware Host release runner requiring full checked source/env/database backups. Not yet deployed.
+
+## 2026-11-09 — Explicit per-piece vs batch print-time quote pricing (LOCAL_TESTED)
+- Added `Quote.print_time_scope` with `per_piece` historical default, `batch` optional for one complete print job; machine time is rounded once per entered time, multiplied by order quantity only in per-piece mode.
+- Admin and customer quote display now label the time's meaning and the total machine minutes; preliminary draft prices are not displayed to customers as accepted prices.
+- Sent/accepted quotes lock the mode and snapshotted money figures. Additive `website.0026_quote_print_time_scope` keeps existing data in per-piece mode without repricing.
+- Example quantity 4/200 minutes: existing total 805000 Toman, optional batch total 325000 Toman (what-if only). No writes to the real order.
+- Focused+website tests 80/80 PASS; production release gated by the exact 3b6a74a7 Host baseline and a new verified full backup.

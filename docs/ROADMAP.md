@@ -1020,3 +1020,13 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - [x] Commit/push and guarded no-database-write Host deploy from exact baseline `17d60f732797751e3ea09fa3e132e8682b9786e0`; code runtime `a8796c465e8139ee89e0f109350211e70bab1611` passes.
 - [x] Refresh authenticated admin order page; all four 720x1280 photos decode, all 20 references use protected URLs, and zero `/media/orders/` references remain.
 - [ ] Promote documentation closeout from exact runtime baseline and record final current branch/SHA.
+
+## 2026-11-09 — Quote print time basis (owner's pricing defect)
+- [x] Verify production finance hotfix `3b6a74a7`: backup, smoke, migration and real order #1 admin GET pass without data mutation.
+- [x] Inspect anonymous monetary facts for order #1: quantity four, 200 print minutes; existing pricing treats that as a per-unit print duration.
+- [x] Add explicit `per_piece` versus `batch` mode with default preserving legacy calculations, admin label and public quote explanation.
+- [x] Block publication of mutable draft quote prices; include time basis in immutable sent/accepted price agreement.
+- [x] Add additive `website.0026_quote_print_time_scope` and tests; 80/80 regressions PASS.
+- [ ] Push dedicated time-basis branch and release through full backup + SHA-pinned single-migration runner after exact Host baseline verification.
+- [ ] Verify order #1 remains unchanged under `per_piece` and that batch what-if uses NO database write.
+- [ ] Product owner decides whether order #1 actual 200-minute slicer estimate describes each piece or the entire job before any price/discount change.

@@ -10,7 +10,7 @@ from django.utils import timezone
 
 FROZEN_INPUT_FIELDS = (
     "order_id", "material_id", "weight_grams", "print_time_minutes",
-    "machine_hourly_rate", "minimum_billable_minutes",
+    "print_time_scope", "machine_hourly_rate", "minimum_billable_minutes",
     "billing_increment_minutes", "labor_fee", "design_fee",
     "post_processing_fee", "shipping_fee", "discount",
     "price_tolerance_percent", "deposit_percent",
@@ -25,6 +25,8 @@ FINAL_QUOTE_STATUSES = frozenset({"sent", "accepted"})
 
 
 def validate_quote_pricing(quote):
+    if quote.print_time_scope not in {"per_piece", "batch"}:
+        raise ValidationError("مبنای زمان چاپ باید «هر قطعه» یا «کل تیراژ» باشد.")
     if quote.pk:
         previous = type(quote).objects.filter(pk=quote.pk).first()
         if previous and previous.pricing_snapshot_at:
