@@ -1370,3 +1370,8 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - Corrected financial approval locking and back-office approval queryset change-during-iteration issue; shipping settles adjusted due, not original when a valid credit note exists.
 - Finance reconciliation checks refund debit/receipt linkage, overcredit and overrefund, operator verified bank evidence. **No automatic external refund is performed.**
 - Final local **129/129 broad regression** PASS (including Store reconciliation), static, schema drift and Bash syntax checks PASS. Production unchanged at `b5687b81` until verified deployment.
+
+## 2026-11-10 — Service finance credit/refund ledger live verified
+- Runtime SHA `e9a088cfe7fc3ebcdcde49e70e31b8f59709478e`, new Website.0028 safely applied. Local 129/129 regression tests passed. Source and complete live MySQL/.env rollback checksums verified at `/home/sfkilvrs/3dprinthub-deploy-backups/20261110-131604-service-credit-refund`.
+- Independent Host GETs Admin Order #1, finance credit note and refund form, private customer quote, public home/store/admin login all 200. `collect_finance_reconciliation(check_storage=False)` returned `ok=True` and `failures={}`. Order #1 remains draft 805000 Toman, zero payments, ledger, delivery, credit notes and refunds.
+- Initial guarded runner smoke returned error due to attempting to render pre-rendered HttpResponse; not migration failure. Read-only QA independently revalidated actual site and script corrected in follow-up source-only maintenance. No live payout was executed or simulated.

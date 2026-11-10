@@ -1,6 +1,6 @@
 # 2026-11-10 — Service Order credit notes, refunds and audit-safe money history
 
-Status: **LOCAL_TESTED**; final combined regression **129/129 PASS**, including original Website financial and Store reconciliation suites. Python compile, Bash syntax, Django check and migration drift checks PASS. Production publish pending.
+Status: **PRODUCTION_VERIFIED** at runtime `e9a088cfe7fc3ebcdcde49e70e31b8f59709478e`; local regression **129/129 PASS** and independent read-only Host audit PASS. Original one-use deployment runner smoke-check error was independently resolved and documented below.
 
 ## Scope and finance contract
 The existing Service Order/Quote/Payment/Store shipping workflow is live at SHA `b5687b8120ee8ec3cfe7ad68aa04a8c531cf1c95` and Website migration 0027. Requested next step is accurate post-acceptance price reductions and manual refunds without rewriting original confirmed payment rows or previously snapshotted quote prices. The staff may issue a uniquely referenced, immutable **credit note** reducing the collectible amount; that is not a refund or bank action. If previous receipts exceed the adjusted amount, finance may open a refund **request** attached to one genuine settled receipt, reserving only the applicable overpayment. Separate **confirmation of actual external payout** with a unique receipt/reference and responsible operator creates one immutable debit in `PaymentLedgerEntry`. The website does not initiate a bank refund, POS reversal, cash distribution, or provider API request.
@@ -30,3 +30,11 @@ Production must remain on its exact clean old SHA until regression and backup ga
 
 ## Follow-up scope
 External automatic bank/provider refunds, 2-person financial approvals, customer dispute document exchange, product RMA inventory restocking, StoreOrder credits, site-wide ledger finance reports and BI should be separate milestones. These finance controls apply to service Quote/Payment, not all StoreOrder return and subscription cases.
+
+## Production release evidence — 2026-11-10
+- Runtime verified on Host `e9a088cfe7fc3ebcdcde49e70e31b8f59709478e`, clean source, MySQL `sfkilvrs_EmiAdmin_3dprinthub`, exactly Website `0028_service_credit_refund_ledger` applied with zero pending migrations. The 129/129 local regression suite passed.
+- Full source snapshot, environment and complete SQL gzip archive checked SHA256; backup `/home/sfkilvrs/3dprinthub-deploy-backups/20261110-131604-service-credit-refund`.
+- Original guarded deploy completed backup, SHA-locked source fast-forward, Website migration, Django check and no schema drift but its own post-check exited 1: wrongly called `.render()` on an already-rendered `HttpResponse` from `django.shortcuts.render()`. This was a **smoke runner bug**, not a database migration or business application error. Corrected the runner in follow-up GitHub source/doc-only commit, not a new Host runtime.
+- Independent fresh read-only Host QA PASS: Admin Order #1 GET 200; both newly added Credit Note and Refund Request GET 200; customer private Quote GET 200 while draft total stayed hidden; finance reconciliation `ok=True` with `failures={}`; Home, Store and Admin Login public HTTP 200.
+- **NO financial data mutation**: 0 Payment, 0 PaymentLedgerEntry, 0 ServiceOrderDelivery, 0 ServiceCreditNote, 0 ServiceRefund. Order #1 still `draft`, `per_piece`, quantity 4, 805000 Toman original/effective, zero paid/pending/refunded/credits, unchanged discount. No manual or automatic external money movement.
+- Existing unrelated warnings: unsupported CKEditor 4, in-memory realtime event channel and MySQL conditional unique constraints, for separate maintenance.

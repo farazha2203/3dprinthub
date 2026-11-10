@@ -317,3 +317,8 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - Isolated worktree `D:\projects\3DPrintHub-refunds-20261110`, Git branch `fix/website-service-credit-refund-20261110`, parent tested released SHA `b5687b8120ee8ec3cfe7ad68aa04a8c531cf1c95`.
 - New guarded runner `scripts/host/phase50_service_credit_refund_deploy.sh`, expected Website `0028_service_credit_refund_ledger`, prior full backup `/home/sfkilvrs/3dprinthub-deploy-backups/20261110-103305-service-order-cycle`.
 - Host via dedicated `D:\projects\.chatgpt-gateway\project-host.ps1 -Project 3dprinthub`; do not alter dirty canonical `D:\projects\3DPrintHub` or prior service-order worktree with docs WIP.
+
+## 2026-11-10 — Live credits/refunds sources and rollback
+- Host SHA `e9a088cfe7fc3ebcdcde49e70e31b8f59709478e`, clean release branch, Website 0028 applied, MySQL `sfkilvrs_EmiAdmin_3dprinthub`.
+- Full validated rollback `/home/sfkilvrs/3dprinthub-deploy-backups/20261110-131604-service-credit-refund` (source-before.tar.gz, .env, database-before-3i53.sql.gz, SHA256 checksums).
+- Source worktree `D:\projects\3DPrintHub-refunds-20261110`; GitHub branch `fix/website-service-credit-refund-20261110`. Post-launch doc/runner fix GitHub SHA may exceed Host runtime SHA.

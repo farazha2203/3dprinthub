@@ -1053,3 +1053,10 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - [x] Broad final **129/129** QA regression PASS, Bash syntax, migration drift, Python compile, diff lint clean.
 - [ ] Freeze tested SHA, push isolated branch; guarded Host release and independent read-only acceptance.
 - [ ] Implement external PSP refund API, human second approval and RMA/StoreOrder credits as separate scope after review.
+
+## 2026-11-10 — Service credits and refunds published
+- [x] Live Host exact code SHA `e9a088cfe7fc3ebcdcde49e70e31b8f59709478e`, clean; Website.0028 only, no pending schema changes.
+- [x] Full source/env/MySQL rollback `20261110-131604-service-credit-refund` with verified gzip and SHA256.
+- [x] Independent read-only Host Admin Order #1/credit/refund GET 200, customer draft Quote private GET 200, Store/Home/Admin Login 200, finance reconciliation PASS no failures, 0 real money/return records altered; 129/129 QA tests PASS.
+- [x] Correct deployment runner HttpResponse-vs-TemplateResponse postcheck mismatch in docs-only follow-up.
+- [ ] Human UAT on genuine commercial correction/payment record only when needed; add maker-checker approval for large refunds, external refund API integration and StoreOrder returns separately.

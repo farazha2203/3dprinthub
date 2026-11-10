@@ -148,7 +148,9 @@ assert "record-receipt/" not in admin_response.content.decode("utf-8")
 from website.service_adjustment_admin import issue_service_credit_note_view,request_service_refund_view
 for fn,url in ((issue_service_credit_note_view,credit_url),(request_service_refund_view,request_url)):
     response=fn(admin.site._registry[Order],rget(url),o.pk)
-    response.render()
+    # django.shortcuts.render() already returns HttpResponse, not TemplateResponse.
+    if hasattr(response, "render") and not getattr(response, "is_rendered", True):
+        response.render()
     assert response.status_code==200
 customer=quote_detail_view(rget("/quote/readonly/"),o.public_token)
 assert customer.status_code==200 and "w-full min-w-[650px] text-sm" not in customer.content.decode("utf-8")

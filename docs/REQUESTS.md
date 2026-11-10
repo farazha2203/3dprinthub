@@ -1132,3 +1132,6 @@ Owner requires manager enter and approve price, customer/staff enter multiple co
 
 ## 2026-11-10 — Follow-on to requested service-order payment and delivery lifecycle
 Implement traceable post-acceptance price corrections and payout reversals WITHOUT changing original prices/receipts or crediting fake funds: unique credit note (contract reduction), proposed refund (no payment), confirmed actual external payout (separate immutable debit ledger) with cumulative overpayment caps and customer-facing adjusted due. Local branch `fix/website-service-credit-refund-20261110`; focus tests 29/29 PASS, full regression and cautious production launch pending. Real order #1 and its financial values must remain unchanged.
+
+## 2026-11-10 — Service financial adjustments / deployed
+Owner's ongoing service-order lifecycle now supports immutable price correction and manual audited refunds as extension to previous multiple payment methods/delivery controls. Production code `e9a088cfe7fc3ebcdcde49e70e31b8f59709478e`; Website 0028; exact clean Host source and independent read-only QA pass. All original customer order prices and receipts remain unchanged. Refunds are financial **recordings of externally completed payouts**, not bank transfer automation. Next separate work: full StoreOrder RMA and actual bank provider refund APIs, second-person approval.
