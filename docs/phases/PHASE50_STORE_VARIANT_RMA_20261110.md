@@ -1,6 +1,6 @@
 # Phase 50 — Store ProductVariant RMA / physical stock / proven cash refunds (2026-11-10)
 
-Status: LOCAL_TESTED, READY FOR GUARDED DEPLOYMENT. 176/176 project-targeted regression PASS; 3 separately proven pre-existing baseline test failures, independent on original e9a branch. Last live SHA before release: e9a088cfe7fc3ebcdcde49e70e31b8f59709478e.
+Status: **PRODUCTION_VERIFIED** on source `0ae8d7851b803ddc8ab75be3adf35ac2a2d76a5a`; 176/176 relevant regression PASS; 3 separately proven pre-existing baseline test failures on original e9a source. Full source/env/MySQL backup and independent live read-only finance/stock and HTTP checks PASS.
 
 ## What already existed (must be reused, not duplicated)
 - Store ProductVariant references Product, Material, PrintQuality and optional MaterialColorOption. StoreOrderItem carries immutable name/variant/price/weight snapshots and its original ProductVariant FK.
@@ -37,3 +37,11 @@ Status: LOCAL_TESTED, READY FOR GUARDED DEPLOYMENT. 176/176 project-targeted reg
 - Django `manage.py check` and `makemigrations --check --dry-run` PASS, no ungenerated schema; Store migration 0043 only. Python compile, `bash -n` and Git diff hygiene PASS.
 - Production preflight through dedicated tunnel: clean source e9a088cf, MySQL `sfkilvrs_EmiAdmin_3dprinthub`, 1 StoreOrder / 1 StorePayment / 0 ReturnRequest / 0 InventoryMovement / 3798 ProductVariants; Website Order #1 draft 805000 with zero service financial movements; Store 0042 / Website 0028 last applied, no pending migrations.
 - Deployment pending exact target SHA, verified full source/env/MySQL backup and read-only Host smoke.
+
+## Live publish and independent Host verification — 2026-11-10
+- **Status: PRODUCTION_VERIFIED** on clean Host runtime `0ae8d7851b803ddc8ab75be3adf35ac2a2d76a5a`; new `store.0043_store_variant_rma_stock_refund_audit` applied, zero pending migrations, no drift.
+- SHA-pinned guarded runner `STORE_VARIANT_RMA_DEPLOY=PASS`; full source/.env/MySQL backup checksums & gzip PASS under `/home/sfkilvrs/3dprinthub-deploy-backups/20261110-144004-store-variant-rma`.
+- Exact before/after SHA256 of StoreOrder statuses/prices, StorePayment statuses/amounts, all 3798 ProductVariant stock/reservation counts and Store InventoryMovement counts matched (`824818d557a813b56df163d7308dfabf11fcc026f468ba145a4c0af570b46f12`). No actual inventory or money events were invented.
+- Independent read-only Host QA after deployment: MySQL identity correct; 1 StoreOrder / 1 StorePayment / 0 ReturnRequest / 0 InventoryMovement / 3798 ProductVariants / 0 new inspections, refunds or refund ledgers. Existing store order remained `payment_review` / `awaiting_review` / 945450 Toman. Website Order #1 still draft/per_piece/805000, 0 service payments/ledger/credit/refund. Finance reconciliation `ok=True`, `failures={}`.
+- Return Admin changelist GET 200, all workflow URLs reverse, Store/Home/Admin Login public HTTP 200. Host Git clean at exact source SHA.
+- 176/176 relevant local regression passed; the three independently reproduced pre-existing legacy price/page test failures are a separate backlog, not silently suppressed. Existing CKEditor4 and memory realtime warnings also remain unrelated.

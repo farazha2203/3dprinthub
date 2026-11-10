@@ -323,3 +323,8 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - RMA code: `store/rma_services.py`, `store/rma_admin.py`, `store/test_phase50_variant_rma.py`, `store/migrations/0043_store_variant_rma_stock_refund_audit.py`.
 - Guarded release: `scripts/host/phase50_store_variant_rma_deploy.sh`; dedicated tunnel `D:\projects\.chatgpt-gateway\project-host.ps1 -Project 3dprinthub`; Host root `/home/sfkilvrs/3dprinthub` / MySQL `sfkilvrs_EmiAdmin_3dprinthub`.
 - Dirty canonical `D:\projects\3DPrintHub` and docs-only other worktrees must be left untouched.
+
+## 2026-11-10 — Store Variant RMA production path / rollback
+- Host code SHA `0ae8d7851b803ddc8ab75be3adf35ac2a2d76a5a`, clean, migration `store.0043_store_variant_rma_stock_refund_audit`.
+- Full verified source, `.env` and MySQL backup `/home/sfkilvrs/3dprinthub-deploy-backups/20261110-144004-store-variant-rma`; before/after live StoreRow fingerprint `824818d557a813b56df163d7308dfabf11fcc026f468ba145a4c0af570b46f12`.
+- Source worktree `D:\projects\3DPrintHub-store-rma-20261110` on `fix/store-variant-rma-20261110`. GitHub docs-only closeout may be newer than live Host SHA. Dedicated tunnel `D:\projects\.chatgpt-gateway\project-host.ps1 -Project 3dprinthub`.

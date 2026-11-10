@@ -1135,3 +1135,6 @@ Implement traceable post-acceptance price corrections and payout reversals WITHO
 
 ## 2026-11-10 — Next step after service-order payment, delivery and credit/refund
 Owner requested continued development. Focus: existing ready-to-sell StoreOrder / ProductVariant/PrintQuality/MaterialColorOption catalog and sold inventory must agree with return/inspection/refund process. Current Store already had SKU variants, stored Checkout price snapshots and stock reservation; missing controlled ReturnRequest quantity, physical inspection, restock and debit-ledger proof. New isolated RMA phase uses exact original Store Variant and requires actual seller/receiver action; no live counterfeit payments, returns or stock movements for QA.
+
+## 2026-11-10 — Owner next-step Store ProductVariant inventory/RMA / completed release
+Continued development delivered on original Host source `0ae8d7851b803ddc8ab75be3adf35ac2a2d76a5a`: original SKU pricing/reservation/physical sale now joined to a controlled buyer return quantity, staff inspection and traceable returned stock and actual externally refunded money. Original customer and Store Invoice/Payment values remain intact; live read-only QA confirms no real stock/payment change. Next separate step: maker-checker approval, warranty exchanges and PSP payout APIs, plus unrelated known legacy tests.

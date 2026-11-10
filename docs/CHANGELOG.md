@@ -1376,3 +1376,8 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - Return stock only after physical inspection of a real sold original ProductVariant, once per RMA; quality rejects do not increase inventory, and no return can exceed purchased quantity/sale inventory movements.
 - Staff-admin controlled status forms replace direct editable refunded flag; Store payment admin forbids manually confirming gateway attempts, shipping of unpaid orders and rewriting paid receipt state. Partial refund cannot reverse whole affiliate commission.
 - Customer order page shows quantities, inspection, refund state and actual external proof. Finance reconciliation calculates store net paid and detects invalid stock/ledger connections. 42/42 initial targeted tests PASS; baseline 3 unrelated legacy commerce test failures independently reproduced.
+
+## 2026-11-10 — ProductVariant order returns published and independently verified
+- Host source `0ae8d7851b803ddc8ab75be3adf35ac2a2d76a5a`, clean; Store.0043 migration applied with no pending, full source/env/MySQL rollback SHA256/gzip verified at `/home/sfkilvrs/3dprinthub-deploy-backups/20261110-144004-store-variant-rma`.
+- Physical return, original variant sale/stock proof, quantity-specific inspection and only healthy inventory restock, externally proven refund/debit ledger and customer/admin RMA flow active. No fake payout or price rewrite.
+- 176/176 relevant regression PASS; three unchanged pre-existing baseline tests documented separately. Independent finance reconciliation PASS, Store Admin HTTP200, Home/Store/Admin Login HTTP200; 3798 Variant stock/reservation fingerprints identical before/after, one real StoreOrder/payment and no return/refund/stock movement changed.

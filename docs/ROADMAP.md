@@ -1063,3 +1063,9 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - [x] 42/42 targeted RMA + old checkout + finance recon tests PASS.
 - [ ] Finish broad targeted regression, pin release SHA; full backup + guarded Host Store.0043 migration, verify live unchanged data and public/private pages.
 - [ ] In separate phases: PSP automated refunds, operator dual approval, shipping label reverse logistics, replacement inventory reservations, legal tax credit notes and apportioned affiliate commissions.
+
+## 2026-11-10 — Store ProductVariant RMA publication closed
+- [x] Tested isolated new Store RMA extension: 42/42 focused, 176/176 full relevant release regression PASS (pre-existing legacy pricing/page tests separately reproduced on base).
+- [x] Published exact SHA `0ae8d7851b803ddc8ab75be3adf35ac2a2d76a5a` and only Store.0043 migration via SHA-pinned dedicated reverse Host runner, before/after variant stock/Store money fingerprint unchanged.
+- [x] Verified complete source/env/SQL rollback `20261110-144004-store-variant-rma`, independent live RMA Admin 200/finance reconcile PASS/public smoke, zero real money, stock or RMA events mutated.
+- [ ] Evaluate legal Store tax credit notes, two-person approval and automated PSP refunds/label printing only as separately controlled projects.
