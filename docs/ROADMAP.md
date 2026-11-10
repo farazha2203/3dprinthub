@@ -1030,3 +1030,16 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - [x] Push dedicated time-basis branch `df1be383` and release through full source/.env/MySQL checksum-backed SHA-pinned runner; Migration 0026 PASS, Home/Store HTTP 200.
 - [x] Verify real order #1 stays at `per_piece` / 805000 Toman, batch 325000 Toman is computed in memory only; Private Quote detail GET 200, draft amount is not shown and 0 payment/ledger records remain.
 - [ ] Product owner decides whether order #1 actual 200-minute slicer estimate describes each piece or the entire job before any price/discount change.
+
+## 2026-11-10 — Service Order sales, receipts and dispatch
+- [x] Audit current production service Order/Quote and finance vs Store: separate delivery models and missing POS/cash methods; 112 active priced, stocked Offers, 5 active shipping methods.
+- [x] Reuse Catalog-managed Offer per gram, time, supervision, preheat and assembly with frozen Quote snapshot. Preserve old quote prices and offered material stock gates.
+- [x] Add staff cash/POS methods, unique cash submission idempotency, mixed partial receipts, customer partial bank-transfer receipts with row-locked accounting.
+- [x] Add audited shipping/delivery on service Orders from same Store ShippingMethods, no handoff before full verified settlement.
+- [x] Add additive website.0027; 22 focused tests pass (initial broad regression 95/95 before fractional rounding tests).
+- [ ] Full 96-case+ regression, Django/schema drift and exact parity tests; commit/push isolated branch.
+- [ ] SHA-pinned Production migration runner with fresh full MySQL/env/source backup + post-restart read-only Order #1/UI/public smoke.
+- [ ] Extend finished-Store-Product Variant price/inventory quotation, refunds/credit notes in separate designed phase.
+
+- [x] Service-order integrated candidate broad regression **97/97 PASS** after Decimal Desktop total-rounding parity and courier address checks; no migration drift, Python compile, Bash and diff checks PASS.
+- [ ] GitHub commit/push + guarded Production approval/rollout of Website 0027 from verified clean host `df1be383`; record exact verified backup and source SHA, then read-only Admin Order #1 and public HTTP acceptance.

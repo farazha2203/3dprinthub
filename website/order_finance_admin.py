@@ -1,4 +1,5 @@
 """Finance controls for the service-order admin; no changes to gateway payments."""
+import uuid
 from django import forms
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
@@ -32,15 +33,32 @@ class ManagedOrderAdminForm(forms.ModelForm):
 
 
 class AdminManualReceiptForm(forms.Form):
+    # An operator may use cash without a bank code, but a repeated POST must not double-book it.
+    submission_key = forms.UUIDField(required=False, widget=forms.HiddenInput)
     amount = forms.IntegerField(label="مبلغ دریافتی (تومان)", min_value=1)
     payment_kind = forms.ChoiceField(label="نوع دریافت", choices=Payment.PAYMENT_KIND_CHOICES)
-    ref_id = forms.CharField(label="شماره پیگیری / شناسه واریز", max_length=255)
+    method = forms.ChoiceField(
+        label="روش واقعی دریافت",
+        choices=[item for item in Payment.METHOD_CHOICES if item[0] != "gateway"],
+    )
+    ref_id = forms.CharField(
+        label="شماره پیگیری کارت / تراکنش پوز", max_length=255, required=False,
+        help_text="برای نقدی اختیاری است؛ برای کارت به کارت و پوز اجباری است.",
+    )
     note = forms.CharField(label="توضیحات", required=False, widget=forms.Textarea(attrs={"rows": 3}))
     confirmed = forms.BooleanField(
-        label="واریز توسط مسئول مالی بررسی و تأیید شده است",
+        label="دریافت توسط مسئول مالی بررسی و تأیید شده است",
         required=False,
         help_text="در صورت عدم تأیید، دریافت در وضعیت «در انتظار بررسی» ثبت می‌شود و از مانده کسر نخواهد شد.",
     )
+
+    def clean(self):
+        data = super().clean()
+        if data.get("method") in {"bank_transfer", "pos"} and not (data.get("ref_id") or "").strip():
+            self.add_error("ref_id", "برای دریافت بانکی و پوز، شماره پیگیری الزامی است.")
+        if data.get("method") == "cash" and not (data.get("ref_id") or "").strip() and not data.get("submission_key"):
+            self.add_error("submission_key", "شناسه یکتای ثبت نقدی نامعتبر است؛ فرم را دوباره باز کنید.")
+        return data
 
 
 def order_finance_summary(obj):
@@ -110,15 +128,18 @@ def record_manual_receipt_view(model_admin, request, order_id):
                         raise PaymentFlowError("ابتدا قیمت نهایی پیش‌فاکتور را تثبیت کنید.")
                     if quote.status != "accepted":
                         raise PaymentFlowError("پیش‌فاکتور باید توسط مشتری تأیید شده باشد.")
-                    reference = form.cleaned_data["ref_id"].strip()
-                    if Payment.objects.filter(method="bank_transfer", ref_id=reference).exclude(
+                    reference = (form.cleaned_data["ref_id"] or "").strip()
+                    method = form.cleaned_data["method"]
+                    if method == "cash" and not reference:
+                        reference = f"cash:{form.cleaned_data['submission_key']}"
+                    if reference and Payment.objects.filter(method=method, ref_id=reference).exclude(
                         status__in=["failed", "cancelled"]
                     ).exists():
-                        raise PaymentFlowError("این شناسه واریز قبلاً برای یک سفارش ثبت شده است.")
+                        raise PaymentFlowError("شناسه این تراکنش قبلاً ثبت شده است.")
                     payment = Payment.objects.create(
                         quote=quote, amount=amount,
                         payment_kind=form.cleaned_data["payment_kind"],
-                        method="bank_transfer", status="awaiting_review",
+                        method=method, status="awaiting_review",
                         ref_id=reference, note=form.cleaned_data["note"],
                     )
                     if form.cleaned_data["confirmed"]:
@@ -136,6 +157,8 @@ def record_manual_receipt_view(model_admin, request, order_id):
         form = AdminManualReceiptForm(initial={
             "amount": quote.available_payment_amount,
             "payment_kind": "balance" if quote.paid_amount else "deposit",
+            "method": "bank_transfer",
+            "submission_key": uuid.uuid4(),
         })
     context = {
         **model_admin.admin_site.each_context(request),

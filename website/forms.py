@@ -424,6 +424,11 @@ class QuotePaymentForm(forms.Form):
         choices=(),
         widget=forms.RadioSelect,
     )
+    partial_amount = forms.IntegerField(
+        label="مبلغ دلخواه کارت به کارت (تومان)", min_value=1, required=False,
+        help_text="فقط هنگام انتخاب «پرداخت بخشی از مبلغ» وارد کنید؛ از مانده آزاد بیشتر نباشد.",
+        widget=forms.NumberInput(attrs={"class": "form-input", "min": 1}),
+    )
     receipt_image = forms.ImageField(
         label="تصویر رسید واریز",
         widget=forms.ClearableFileInput(attrs={"class": "form-input", "accept": "image/*"}),
@@ -444,6 +449,8 @@ class QuotePaymentForm(forms.Form):
         for kind, amount in self.payment_amounts.items():
             label = {"deposit": "پرداخت بیعانه", "full": "پرداخت کامل", "balance": "تسویه مانده"}.get(kind, "پرداخت")
             choices.append((kind, f"{label} ({amount:,} تومان)"))
+        if quote and quote.available_payment_amount > 0:
+            choices.append(("partial", f"پرداخت بخشی از مبلغ (حداکثر {quote.available_payment_amount:,} تومان)"))
         self.fields["payment_kind"].choices = choices
         if not choices:
             self.fields["payment_kind"].required = False
@@ -454,8 +461,16 @@ class QuotePaymentForm(forms.Form):
         if not self.quote or not self.quote.total_price:
             raise forms.ValidationError("مبلغ پیش‌فاکتور هنوز نهایی نشده است.")
         kind = cleaned.get("payment_kind")
+        if kind == "partial":
+            amount = cleaned.get("partial_amount")
+            if not amount or amount > self.quote.available_payment_amount:
+                raise forms.ValidationError("مبلغ پرداخت بخشی باید مثبت و حداکثر برابر مانده آزاد سفارش باشد.")
+            cleaned["payment_amount"] = amount
+            return cleaned
         if not kind or kind not in self.payment_amounts:
             raise forms.ValidationError("مبلغ قابل پرداختی برای این گزینه وجود ندارد یا رسید قبلی در انتظار بررسی است.")
+        if cleaned.get("partial_amount"):
+            raise forms.ValidationError("برای بیعانه یا تسویه کامل، مبلغ دلخواه را خالی بگذارید.")
         cleaned["payment_amount"] = self.payment_amounts[kind]
         return cleaned
 # END PHASE 28 QUOTE DEPOSIT PAYMENT

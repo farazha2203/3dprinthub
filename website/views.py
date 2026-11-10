@@ -147,38 +147,39 @@ def quote_payment_view(request, token):
     if not _quote_owned_by(order, request.user):
         from django.http import Http404
         raise Http404("پیش‌فاکتور پیدا نشد.")
-    quote = get_object_or_404(Quote, order=order, status="accepted")
-    form = QuotePaymentForm(request.POST, request.FILES, quote=quote)
-    if not form.is_valid():
-        for error_list in form.errors.values():
-            for error in error_list:
-                messages.error(request, error)
-        return redirect("website:quote_detail", token=token)
+    from django.db import transaction
+    with transaction.atomic():
+        quote = get_object_or_404(Quote.objects.select_for_update(), order=order, status="accepted")
+        form = QuotePaymentForm(request.POST, request.FILES, quote=quote)
+        if not quote.pricing_snapshot_at or not form.is_valid():
+            if not quote.pricing_snapshot_at:
+                messages.error(request, "پیش فاکتور هنوز دارای قیمت نهایی ثابت نیست.")
+            else:
+                for error_list in form.errors.values():
+                    for error in error_list:
+                        messages.error(request, error)
+            return redirect("website:quote_detail", token=token)
 
-    kind = form.cleaned_data["payment_kind"]
-    amount = int(form.cleaned_data["payment_amount"])
-    if amount <= 0:
-        messages.info(request, "این پیش‌فاکتور مانده قابل پرداخت ندارد.")
-        return redirect("website:quote_detail", token=token)
+        kind = form.cleaned_data["payment_kind"]
+        amount = int(form.cleaned_data["payment_amount"])
+        if amount <= 0 or amount > quote.available_payment_amount:
+            messages.error(request, "مبلغ با مانده قابل پرداخت سفارش مطابقت ندارد.")
+            return redirect("website:quote_detail", token=token)
 
-    duplicate = quote.payments.filter(
-        payment_kind=kind,
-        amount=amount,
-        status__in=["pending", "awaiting_review"],
-    ).first()
-    if duplicate:
-        messages.info(request, "یک پرداخت مشابه در انتظار بررسی است.")
-        return redirect("website:quote_detail", token=token)
+        duplicate = quote.payments.filter(
+            payment_kind=kind, amount=amount,
+            status__in=["pending", "verifying", "awaiting_review"],
+        ).exists()
+        if duplicate:
+            messages.info(request, "یک پرداخت مشابه در انتظار بررسی است.")
+            return redirect("website:quote_detail", token=token)
 
-    Payment.objects.create(
-        quote=quote,
-        amount=amount,
-        payment_kind=kind,
-        method="bank_transfer",
-        status="awaiting_review",
-        receipt_image=form.cleaned_data["receipt_image"],
-        note=form.cleaned_data.get("note", ""),
-    )
+        Payment.objects.create(
+            quote=quote, amount=amount, payment_kind=kind,
+            method="bank_transfer", status="awaiting_review",
+            receipt_image=form.cleaned_data["receipt_image"],
+            note=form.cleaned_data.get("note", ""),
+        )
     messages.success(request, "رسید پرداخت ثبت شد و در انتظار تأیید واحد مالی است.")
     return redirect("website:quote_detail", token=token)
 

@@ -588,6 +588,26 @@ class Quote(models.Model):
         blank=True,
         verbose_name="متریال نهایی"
     )
+    filament_offer = models.ForeignKey(
+        "store.MaterialColorOption", on_delete=models.PROTECT,
+        null=True, blank=True, related_name="service_quotes",
+        verbose_name="فیلامنت قابل فروش (متریال / برند / رنگ)",
+        help_text="قیمت هر گرم، چاپ، نظارت و پیش‌گرم مستقیم از Offer فروشگاه و دسکتاپ خوانده می‌شود.",
+    )
+    print_quality = models.ForeignKey(
+        "store.PrintQuality", on_delete=models.PROTECT,
+        null=True, blank=True, verbose_name="کیفیت چاپ قابل ارائه",
+    )
+    support_weight_grams = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0, verbose_name="وزن ساپورت هر قطعه (گرم)",
+    )
+    support_cost_multiplier = models.DecimalField(
+        max_digits=7, decimal_places=3, default=1,
+        verbose_name="ضریب محاسبه وزن ساپورت",
+    )
+    assembly_fee_per_unit = models.PositiveBigIntegerField(
+        default=0, verbose_name="مونتاژ برای هر قطعه (تومان)",
+    )
 
     weight_grams = models.DecimalField(
         max_digits=10,
@@ -690,6 +710,10 @@ class Quote(models.Model):
     pricing_snapshot_quantity = models.PositiveIntegerField(null=True, blank=True, editable=False, verbose_name="تعداد قطعات در زمان قیمت گذاری")
     pricing_snapshot_material_cost = models.PositiveBigIntegerField(null=True, blank=True, editable=False, verbose_name="هزینه ثابت متریال")
     pricing_snapshot_machine_cost = models.PositiveBigIntegerField(null=True, blank=True, editable=False, verbose_name="هزینه ثابت دستگاه")
+    pricing_snapshot_supervision_cost = models.PositiveBigIntegerField(null=True, blank=True, editable=False, verbose_name="هزینه قطعی نظارت")
+    pricing_snapshot_preheat_cost = models.PositiveBigIntegerField(null=True, blank=True, editable=False, verbose_name="هزینه قطعی پیش گرم")
+    pricing_snapshot_assembly_cost = models.PositiveBigIntegerField(null=True, blank=True, editable=False, verbose_name="هزینه قطعی مونتاژ")
+    pricing_snapshot_offer_rounding_adjustment = models.BigIntegerField(null=True, blank=True, editable=False, verbose_name="تعدیل گردکردن قیمت دسکتاپ")
     pricing_snapshot_subtotal = models.PositiveBigIntegerField(null=True, blank=True, editable=False, verbose_name="جمع ثابت قبل از تخفیف")
     pricing_snapshot_discount = models.PositiveBigIntegerField(null=True, blank=True, editable=False, verbose_name="تخفیف ثابت")
     pricing_snapshot_total = models.PositiveBigIntegerField(null=True, blank=True, editable=False, verbose_name="مبلغ نهایی توافق شده")
@@ -744,10 +768,14 @@ class Quote(models.Model):
 
     @property
     def selected_material(self):
+        if self.filament_offer_id:
+            return self.filament_offer.material
         return self.material or self.order.material
 
     @property
     def material_price_per_kg(self):
+        if self.filament_offer_id and self.pricing_snapshot_material_rate is None:
+            return int(Decimal(self.filament_offer.effective_sale_price_per_gram) * Decimal("1000"))
         if self.pricing_snapshot_material_rate is not None:
             return int(Decimal(self.pricing_snapshot_material_rate) * Decimal("1000"))
         material = self.selected_material
@@ -762,6 +790,8 @@ class Quote(models.Model):
     def material_price_per_gram(self):
         if self.pricing_snapshot_material_rate is not None:
             return Decimal(self.pricing_snapshot_material_rate)
+        if self.filament_offer_id:
+            return Decimal(self.filament_offer.effective_sale_price_per_gram)
         material = self.selected_material
         if not material:
             return 0
@@ -781,6 +811,12 @@ class Quote(models.Model):
     def material_cost(self):
         if self.pricing_snapshot_material_cost is not None:
             return int(self.pricing_snapshot_material_cost)
+        if self.filament_offer_id:
+            chargeable = self.weight_grams + self.support_weight_grams * self.support_cost_multiplier
+            per_unit = (Decimal(self.material_price_per_gram) * chargeable).quantize(
+                Decimal("1"), rounding=ROUND_HALF_UP
+            )
+            return int(per_unit) * self.order.quantity
         value = self.material_price_per_gram * self.weight_grams * Decimal(self.order.quantity)
         return int(value.quantize(Decimal("1"), rounding=ROUND_HALF_UP))
 
@@ -788,6 +824,9 @@ class Quote(models.Model):
     def billable_print_minutes(self):
         if not self.print_time_minutes:
             return 0
+        if self.filament_offer_id:
+            # Desktop professional Offer pricing uses the actual slicer minutes.
+            return int(self.print_time_minutes)
         import math
         minimum = max(int(self.minimum_billable_minutes or 1), 1)
         increment = max(int(self.billing_increment_minutes or 1), 1)
@@ -813,9 +852,72 @@ class Quote(models.Model):
     def machine_cost(self):
         if self.pricing_snapshot_machine_cost is not None:
             return int(self.pricing_snapshot_machine_cost)
+        if self.filament_offer_id:
+            rate = Decimal(self.filament_offer.print_hourly_rate)
+            unit = (rate * Decimal(self.billable_print_minutes) / Decimal(60)).quantize(
+                Decimal("1"), rounding=ROUND_HALF_UP
+            )
+            return int(unit) * (self.order.quantity if self.print_time_scope == "per_piece" else 1)
         value = (Decimal(self.machine_hourly_rate)
                  * Decimal(self.total_billable_machine_minutes) / Decimal(60))
         return int(value.quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+
+    @property
+    def supervision_cost(self):
+        if self.pricing_snapshot_supervision_cost is not None:
+            return int(self.pricing_snapshot_supervision_cost)
+        if not self.filament_offer_id or not self.billable_print_minutes:
+            return 0
+        unit = (Decimal(self.filament_offer.supervision_hourly_rate)
+                * Decimal(self.billable_print_minutes) / Decimal(60)).quantize(
+                    Decimal("1"), rounding=ROUND_HALF_UP
+                )
+        return int(unit) * (self.order.quantity if self.print_time_scope == "per_piece" else 1)
+
+    @property
+    def preheat_cost(self):
+        if self.pricing_snapshot_preheat_cost is not None:
+            return int(self.pricing_snapshot_preheat_cost)
+        if not self.filament_offer_id:
+            return 0
+        offer = self.filament_offer
+        unit = (Decimal(offer.preheat_hours) * Decimal(offer.preheat_hourly_rate)).quantize(
+            Decimal("1"), rounding=ROUND_HALF_UP
+        )
+        return int(unit) * (self.order.quantity if self.print_time_scope == "per_piece" else 1)
+
+    @property
+    def assembly_cost(self):
+        if self.pricing_snapshot_assembly_cost is not None:
+            return int(self.pricing_snapshot_assembly_cost)
+        return int(self.assembly_fee_per_unit) * self.order.quantity
+
+    @property
+    def offer_rounding_adjustment(self):
+        """Keep each Offer quote on the exact Desktop rounded-total contract."""
+        if self.pricing_snapshot_offer_rounding_adjustment is not None:
+            return int(self.pricing_snapshot_offer_rounding_adjustment)
+        if not self.filament_offer_id:
+            return 0
+        offer = self.filament_offer
+        pieces = self.order.quantity
+        multiplier = pieces if self.print_time_scope == "per_piece" else 1
+        per_unit_material = (self.weight_grams + self.support_weight_grams * self.support_cost_multiplier) * Decimal(offer.effective_sale_price_per_gram)
+        per_unit_machine = Decimal(offer.print_hourly_rate) * Decimal(self.billable_print_minutes) / Decimal(60)
+        per_unit_supervision = Decimal(offer.supervision_hourly_rate) * Decimal(self.billable_print_minutes) / Decimal(60)
+        per_unit_preheat = Decimal(offer.preheat_hours) * Decimal(offer.preheat_hourly_rate)
+        if self.print_time_scope == "per_piece":
+            raw_unit = (per_unit_material + per_unit_machine + per_unit_supervision +
+                        per_unit_preheat + Decimal(self.assembly_fee_per_unit))
+            exact_offer_total = int(raw_unit.quantize(Decimal("1"), rounding=ROUND_HALF_UP)) * pieces
+        else:
+            raw_total = (per_unit_material * pieces +
+                         (per_unit_machine + per_unit_supervision + per_unit_preheat) * multiplier +
+                         Decimal(self.assembly_fee_per_unit) * pieces)
+            exact_offer_total = int(raw_total.quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+        rounded_components = (self.material_cost + self.machine_cost + self.supervision_cost +
+                              self.preheat_cost + self.assembly_cost)
+        return exact_offer_total - rounded_components
 
     @property
     def subtotal(self):
@@ -824,6 +926,10 @@ class Quote(models.Model):
         return (
             self.material_cost
             + self.machine_cost
+            + self.supervision_cost
+            + self.preheat_cost
+            + self.assembly_cost
+            + self.offer_rounding_adjustment
             + self.labor_fee
             + self.design_fee
             + self.post_processing_fee
@@ -875,12 +981,15 @@ class Payment(models.Model):
     ]
 
     METHOD_CHOICES = [
-        ("gateway", "درگاه پرداخت"),
-        ("bank_transfer", "کارت به کارت / واریز دستی"),
+        ("gateway", "درگاه پرداخت آنلاین"),
+        ("bank_transfer", "کارت به کارت / واریز بانکی"),
+        ("pos", "کارتخوان / پوز دفتر"),
+        ("cash", "دریافت نقدی"),
     ]
 
     PAYMENT_KIND_CHOICES = [
         ("deposit", "بیعانه"),
+        ("partial", "پرداخت بخشی از مبلغ"),
         ("full", "پرداخت کامل"),
         ("balance", "تسویه مانده"),
     ]
@@ -998,6 +1107,82 @@ class PaymentLedgerEntry(models.Model):
 
     def __str__(self):
         return f"{self.get_entry_type_display()} - {self.amount} تومان"
+
+
+class ServiceOrderDelivery(models.Model):
+    """Auditable service-order handoff, separate from financial settlement."""
+    STATUS_CHOICES = [
+        ("dispatched", "تحویل شرکت حمل / پیک"),
+        ("delivered", "تحویل قطعی مشتری"),
+    ]
+    order = models.OneToOneField(
+        Order, on_delete=models.PROTECT, related_name="service_delivery",
+        verbose_name="سفارش خدمات",
+    )
+    shipping_method = models.ForeignKey(
+        "store.ShippingMethod", on_delete=models.PROTECT,
+        verbose_name="روش ارسال / تحویل از فروشگاه",
+    )
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default="dispatched")
+    tracking_code = models.CharField(max_length=120, blank=True, verbose_name="کد رهگیری مرسوله")
+    recipient_name = models.CharField(max_length=150, blank=True, verbose_name="نام تحویل گیرنده")
+    recipient_address = models.TextField(blank=True, verbose_name="نشانی تحویل")
+    note = models.TextField(blank=True, verbose_name="توضیحات تحویل")
+    shipped_at = models.DateTimeField(null=True, blank=True, verbose_name="تاریخ ارسال")
+    delivered_at = models.DateTimeField(null=True, blank=True, verbose_name="تاریخ تحویل")
+    recorded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+        related_name="recorded_service_deliveries", verbose_name="تأیید کننده تحویل",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "تحویل سفارش خدمات"
+        verbose_name_plural = "تحویل سفارش‌های خدمات"
+
+    def clean(self):
+        super().clean()
+        from django.core.exceptions import ValidationError
+        if self.pk:
+            prior = type(self).objects.filter(pk=self.pk).first()
+            if prior and prior.status == "delivered":
+                locked = ("status", "shipping_method_id", "tracking_code",
+                          "recipient_name", "recipient_address", "note",
+                          "delivered_at", "recorded_by_id")
+                if any(getattr(self, key) != getattr(prior, key) for key in locked):
+                    raise ValidationError("تحویل قطعی قبلی قابل بازنویسی نیست؛ اصلاحیه مستقل لازم است.")
+        if not self.shipping_method_id:
+            raise ValidationError("روش ارسال یا تحویل مشخص نیست.")
+        if not self.shipping_method.is_active:
+            raise ValidationError("روش انتخابی در فروشگاه غیرفعال شده است.")
+        try:
+            quote = self.order.quote
+        except Quote.DoesNotExist:
+            raise ValidationError("سفارش بدون پیش فاکتور تأییدشده قابل تحویل نیست.")
+        if (quote.status != "accepted" or not quote.pricing_snapshot_at or
+                quote.total_price <= 0 or quote.paid_amount < quote.total_price):
+            raise ValidationError("ثبت تحویل فقط پس از تأیید پیش فاکتور و تسویه واقعی مجاز است.")
+        if self.status == "dispatched" and self.shipping_method.code.startswith("pickup"):
+            raise ValidationError("تحویل حضوری را مستقیماً در وضعیت تحویل قطعی ثبت کنید.")
+        if not self.shipping_method.code.startswith("pickup") and not self.recipient_address.strip():
+            raise ValidationError("برای ارسال پستی یا پیک باید نشانی تحویل ثبت شود.")
+        if self.shipping_method.code in {"post", "tipax"} and not self.tracking_code.strip():
+            raise ValidationError("کد رهگیری برای ارسال پستی یا تیپاکس الزامی است.")
+        if self.status == "delivered" and not self.recipient_name.strip():
+            raise ValidationError("نام گیرنده برای تأیید تحویل نهایی لازم است.")
+
+    def save(self, *args, **kwargs):
+        from django.utils import timezone
+        self.full_clean()
+        if self.status == "dispatched" and self.shipped_at is None:
+            self.shipped_at = timezone.now()
+        if self.status == "delivered" and self.delivered_at is None:
+            self.delivered_at = timezone.now()
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"تحویل سفارش {self.order_id} ({self.get_status_display()})"
 
 
 class OrderReview(models.Model):

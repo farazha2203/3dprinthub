@@ -22,6 +22,7 @@ from .models import (
     Quote,
     Payment,
     PaymentLedgerEntry,
+    ServiceOrderDelivery,
     OrderReview,
 )
 
@@ -324,15 +325,15 @@ class OrderImageInline(admin.TabularInline):
 
 class QuoteInline(admin.StackedInline):
     model = Quote
-    extra = 0
+    extra = 1
     max_num = 1
     fields = [
-        "material",
-        "weight_grams",
+        "filament_offer", "material", "print_quality",
+        "weight_grams", "support_weight_grams", "support_cost_multiplier",
         "print_time_minutes",
         "print_time_scope",
         "machine_hourly_rate",
-        "labor_fee",
+        "assembly_fee_per_unit", "labor_fee",
         "design_fee",
         "post_processing_fee",
         "shipping_fee",
@@ -344,13 +345,25 @@ class QuoteInline(admin.StackedInline):
         "deposit_percent",
         "price_preview", "pricing_snapshot_at", "pricing_snapshot_total",
     ]
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "filament_offer":
+            from .quote_catalog_offer import available_filament_offers, format_filament_offer
+            kwargs["queryset"] = available_filament_offers()
+            formfield = super().formfield_for_foreignkey(db_field, request, **kwargs)
+            formfield.label_from_instance = format_filament_offer
+            return formfield
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
     readonly_fields = ["price_preview", "pricing_snapshot_at", "pricing_snapshot_total"]
 
     def get_readonly_fields(self, request, obj=None):
         fields = list(super().get_readonly_fields(request, obj))
         if obj and obj.pk and Quote.objects.filter(order=obj, pricing_snapshot_at__isnull=False).exists():
-            fields += ["material", "weight_grams", "print_time_minutes", "print_time_scope", "machine_hourly_rate",
-                       "labor_fee", "design_fee", "post_processing_fee", "shipping_fee", "discount"]
+            fields += ["filament_offer", "material", "print_quality", "weight_grams", "support_weight_grams",
+                       "support_cost_multiplier", "assembly_fee_per_unit", "print_time_minutes",
+                       "print_time_scope", "machine_hourly_rate", "labor_fee", "design_fee",
+                       "post_processing_fee", "shipping_fee", "discount"]
         return fields
 
     def price_preview(self, obj):
@@ -363,6 +376,10 @@ class QuoteInline(admin.StackedInline):
             <strong>مبنای محاسبه زمان:</strong> {obj.get_print_time_scope_display()}<br>
             <strong>زمان قابل محاسبه دستگاه:</strong> {obj.total_billable_machine_minutes:,} دقیقه<br>
             <strong>هزینه دستگاه:</strong> {obj.machine_cost:,} تومان<br>
+            <strong>نظارت بر چاپ:</strong> {obj.supervision_cost:,} تومان<br>
+            <strong>پیش‌گرم فیلامنت:</strong> {obj.preheat_cost:,} تومان<br>
+            <strong>مونتاژ:</strong> {obj.assembly_cost:,} تومان<br>
+            <strong>تعدیل گردکردن دسکتاپ:</strong> {obj.offer_rounding_adjustment:,} تومان<br>
             <strong>جمع قبل از تخفیف:</strong> {obj.subtotal:,} تومان<br>
             <strong>مبلغ نهایی:</strong> <span style="color:#0a7;font-weight:bold">{obj.total_price:,} تومان</span>
         </div>
@@ -380,14 +397,20 @@ class OrderAdmin(admin.ModelAdmin):
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
         from .order_finance_admin import order_finance_summary
+        from .service_delivery_admin import order_delivery_summary
         obj = self.get_object(request, object_id)
         context = dict(extra_context or {})
         context["order_finance_panel"] = order_finance_summary(obj) if obj else ""
+        context["order_delivery_panel"] = order_delivery_summary(obj) if obj else ""
         return super().change_view(request, object_id, form_url, extra_context=context)
 
     def get_urls(self):
         from .order_finance_admin import record_manual_receipt_view
+        from .service_delivery_admin import record_service_delivery_view
         return [
+            path("<int:order_id>/record-delivery/", self.admin_site.admin_view(
+                lambda request, order_id: record_service_delivery_view(self, request, order_id)
+            ), name="website_order_record_delivery"),
             path("<int:order_id>/record-receipt/", self.admin_site.admin_view(
                 lambda request, order_id: record_manual_receipt_view(self, request, order_id)
             ), name="website_order_record_receipt"),
@@ -397,6 +420,11 @@ class OrderAdmin(admin.ModelAdmin):
     def finance_summary(self, obj):
         from .order_finance_admin import order_finance_summary
         return order_finance_summary(obj)
+
+    @admin.display(description="ارسال / تحویل مشتری")
+    def delivery_summary(self, obj):
+        from .service_delivery_admin import order_delivery_summary
+        return order_delivery_summary(obj)
 
     list_display = [
         "first_name",
@@ -535,21 +563,30 @@ class QuoteAdmin(admin.ModelAdmin):
     list_filter = ["status", "material", "created_at"]
     search_fields = ["order__first_name", "order__last_name", "order__phone"]
     readonly_fields = [
-        "material_cost_display", "machine_cost_display", "subtotal_display",
-        "total_price_display", "pricing_snapshot_at", "pricing_snapshot_total",
+        "material_cost_display", "machine_cost_display",
+        "supervision_cost_display", "preheat_cost_display", "assembly_cost_display",
+        "rounding_adjustment_display", "subtotal_display", "total_price_display", "pricing_snapshot_at", "pricing_snapshot_total",
     ]
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "filament_offer":
+            from .quote_catalog_offer import available_filament_offers, format_filament_offer
+            kwargs["queryset"] = available_filament_offers()
+            formfield = super().formfield_for_foreignkey(db_field, request, **kwargs)
+            formfield.label_from_instance = format_filament_offer
+            return formfield
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
     fieldsets = (
-        ("اطلاعات سفارش", {
-            "fields": ("order", "material", "status", "valid_until", "deposit_percent")
+        ("اطلاعات سفارش و فیلامنت قابل ارائه", {
+            "fields": ("order", "filament_offer", "material", "print_quality",
+                       "status", "valid_until", "deposit_percent")
         }),
         ("محاسبات قیمت", {
             "fields": (
-                "weight_grams",
-                "print_time_minutes",
-                "print_time_scope",
-                "machine_hourly_rate",
-                "labor_fee",
+                "weight_grams", "support_weight_grams", "support_cost_multiplier",
+                "print_time_minutes", "print_time_scope",
+                "machine_hourly_rate", "assembly_fee_per_unit", "labor_fee",
                 "design_fee",
                 "post_processing_fee",
                 "shipping_fee",
@@ -558,7 +595,9 @@ class QuoteAdmin(admin.ModelAdmin):
         }),
         ("نتیجه محاسبه", {
             "fields": (
-                "material_cost_display", "machine_cost_display", "subtotal_display", "total_price_display",
+                "material_cost_display", "machine_cost_display",
+                "supervision_cost_display", "preheat_cost_display", "assembly_cost_display",
+                "rounding_adjustment_display", "subtotal_display", "total_price_display",
                 "pricing_snapshot_at", "pricing_snapshot_total",
             )
         }),
@@ -570,8 +609,11 @@ class QuoteAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         fields = list(super().get_readonly_fields(request, obj))
         if obj and obj.pk and obj.pricing_snapshot_at is not None:
-            fields += ["order", "material", "weight_grams", "print_time_minutes", "print_time_scope", "machine_hourly_rate",
-                       "labor_fee", "design_fee", "post_processing_fee", "shipping_fee", "discount"]
+            fields += ["order", "filament_offer", "material", "print_quality",
+                       "weight_grams", "support_weight_grams", "support_cost_multiplier",
+                       "print_time_minutes", "print_time_scope", "machine_hourly_rate",
+                       "assembly_fee_per_unit", "labor_fee", "design_fee",
+                       "post_processing_fee", "shipping_fee", "discount"]
         return fields
 
     def has_delete_permission(self, request, obj=None):
@@ -589,6 +631,18 @@ class QuoteAdmin(admin.ModelAdmin):
     def machine_cost_display(self, obj):
         return f"{obj.machine_cost:,} تومان"
 
+    def supervision_cost_display(self, obj):
+        return f"{obj.supervision_cost:,} تومان"
+
+    def preheat_cost_display(self, obj):
+        return f"{obj.preheat_cost:,} تومان"
+
+    def assembly_cost_display(self, obj):
+        return f"{obj.assembly_cost:,} تومان"
+
+    def rounding_adjustment_display(self, obj):
+        return f"{obj.offer_rounding_adjustment:,} تومان"
+
     def subtotal_display(self, obj):
         return f"{obj.subtotal:,} تومان"
 
@@ -597,6 +651,10 @@ class QuoteAdmin(admin.ModelAdmin):
 
     material_cost_display.short_description = "هزینه متریال"
     machine_cost_display.short_description = "هزینه دستگاه"
+    supervision_cost_display.short_description = "هزینه نظارت"
+    preheat_cost_display.short_description = "هزینه پیش‌گرم"
+    assembly_cost_display.short_description = "مونتاژ"
+    rounding_adjustment_display.short_description = "تعدیل گردکردن دسکتاپ"
     subtotal_display.short_description = "جمع قبل از تخفیف"
     total_price_display.short_description = "مبلغ نهایی"
 
@@ -637,7 +695,7 @@ class PaymentAdmin(admin.ModelAdmin):
 
     @admin.action(description="تأیید پرداخت‌های انتخاب‌شده")
     def mark_selected_paid(self, request, queryset):
-        eligible = queryset.filter(method="bank_transfer", status__in=["pending", "awaiting_review"])
+        eligible = queryset.filter(method__in=["bank_transfer", "pos", "cash"], status__in=["pending", "awaiting_review"])
         for payment in eligible:
             payment.mark_paid(
                 ref_id=payment.ref_id,
@@ -647,9 +705,9 @@ class PaymentAdmin(admin.ModelAdmin):
                     "reviewed_by_user_id": request.user.pk,
                 },
             )
-        skipped = queryset.exclude(method="bank_transfer", status__in=["pending", "awaiting_review"]).count()
+        skipped = queryset.exclude(method__in=["bank_transfer", "pos", "cash"], status__in=["pending", "awaiting_review"]).count()
         if skipped:
-            self.message_user(request, "پرداخت آنلاین فقط از طریق Verify درگاه تأیید می‌شود و دستی تأیید نشد.", level=messages.WARNING)
+            self.message_user(request, "تراکنش‌های درگاه فقط با Verify بانکی تأیید می‌شوند و وضعیت‌های غیرمجاز تغییر نکردند.", level=messages.WARNING)
 
     @admin.action(description="رد پرداخت‌های انتخاب‌شده")
     def mark_selected_failed(self, request, queryset):
@@ -665,6 +723,26 @@ class PaymentLedgerEntryAdmin(admin.ModelAdmin):
         "quote", "payment", "entry_type", "direction", "amount", "currency", "event_key",
         "provider_ref", "description", "metadata", "created_at",
     ]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(ServiceOrderDelivery)
+class ServiceOrderDeliveryAdmin(admin.ModelAdmin):
+    list_display = ("order", "shipping_method", "status", "tracking_code", "recipient_name",
+                    "recorded_by", "shipped_at", "delivered_at")
+    list_filter = ("status", "shipping_method")
+    search_fields = ("order__phone", "order__first_name", "tracking_code", "recipient_name")
+    readonly_fields = ("order", "shipping_method", "status", "tracking_code", "recipient_name",
+                       "recipient_address", "note", "recorded_by", "shipped_at", "delivered_at",
+                       "created_at", "updated_at")
 
     def has_add_permission(self, request):
         return False

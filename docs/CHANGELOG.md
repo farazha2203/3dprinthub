@@ -1356,3 +1356,11 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - Source/env/full MySQL backup checksums/gzip verified at `/home/sfkilvrs/3dprinthub-deploy-backups/20261109-184700-quote-time-basis`.
 - Order #1 Admin GET 200 and private Quote GET 200 via read-only Host Django execution; customer draft does not expose unconfirmed price, no new payments or ledger entries.
 - Order #1 remains `per_piece` / 805000 Toman. Batch what-if=325000 Toman without save. Home/Store HTTP 200; 80/80 local regression tests PASS.
+
+## 2026-11-10 — Service Order unified pricing, collections and delivery (LOCAL_TESTED)
+- Added Quote link to active Store filament Offer/material/brand/color with optional PrintQuality, support grams/multiplier, per-piece assembly, exact Desktop rounded total and immutable component snapshots. Legacy quotes untouched.
+- Added staff manual cash and office POS receipts, idempotent cash submissions, card-transfer partial customer receipts with finance confirmation and row locks; online gateway still independently server Verified.
+- Added service delivery event based on existing Store ShippingMethod (post/courier/pickup) with delivery guard requiring full settled accepted Quote, tracking code/recipient and operator audit.
+- Added Website 0027 additive migration; 22/22 latest focused tests PASS, broad suite pending final rounding patch. Production source and financial data unchanged pending guarded publish.
+
+2026-11-10 LOCAL_TESTED addendum: Final 97/97 broad regression PASS, including fractional Desktop HALF_UP total parity and durable signed rounding adjustment snapshot, 112 active/stocked live Offers, and post/courier/pickup delivery restrictions. One additive Website 0027 only; no production financial data changed. SHA-pinned backup-aware Host deployment runner authored and syntax-checked; rollout pending.

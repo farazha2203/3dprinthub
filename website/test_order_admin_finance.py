@@ -1,3 +1,4 @@
+import uuid
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
@@ -29,7 +30,8 @@ class ServiceOrderAdminFinanceTests(TestCase):
     def post(self, amount, ref, confirmed=True):
         return self.client.post(self.url, {
             "amount": amount, "ref_id": ref,
-            "payment_kind": "deposit",
+            "payment_kind": "deposit", "method": "bank_transfer",
+            "submission_key": str(uuid.uuid4()),
             "note": "Finance unit QA",
             **({"confirmed": "on"} if confirmed else {}),
         })

@@ -306,3 +306,9 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - Production Git HEAD: `df1be38355da6f3fa16ce5f480e5da81b5ae239a`, clean on `release/phase50-a2j-hero-20260915` at `/home/sfkilvrs/3dprinthub`.
 - Website migrations `0025_quote_pricing_snapshot` and `0026_quote_print_time_scope` applied; no pending migrations. Valid full rollback: `/home/sfkilvrs/3dprinthub-deploy-backups/20261109-184700-quote-time-basis`.
 - Local release worktree and GitHub branch remain `D:\projects\3DPrintHub-quote-time-basis-20261109` / `fix/website-quote-time-basis-20261109`. Runtime Host and local SHA agree at the verified release; any later documentation-only SHA must be labeled separately.
+
+## 2026-11-10 — Service order finance / delivery local candidate
+- Local isolated clean worktree: `D:\projects\3DPrintHub-order-cycle-20261110`; GitHub branch `fix/website-service-order-cycle-20261110`.
+- Based on `f4cceba2`, a docs-only descendant of Production `df1be38355da6f3fa16ce5f480e5da81b5ae239a`; Host remains on this runtime until guarded deploy.
+- Host dedicated router is `D:\projects\.chatgpt-gateway\project-host.ps1 -Project 3dprinthub`, reverse loopback 22024 -> 22224. Host /home/sfkilvrs/3dprinthub, MySQL sfkilvrs_EmiAdmin_3dprinthub; new additive migration Website 0027 only.
+- Canonical D:\projects\3DPrintHub has large unrelated dirty WIP, do not mutate/reset.

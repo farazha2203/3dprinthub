@@ -1,0 +1,23 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div dir="rtl" style="max-width:840px;margin:20px auto;line-height:2">
+  <p><a href="{{ change_url }}">بازگشت به سفارش</a></p>
+  <h2>ثبت ارسال و تحویل سفارش شماره {{ order.pk }}</h2>
+  <p>روش‌های ارسال از همان فهرست فعال فروشگاه بارگذاری می‌شوند. برای تأیید تحویل حضوری، گزینه «تحویل قطعی مشتری» را انتخاب و نام تحویل‌گیرنده را ثبت کنید.</p>
+  {% if previous_delivery and previous_delivery.status == 'delivered' %}
+    <div style="padding:15px;background:#f5f1eb;border-radius:8px">تحویل نهایی قبلاً ثبت شده است و از این فرم قابل تغییر نیست.</div>
+  {% else %}
+    <p>ثبت این رویداد فقط پس از تسویه تأییدشده سفارش امکان‌پذیر است.</p>
+    <form method="post">{% csrf_token %}
+      {{ form.non_field_errors }}
+      {% for field in form %}
+      <div style="margin:14px 0">
+        <label style="display:block;font-weight:700" for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}{{ field.errors }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+      </div>
+      {% endfor %}
+      <button type="submit" class="default" style="padding:10px 25px">ثبت رویداد ارسال / تحویل</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}
