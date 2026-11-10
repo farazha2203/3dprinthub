@@ -887,14 +887,21 @@ def return_request_view(request, order_number):
         return redirect(order.get_absolute_url())
     form = ReturnRequestForm(request.POST or None, request.FILES or None, order=order)
     if request.method == "POST" and form.is_valid():
-        obj = form.save(commit=False)
-        obj.order = order
-        obj.user = request.user
-        obj.save()
-        record_event(order, "درخواست مرجوعی ثبت شد", "درخواست مشتری برای بررسی به واحد پشتیبانی ارسال شد.")
-        notify(request.user, "درخواست مرجوعی ثبت شد", f"درخواست مرجوعی سفارش {order.order_number} ثبت شد.", notification_type="order", url=order.get_absolute_url())
-        messages.success(request, "درخواست مرجوعی ثبت شد و پس از بررسی نتیجه اعلام می‌شود.")
-        return redirect(order.get_absolute_url())
+        from .rma_services import StoreRMAError, submit_return_request
+        try:
+            submit_return_request(
+                order_id=order.pk, item_id=form.cleaned_data["item"].pk,
+                quantity=form.cleaned_data["quantity"],
+                reason=form.cleaned_data["reason"],
+                description=form.cleaned_data["description"],
+                image=form.cleaned_data.get("image"), user=request.user,
+            )
+        except StoreRMAError as exc:
+            form.add_error(None, str(exc))
+        else:
+            notify(request.user, "درخواست مرجوعی ثبت شد", f"درخواست مرجوعی سفارش {order.order_number} ثبت شد.", notification_type="order", url=order.get_absolute_url())
+            messages.success(request, "درخواست مرجوعی ثبت شد و پس از بررسی نتیجه اعلام می‌شود.")
+            return redirect(order.get_absolute_url())
     return render(request, "store/return_request.html", {"order": order, "form": form})
 
 

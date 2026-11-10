@@ -1370,3 +1370,9 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - Corrected financial approval locking and back-office approval queryset change-during-iteration issue; shipping settles adjusted due, not original when a valid credit note exists.
 - Finance reconciliation checks refund debit/receipt linkage, overcredit and overrefund, operator verified bank evidence. **No automatic external refund is performed.**
 - Final local **129/129 broad regression** PASS (including Store reconciliation), static, schema drift and Bash syntax checks PASS. Production unchanged at `b5687b81` until verified deployment.
+
+## 2026-11-10 — Store Item / ProductVariant returns (LOCAL)
+- New Store.0043 adds ReturnRequest quantity and three RMA models for actual item inspection, verified external Store refund requests and immutable debit ledger. Existing checkout price and sale history remain original source of truth.
+- Return stock only after physical inspection of a real sold original ProductVariant, once per RMA; quality rejects do not increase inventory, and no return can exceed purchased quantity/sale inventory movements.
+- Staff-admin controlled status forms replace direct editable refunded flag; Store payment admin forbids manually confirming gateway attempts, shipping of unpaid orders and rewriting paid receipt state. Partial refund cannot reverse whole affiliate commission.
+- Customer order page shows quantities, inspection, refund state and actual external proof. Finance reconciliation calculates store net paid and detects invalid stock/ledger connections. 42/42 initial targeted tests PASS; baseline 3 unrelated legacy commerce test failures independently reproduced.

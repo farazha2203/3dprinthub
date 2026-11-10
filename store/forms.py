@@ -290,7 +290,7 @@ class CheckoutForm(forms.ModelForm):
 # END CUSTOMER PORTAL PHASE 3 CHECKOUT FORM
 
 # BEGIN STORE OPERATIONS PHASE 6 FORMS
-from .models import ReturnRequest
+from .models import ReturnRequest, StoreOrderItem
 from website.iran_locations import IRAN_LOCATIONS
 from website.models import IranCity, IranCounty, IranProvince
 
@@ -424,9 +424,10 @@ CheckoutForm = CheckoutOperationsForm
 class ReturnRequestForm(forms.ModelForm):
     class Meta:
         model = ReturnRequest
-        fields = ["item", "reason", "description", "image"]
+        fields = ["item", "quantity", "reason", "description", "image"]
         widgets = {
             "item": forms.Select(attrs={"class":"form-input"}),
+            "quantity": forms.NumberInput(attrs={"class":"form-input", "min":"1"}),
             "reason": forms.Select(attrs={"class":"form-input"}),
             "description": forms.Textarea(attrs={"class":"form-input min-h-36","placeholder":"شرح دقیق مشکل و شرایط کالا را بنویسید."}),
             "image": forms.ClearableFileInput(attrs={"class":"form-input","accept":"image/jpeg,image/png,image/webp"}),
@@ -435,8 +436,19 @@ class ReturnRequestForm(forms.ModelForm):
     def __init__(self, *args, order=None, **kwargs):
         self.order = order
         super().__init__(*args, **kwargs)
-        self.fields["item"].queryset = order.items.all() if order else StoreOrder.objects.none()
-        self.fields["item"].required = False
+        self.fields["item"].queryset = order.items.all() if order else StoreOrderItem.objects.none()
+        self.fields["item"].required = True
+        self.fields["quantity"].initial = 1
+
+    def clean(self):
+        cleaned = super().clean()
+        item = cleaned.get("item")
+        qty = int(cleaned.get("quantity") or 0)
+        if item and self.order and qty > 0:
+            from .rma_services import _historical_return_quantity
+            if qty + _historical_return_quantity(item.pk) > item.quantity:
+                raise forms.ValidationError("مجموع کالای مرجوعی این ردیف بیش از تعداد فروخته‌شده است.")
+        return cleaned
 # END STORE OPERATIONS PHASE 6 FORMS
 
 # BEGIN AFFILIATE PARTNER PROGRAM PHASE 7 FORMS

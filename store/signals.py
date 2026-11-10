@@ -39,7 +39,9 @@ def reverse_affiliate_on_refund(sender, instance, **kwargs):
     if kwargs.get("raw"):
         return
     if instance.status == "refunded":
-        reverse_commission(instance.order, reason="استرداد وجه پس از مرجوعی")
+        from .rma_services import full_store_order_refund_proven
+        if full_store_order_refund_proven(instance.order):
+            reverse_commission(instance.order, reason="استرداد کامل مبلغ سفارش پس از مرجوعی")
 # END AFFILIATE PARTNER PROGRAM PHASE 7 SIGNALS
 
 # BEGIN INVENTORY FINANCE CATALOG PHASE 8 SIGNALS

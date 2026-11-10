@@ -317,3 +317,9 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - Isolated worktree `D:\projects\3DPrintHub-refunds-20261110`, Git branch `fix/website-service-credit-refund-20261110`, parent tested released SHA `b5687b8120ee8ec3cfe7ad68aa04a8c531cf1c95`.
 - New guarded runner `scripts/host/phase50_service_credit_refund_deploy.sh`, expected Website `0028_service_credit_refund_ledger`, prior full backup `/home/sfkilvrs/3dprinthub-deploy-backups/20261110-103305-service-order-cycle`.
 - Host via dedicated `D:\projects\.chatgpt-gateway\project-host.ps1 -Project 3dprinthub`; do not alter dirty canonical `D:\projects\3DPrintHub` or prior service-order worktree with docs WIP.
+
+## 2026-11-10 — Store variant RMA isolated development
+- Local source worktree: `D:\projects\3DPrintHub-store-rma-20261110`, branch `fix/store-variant-rma-20261110`, base deployed Host SHA `e9a088cfe7fc3ebcdcde49e70e31b8f59709478e`.
+- RMA code: `store/rma_services.py`, `store/rma_admin.py`, `store/test_phase50_variant_rma.py`, `store/migrations/0043_store_variant_rma_stock_refund_audit.py`.
+- Guarded release: `scripts/host/phase50_store_variant_rma_deploy.sh`; dedicated tunnel `D:\projects\.chatgpt-gateway\project-host.ps1 -Project 3dprinthub`; Host root `/home/sfkilvrs/3dprinthub` / MySQL `sfkilvrs_EmiAdmin_3dprinthub`.
+- Dirty canonical `D:\projects\3DPrintHub` and docs-only other worktrees must be left untouched.

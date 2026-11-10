@@ -5,7 +5,10 @@ from typing import Any
 
 from django.db.models import Sum
 
-from .models import CostEntry, ProductionJob, StoreOrder, StorePayment
+from .models import (
+    CostEntry, ProductionJob, StoreOrder, StoreOrderItem,
+    StorePayment, StoreReturnInspection, StoreReturnRefund, StoreReturnRefundLedger,
+)
 from .production_services import finance_summary
 
 
@@ -78,6 +81,67 @@ def collect_finance_reconciliation(*, check_storage: bool = True) -> dict[str, A
             job = None
         if job is None:
             failures["store_paid_order_job_missing"] += 1
+
+    # Service Quote refunds use their own ledger; Store returns debit original StorePayment
+    # without altering its verified paid status or the original ProductVariant line price.
+    store_refund_ledger = StoreReturnRefundLedger.objects.select_related(
+        "refund", "order", "payment", "refund__return_request"
+    )
+    metrics["store_return_inspection_count"] = StoreReturnInspection.objects.count()
+    metrics["store_return_restock_sum"] = int(StoreReturnInspection.objects.aggregate(
+        total=Sum("restock_quantity"))["total"] or 0)
+    metrics["store_refund_requests"] = StoreReturnRefund.objects.count()
+    metrics["store_refund_ledger_count"] = store_refund_ledger.count()
+    metrics["store_refund_debit_sum"] = int(store_refund_ledger.aggregate(
+        total=Sum("amount"))["total"] or 0)
+    metrics["store_net_paid_sum"] = metrics["store_paid_sum"] - metrics["store_refund_debit_sum"]
+    for refund in StoreReturnRefund.objects.select_related("return_request", "payment"):
+        has_ledger = StoreReturnRefundLedger.objects.filter(refund=refund).exists()
+        if (refund.status == "completed") != has_ledger:
+            failures["store_rma_refund_status_ledger_mismatch"] += 1
+        if refund.payment.order_id != refund.return_request.order_id or refund.payment.status != "paid":
+            failures["store_rma_refund_source_mismatch"] += 1
+    for ledger in store_refund_ledger:
+        refund = ledger.refund
+        if (refund.status != "completed" or ledger.amount != refund.amount
+                or ledger.payment_id != refund.payment_id
+                or ledger.order_id != refund.return_request.order_id
+                or ledger.provider_ref != refund.payout_reference
+                or ledger.currency != "IRT" or ledger.amount <= 0):
+            failures["store_rma_refund_ledger_invalid"] += 1
+    for inspection in StoreReturnInspection.objects.select_related(
+        "return_request", "inventory_movement", "variant"
+    ):
+        rma = inspection.return_request
+        if (rma.status not in {"received", "refunded", "closed"}
+                or not rma.item_id or rma.item.order_id != rma.order_id
+                or inspection.received_quantity > rma.quantity
+                or inspection.restock_quantity > inspection.received_quantity):
+            failures["store_rma_inspection_invalid"] += 1
+        movement = inspection.inventory_movement
+        if inspection.restock_quantity and (
+            movement is None or movement.movement_type != "return"
+            or movement.variant_id != inspection.variant_id
+            or movement.order_id != rma.order_id
+            or movement.quantity != inspection.restock_quantity
+        ):
+            failures["store_rma_restock_movement_mismatch"] += 1
+        if not inspection.restock_quantity and movement is not None:
+            failures["store_rma_zero_restock_has_movement"] += 1
+    for order in StoreOrder.objects.prefetch_related("payments", "refund_ledger_entries"):
+        gross = sum(int(p.amount) for p in order.payments.all() if p.status == "paid")
+        returned = sum(int(entry.amount) for entry in order.refund_ledger_entries.all())
+        if returned > gross:
+            failures["store_rma_refund_exceeds_paid"] += 1
+    for order_item in StoreOrderItem.objects.filter(
+        return_requests__isnull=False
+    ).distinct():
+        used = sum(
+            int(r.inspection.received_quantity) if hasattr(r, "inspection") else int(r.quantity)
+            for r in order_item.return_requests.exclude(status="rejected")
+        )
+        if used > order_item.quantity:
+            failures["store_rma_item_return_count_exceeded"] += 1
 
     jobs = ProductionJob.objects.select_related("store_order", "custom_order").exclude(status="cancelled")
     metrics["production_jobs"] = jobs.count()

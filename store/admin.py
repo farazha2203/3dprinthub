@@ -1,4 +1,6 @@
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.core.exceptions import ValidationError
+from django.urls import path, reverse
 from django.utils.html import format_html
 
 from .models import (
@@ -237,11 +239,26 @@ class StoreOrderAdmin(admin.ModelAdmin):
     list_filter = ["status", "payment_status", "shipping_method", "created_at"]
     search_fields = ["order_number", "user__username", "full_name", "phone", "tracking_code"]
     readonly_fields = [
-        "order_number", "subtotal", "packaging_fee", "shipping_fee", "tax_amount",
+        "order_number", "status", "payment_status", "return_cases_summary",
+        "subtotal", "packaging_fee", "shipping_fee", "tax_amount",
         "discount_amount", "total_amount", "total_weight_grams", "paid_at", "created_at", "updated_at",
     ]
     inlines = [StoreOrderItemInline]
     actions = ["mark_processing", "mark_ready", "mark_shipped", "mark_delivered"]
+
+    @admin.display(description="مرجوعی تنوع‌های محصول / بازرسی و استرداد")
+    def return_cases_summary(self, obj):
+        if not obj or not obj.pk:
+            return "پس از ثبت سفارش قابل مشاهده است."
+        from django.utils.html import format_html_join
+        rows = obj.return_requests.select_related("item").order_by("-id")
+        if not rows.exists():
+            return "برای این سفارش هنوز درخواست مرجوعی ثبت نشده است."
+        return format_html_join("", '<p><a href="{}">مرجوعی شماره {}</a> | {} | {} عدد | {}</p>', (
+            (reverse("admin:store_returnrequest_change", args=[r.pk]), r.pk,
+             r.item.variant_code if r.item_id else "نامشخص", r.quantity, r.get_status_display())
+            for r in rows
+        ))
 
     @admin.action(description="انتقال به در حال تولید")
     def mark_processing(self, request, queryset):
@@ -265,26 +282,40 @@ class StorePaymentAdmin(admin.ModelAdmin):
     list_display = ["order", "amount", "method", "status", "ref_id", "created_at", "paid_at"]
     list_filter = ["method", "status", "created_at"]
     search_fields = ["order__order_number", "ref_id", "card_holder"]
-    readonly_fields = ["idempotency_key", "created_at", "updated_at", "paid_at"]
+    readonly_fields = [
+        "order", "amount", "method", "status", "authority", "ref_id", "receipt_image",
+        "idempotency_key", "created_at", "updated_at", "paid_at",
+    ]
     actions = ["approve_payments", "reject_payments"]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
     @admin.action(description="تأیید پرداخت‌های انتخاب‌شده")
     def approve_payments(self, request, queryset):
         for payment in queryset.select_related("order"):
-            if payment.status != "paid":
-                payment.mark_paid(
-                    payment.ref_id or f"ADMIN-{payment.pk}",
-                    actor=request.user,
-                )
+            if payment.method != "bank_transfer" or payment.status != "awaiting_review":
+                continue
+            if not payment.receipt_image:
+                self.message_user(request, "تراکنش فاقد رسید تصویری برای تأیید دستی مجاز نیست.", level=messages.WARNING)
+                continue
+            payment.mark_paid(payment.ref_id or f"ADMIN-{payment.pk}", actor=request.user)
 
     @admin.action(description="رد پرداخت‌های انتخاب‌شده")
     def reject_payments(self, request, queryset):
         for payment in queryset.select_related("order"):
+            if payment.method != "bank_transfer" or payment.status != "awaiting_review":
+                continue
             payment.status = "failed"
             payment.save(update_fields=["status", "updated_at"])
-            payment.order.payment_status = "failed"
-            payment.order.status = "awaiting_payment"
-            payment.order.save(update_fields=["payment_status", "status", "updated_at"])
+            if payment.order.payment_status != "paid":
+                payment.order.payment_status = "failed"
+                if payment.order.status in {"awaiting_payment", "payment_review"}:
+                    payment.order.status = "awaiting_payment"
+                payment.order.save(update_fields=["payment_status", "status", "updated_at"])
 # END STORE COMMERCE PHASE 2
 
 # BEGIN PHASE 4 SEO ADMIN
@@ -304,6 +335,9 @@ from .models import (
     InventoryMovement,
     ProductFAQ,
     ReturnRequest,
+    StoreReturnInspection,
+    StoreReturnRefund,
+    StoreReturnRefundLedger,
     Shipment,
     StoreInvoice,
     StoreOperationsDashboard,
@@ -341,7 +375,10 @@ StoreOrderAdmin.readonly_fields = list(StoreOrderAdmin.readonly_fields) + ["coup
 def _transition_action(status, description):
     def action(self, request, queryset):
         for order in queryset:
-            transition_order(order, status, actor=request.user, description=description)
+            try:
+                transition_order(order, status, actor=request.user, description=description)
+            except ValidationError as exc:
+                self.message_user(request, f"سفارش {order.order_number}: {exc}", level=messages.WARNING)
     return action
 
 
@@ -465,16 +502,80 @@ class CustomerNotificationAdmin(admin.ModelAdmin):
 
 @admin.register(ReturnRequest)
 class ReturnRequestAdmin(admin.ModelAdmin):
-    list_display = ["order", "user", "reason", "status", "created_at", "updated_at"]
-    list_editable = ["status"]
-    list_filter = ["status", "reason", "created_at"]
-    search_fields = ["order__order_number", "user__username", "description", "admin_response"]
+    list_display = ("order", "item", "quantity", "user", "reason", "status", "workflow_link", "created_at")
+    list_filter = ("status", "reason", "created_at")
+    search_fields = ("order__order_number", "item__variant_code", "user__username", "description", "admin_response")
+    # All financial and physical transitions go through the audited workflow.
+    list_editable = []
+    actions = None
+    fields = ("order", "item", "quantity", "user", "reason", "description", "image",
+              "status", "admin_response", "workflow_details", "created_at", "updated_at")
+    readonly_fields = ("order", "item", "quantity", "user", "reason", "description",
+                       "image", "status", "admin_response", "workflow_details", "created_at", "updated_at")
 
-    def save_model(self, request, obj, form, change):
-        previous = ReturnRequest.objects.filter(pk=obj.pk).values_list("status", flat=True).first() if change else None
-        super().save_model(request, obj, form, change)
-        if previous != obj.status:
-            notify(obj.user, "وضعیت درخواست مرجوعی تغییر کرد", f"درخواست مربوط به سفارش {obj.order.order_number}: {obj.get_status_display()}", notification_type="order", url=obj.order.get_absolute_url())
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def get_urls(self):
+        from .rma_admin import rma_action_view
+        return [
+            path("<int:return_id>/workflow/review/", self.admin_site.admin_view(
+                lambda req, return_id: rma_action_view(self, req, return_id, "review")
+            ), name="store_returnrequest_workflow_review"),
+            path("<int:return_id>/workflow/inspect/", self.admin_site.admin_view(
+                lambda req, return_id: rma_action_view(self, req, return_id, "inspect")
+            ), name="store_returnrequest_workflow_inspect"),
+            path("<int:return_id>/workflow/refund/", self.admin_site.admin_view(
+                lambda req, return_id: rma_action_view(self, req, return_id, "request-refund")
+            ), name="store_returnrequest_workflow_request_refund"),
+            path("<int:return_id>/workflow/refund/<int:refund_id>/", self.admin_site.admin_view(
+                lambda req, return_id, refund_id: rma_action_view(
+                    self, req, return_id, "decide-refund", refund_id
+                )
+            ), name="store_returnrequest_workflow_decide_refund"),
+        ] + super().get_urls()
+
+    @admin.display(description="چرخه بررسی / بازگشت انبار / استرداد")
+    def workflow_details(self, obj):
+        from .rma_admin import rma_workflow_summary
+        return rma_workflow_summary(obj)
+
+    @admin.display(description="عملیات مرجوعی")
+    def workflow_link(self, obj):
+        return format_html('<a href="{}">مشاهده چرخه</a>', reverse("admin:store_returnrequest_change", args=[obj.pk]))
+
+
+@admin.register(StoreReturnInspection)
+class StoreReturnInspectionAdmin(admin.ModelAdmin):
+    list_display = ("return_request", "variant", "received_quantity", "restock_quantity",
+                    "inventory_movement", "inspected_by", "inspected_at")
+    readonly_fields = [f.name for f in StoreReturnInspection._meta.fields]
+    def has_add_permission(self, request): return False
+    def has_change_permission(self, request, obj=None): return False
+    def has_delete_permission(self, request, obj=None): return False
+
+
+@admin.register(StoreReturnRefund)
+class StoreReturnRefundAdmin(admin.ModelAdmin):
+    list_display = ("return_request", "amount", "method", "status", "payout_reference",
+                    "requested_by", "completed_by", "completed_at")
+    list_filter = ("status", "method")
+    readonly_fields = [f.name for f in StoreReturnRefund._meta.fields]
+    def has_add_permission(self, request): return False
+    def has_change_permission(self, request, obj=None): return False
+    def has_delete_permission(self, request, obj=None): return False
+
+
+@admin.register(StoreReturnRefundLedger)
+class StoreReturnRefundLedgerAdmin(admin.ModelAdmin):
+    list_display = ("order", "payment", "refund", "amount", "provider_ref", "created_at")
+    readonly_fields = [f.name for f in StoreReturnRefundLedger._meta.fields]
+    def has_add_permission(self, request): return False
+    def has_change_permission(self, request, obj=None): return False
+    def has_delete_permission(self, request, obj=None): return False
 
 
 @admin.register(StoreOperationsDashboard)

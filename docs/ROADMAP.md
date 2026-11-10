@@ -1053,3 +1053,13 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - [x] Broad final **129/129** QA regression PASS, Bash syntax, migration drift, Python compile, diff lint clean.
 - [ ] Freeze tested SHA, push isolated branch; guarded Host release and independent read-only acceptance.
 - [ ] Implement external PSP refund API, human second approval and RMA/StoreOrder credits as separate scope after review.
+
+## 2026-11-10 — ProductVariant Store RMA and actual refund accounting
+- [x] Discover existing StoreOrderItem variant/price snapshots, checkout reservation, variant stock and InventoryMovement; avoid duplicate catalog or accounting engines.
+- [x] Add quantity-scoped ReturnRequest to actual sold line and customer return form; prevent cross-order, overclaim and double returns.
+- [x] Add operator-reviewed physical inspection and immutable restock to original tracked variant capped by historical sale movements, including rejected/defective items.
+- [x] Add request vs confirmed external payout with unique receipt and StoreReturnRefundLedger debit; don't alter original StorePayment.
+- [x] Add customer/admin RMA states, immutable proofs, account event logs and finance/stock reconciliation; protect unpaid shipping and gateway manual approval.
+- [x] 42/42 targeted RMA + old checkout + finance recon tests PASS.
+- [ ] Finish broad targeted regression, pin release SHA; full backup + guarded Host Store.0043 migration, verify live unchanged data and public/private pages.
+- [ ] In separate phases: PSP automated refunds, operator dual approval, shipping label reverse logistics, replacement inventory reservations, legal tax credit notes and apportioned affiliate commissions.

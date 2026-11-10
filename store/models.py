@@ -4,6 +4,7 @@ from datetime import timedelta
 from decimal import Decimal, ROUND_HALF_UP
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.urls import reverse
@@ -1167,6 +1168,7 @@ class ReturnRequest(models.Model):
     order = models.ForeignKey("StoreOrder", on_delete=models.PROTECT, related_name="return_requests", verbose_name="سفارش")
     item = models.ForeignKey(StoreOrderItem, on_delete=models.SET_NULL, null=True, blank=True, related_name="return_requests", verbose_name="ردیف سفارش")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="store_return_requests", verbose_name="مشتری")
+    quantity = models.PositiveIntegerField(default=1, verbose_name="تعداد درخواستی مرجوعی")
     reason = models.CharField(max_length=30, choices=REASON_CHOICES, verbose_name="دلیل")
     description = models.TextField(verbose_name="شرح درخواست")
     image = models.ImageField(upload_to="store/returns/", blank=True, null=True, verbose_name="تصویر")
@@ -1179,6 +1181,146 @@ class ReturnRequest(models.Model):
         ordering = ["-created_at"]
         verbose_name = "درخواست مرجوعی"
         verbose_name_plural = "درخواست‌های مرجوعی"
+
+
+class StoreReturnInspection(models.Model):
+    """Single immutable inspection of physically received units for a store RMA."""
+    return_request = models.OneToOneField(
+        ReturnRequest, on_delete=models.PROTECT, related_name="inspection",
+        verbose_name="درخواست مرجوعی",
+    )
+    variant = models.ForeignKey(
+        ProductVariant, on_delete=models.PROTECT, null=True, blank=True,
+        related_name="return_inspections", verbose_name="تنوع اصلی فروخته شده",
+    )
+    received_quantity = models.PositiveIntegerField(verbose_name="تعداد فیزیکی بررسی شده")
+    restock_quantity = models.PositiveIntegerField(default=0, verbose_name="تعداد سالم بازگشتی به انبار")
+    inspection_note = models.TextField(verbose_name="نتیجه بررسی سلامت و علت عدم بازگشت به موجودی")
+    inventory_movement = models.OneToOneField(
+        InventoryMovement, null=True, blank=True, on_delete=models.PROTECT,
+        related_name="return_inspection", verbose_name="گردش یکتای بازگشت به انبار",
+    )
+    inspected_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
+        related_name="inspected_store_returns", verbose_name="بازرس انبار",
+    )
+    inspected_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "بازرسی کالای مرجوعی"
+        verbose_name_plural = "بازرسی‌های کالای مرجوعی"
+
+    def clean(self):
+        super().clean()
+        if self.received_quantity < 1 or self.restock_quantity > self.received_quantity:
+            raise ValidationError("تعداد سالم نمی‌تواند از تعداد دریافت‌شده بیشتر باشد.")
+        if self.return_request_id and self.received_quantity > self.return_request.quantity:
+            raise ValidationError("تعداد دریافتی از تعداد درخواست اولیه بیشتر است.")
+        if self.restock_quantity and (not self.variant_id or not self.variant.track_inventory):
+            raise ValidationError("بازگشت به موجودی تنها برای تنوع دارای کنترل موجودی مجاز است.")
+        if not self.inspection_note.strip():
+            raise ValidationError("ثبت نتیجه بررسی فیزیکی ضروری است.")
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            raise ValidationError("بازرسی قطعی قابل بازنویسی نیست؛ اصلاح باید سند جداگانه داشته باشد.")
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("گزارش بازرسی و گردش موجودی مربوطه حذف نمی‌شوند.")
+
+
+class StoreReturnRefund(models.Model):
+    """Requested vs proven external payout, never an actual bank transfer."""
+    STATUS_CHOICES = [
+        ("requested", "در انتظار اجرای واقعی استرداد"),
+        ("completed", "بازپرداخت واقعی ثبت و تأیید شد"),
+        ("cancelled", "درخواست استرداد لغو شد"),
+    ]
+    METHOD_CHOICES = [
+        ("bank_transfer", "واریز بانکی به مشتری"),
+        ("pos_reversal", "برگشت کارتخوان"),
+        ("cash", "بازپرداخت نقدی"),
+        ("provider_manual", "بازپرداخت دستی درگاه"),
+    ]
+    return_request = models.ForeignKey(
+        ReturnRequest, on_delete=models.PROTECT, related_name="refunds",
+        verbose_name="مرجوعی کالای فروشگاهی",
+    )
+    payment = models.ForeignKey(
+        StorePayment, on_delete=models.PROTECT, related_name="return_refunds",
+        verbose_name="رسید پرداخت اولیه مشتری",
+    )
+    amount = models.PositiveBigIntegerField(verbose_name="مبلغ استرداد (تومان)")
+    method = models.CharField(max_length=24, choices=METHOD_CHOICES)
+    reason = models.TextField(verbose_name="دلیل پرداخت مبلغ استرداد")
+    request_key = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default="requested", db_index=True)
+    payout_reference = models.CharField(max_length=180, unique=True, blank=True, null=True, verbose_name="کد رسید واقعی برگشت وجه")
+    requested_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
+        related_name="requested_store_refunds", verbose_name="درخواست‌کننده",
+    )
+    completed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
+        null=True, blank=True, related_name="completed_store_refunds",
+        verbose_name="تأییدکننده برگشت واقعی وجه",
+    )
+    completed_at = models.DateTimeField(null=True, blank=True)
+    cancelled_reason = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-created_at", "-id")
+        verbose_name = "بازپرداخت مرجوعی فروشگاه"
+        verbose_name_plural = "بازپرداخت‌های مرجوعی فروشگاه"
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            previous = type(self).objects.get(pk=self.pk)
+            original = ("return_request_id", "payment_id", "amount", "method", "reason",
+                        "request_key", "requested_by_id")
+            if previous.status in {"completed", "cancelled"} or any(
+                getattr(self, name) != getattr(previous, name) for name in original
+            ):
+                raise ValidationError("بازپرداخت قطعی یا مشخصات اصلی آن قابل بازنویسی نیست.")
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("سابقه درخواست بازپرداخت حذف نمی‌شود.")
+
+
+class StoreReturnRefundLedger(models.Model):
+    """Immutable negative cash movement paired with exactly one externally completed refund."""
+    refund = models.OneToOneField(
+        StoreReturnRefund, on_delete=models.PROTECT, related_name="ledger_entry",
+        verbose_name="بازپرداخت مستند",
+    )
+    order = models.ForeignKey(StoreOrder, on_delete=models.PROTECT, related_name="refund_ledger_entries")
+    payment = models.ForeignKey(StorePayment, on_delete=models.PROTECT, related_name="refund_ledger_entries")
+    amount = models.PositiveBigIntegerField(verbose_name="وجه بازگردانده‌شده (تومان)")
+    currency = models.CharField(max_length=8, default="IRT")
+    event_key = models.CharField(max_length=170, unique=True)
+    provider_ref = models.CharField(max_length=180, unique=True)
+    description = models.TextField(blank=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
+        related_name="store_refund_ledger_entries",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "سند بدهکار استرداد فروشگاه"
+        verbose_name_plural = "دفتر مالی استرداد فروشگاه"
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            raise ValidationError("ثبت دفتر استرداد قطعی است و ویرایش نمی‌شود.")
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("ثبت بدهکار دفتر مالی قابل حذف نیست.")
 
 
 class ProductFAQ(models.Model):

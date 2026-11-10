@@ -1,0 +1,42 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div dir="rtl" style="max-width:860px;margin:22px auto;line-height:2">
+  <p><a href="{{ return_url }}">بازگشت به پرونده مرجوعی</a></p>
+  <h2>{{ title }} — شماره {{ rma.pk }}</h2>
+  <div style="background:#fffaf1;border:1px solid #d3c7ac;padding:16px;border-radius:14px">
+    <p>سفارش: <b>{{ rma.order.order_number }}</b> |
+       تنوع فروشگاهی: <b>{{ rma.item.variant_code|default:"فاقد تنوع مشخص" }}</b> |
+       درخواست مشتری: <b>{{ rma.quantity }} عدد</b></p>
+    <p>وضعیت کنونی: <b>{{ rma.get_status_display }}</b></p>
+    {% if action == 'inspect' %}
+      <p><b>افزایش موجودی فقط بعد از دریافت فیزیکی و تشخیص سلامت قطعه انجام می‌شود.</b>
+      تعداد معیوب را در قسمت سالم حساب نکنید؛ فروشگاه فقط تنوع اصلی این سفارش را تغییر خواهد داد.</p>
+    {% elif action == 'request-refund' %}
+      <p><b>درخواست وجه به معنی انتقال پول نیست.</b>
+      مبلغ را طبق ارزش کالای دریافت‌شده و پرداخت واقعی مشتری ثبت کنید.</p>
+    {% elif action == 'decide-refund' %}
+      <p><b>تا زمان ثبت رسید واقعی بازپرداخت، هیچ سند بدهکاری صادر نمی‌شود.</b>
+      مرجوعی و دریافت وجه مشتری حذف یا بازنویسی نخواهند شد.</p>
+    {% endif %}
+  </div>
+  {% if refund %}
+  <div style="padding:14px;background:#edf3f8;margin-top:16px;border-radius:10px">
+    <b>درخواست استرداد {{ refund.pk }}</b>
+    <p>{{ refund.amount }} تومان | {{ refund.get_method_display }} | {{ refund.get_status_display }}</p>
+    <p>دلیل: {{ refund.reason }}</p>
+    {% if refund.payout_reference %}<p>رسید واقعی: {{ refund.payout_reference }}</p>{% endif %}
+  </div>
+  {% endif %}
+  <form method="post" style="margin-top:20px">{% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+      <div style="margin:16px 0">
+        <label style="display:block;font-weight:700" for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}{{ field.errors }}
+        {% if field.help_text %}<p><small>{{ field.help_text }}</small></p>{% endif %}
+      </div>
+    {% endfor %}
+    <button type="submit" class="default" style="padding:10px 25px">ثبت تصمیم مستند</button>
+  </form>
+</div>
+{% endblock %}

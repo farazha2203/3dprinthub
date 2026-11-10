@@ -246,6 +246,16 @@ def transition_order(order, status, *, actor=None, description="", public=True):
     old_status = order.status
     if old_status == status:
         return order
+    if old_status in {"cancelled", "refunded"}:
+        raise ValidationError("سفارش لغو یا مستردشده بدون سند حسابداری جدید قابل فعال‌سازی نیست.")
+    if status in {"processing", "ready", "shipped", "delivered"} and order.payment_status != "paid":
+        raise ValidationError("ارسال و تحویل کالا فقط پس از تأیید پرداخت واقعی مجاز است.")
+    if status == "cancelled" and order.payment_status == "paid":
+        raise ValidationError("سفارش پرداخت‌شده بدون چرخه رسمی بازپرداخت لغو نمی‌شود.")
+    if status == "refunded":
+        from .rma_services import full_store_order_refund_proven
+        if not full_store_order_refund_proven(order):
+            raise ValidationError("استرداد کل سفارش فقط بعد از دریافت فیزیکی و برگشت مستند همه مبلغ مجاز است.")
     if status in {"cancelled", "refunded"}:
         if status == "cancelled":
             release_order_inventory(order, reason="لغو سفارش", actor=actor)
