@@ -312,3 +312,8 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - Based on `f4cceba2`, a docs-only descendant of Production `df1be38355da6f3fa16ce5f480e5da81b5ae239a`; Host remains on this runtime until guarded deploy.
 - Host dedicated router is `D:\projects\.chatgpt-gateway\project-host.ps1 -Project 3dprinthub`, reverse loopback 22024 -> 22224. Host /home/sfkilvrs/3dprinthub, MySQL sfkilvrs_EmiAdmin_3dprinthub; new additive migration Website 0027 only.
 - Canonical D:\projects\3DPrintHub has large unrelated dirty WIP, do not mutate/reset.
+
+## 2026-11-10 — Credit note and refund source path
+- Isolated worktree `D:\projects\3DPrintHub-refunds-20261110`, Git branch `fix/website-service-credit-refund-20261110`, parent tested released SHA `b5687b8120ee8ec3cfe7ad68aa04a8c531cf1c95`.
+- New guarded runner `scripts/host/phase50_service_credit_refund_deploy.sh`, expected Website `0028_service_credit_refund_ledger`, prior full backup `/home/sfkilvrs/3dprinthub-deploy-backups/20261110-103305-service-order-cycle`.
+- Host via dedicated `D:\projects\.chatgpt-gateway\project-host.ps1 -Project 3dprinthub`; do not alter dirty canonical `D:\projects\3DPrintHub` or prior service-order worktree with docs WIP.

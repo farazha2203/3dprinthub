@@ -190,14 +190,19 @@ def _notify_payment_success(payment: Payment) -> None:
 
 def mark_payment_paid(payment: Payment, ref_id: str = "", *, provider_status_code: int | None = None, provider_message: str = "", metadata: dict[str, Any] | None = None) -> Payment:
     with transaction.atomic():
+        quote_id = Payment.objects.only("quote_id").get(pk=payment.pk).quote_id
+        # Quote-first locks serialize manual receipts, gateway verifies and refund/credit operations.
+        quote = Quote.objects.select_for_update().select_related("order").get(pk=quote_id)
         locked = Payment.objects.select_for_update().select_related("quote", "quote__order").get(pk=payment.pk)
         if locked.status == "paid":
             _create_payment_ledger(locked, metadata=metadata)
             return locked
         if locked.status in {"refunded"}:
             raise PaymentFlowError("پرداخت مستردشده را نمی‌توان دوباره تأیید کرد.")
-        if not locked.quote.pricing_snapshot_at:
-            raise PaymentFlowError("ثبت دریافت تأییدشده بدون قیمت قطعی پیش‌فاکتور مجاز نیست.")
+        if quote.status != "accepted" or not quote.pricing_snapshot_at:
+            raise PaymentFlowError("ثبت دریافت تأییدشده بدون تأیید و قیمت قطعی پیش‌فاکتور مجاز نیست.")
+        if int(locked.amount) > quote.remaining_amount:
+            raise PaymentFlowError("این پرداخت بیش از مانده اصلاح‌شده پیش‌فاکتور است.")
         locked.status = "paid"
         if ref_id:
             locked.ref_id = str(ref_id)
@@ -212,12 +217,9 @@ def mark_payment_paid(payment: Payment, ref_id: str = "", *, provider_status_cod
             "paid_at", "verified_at", "updated_at",
         ])
         _create_payment_ledger(locked, metadata=metadata)
-        quote = locked.quote
         order = quote.order
-        if quote.paid_amount >= quote.total_price:
-            order.status = "paid"
-        elif order.status not in {"in_progress", "done"}:
-            order.status = "accepted"
+        if order.status not in {"in_progress", "done"}:
+            order.status = "paid" if quote.paid_amount >= quote.effective_total_price else "accepted"
         order.save(update_fields=["status"])
         transaction.on_commit(lambda: _notify_payment_success(locked))
         return locked

@@ -23,7 +23,7 @@ class ManagedOrderAdminForm(forms.ModelForm):
         status = self.cleaned_data["status"]
         if status == "paid":
             quote = Quote.objects.filter(order_id=self.instance.pk).first() if self.instance.pk else None
-            if not quote or not quote.pricing_snapshot_at or quote.total_price <= 0 or quote.paid_amount < quote.total_price:
+            if not quote or not quote.pricing_snapshot_at or quote.effective_total_price <= 0 or quote.paid_amount < quote.effective_total_price:
                 raise forms.ValidationError("وضعیت پرداخت‌شده فقط پس از تسویه واقعی ثبت‌شده در دفتر مالی مجاز است.")
         if status == "cancelled" and self.instance.pk:
             quote = Quote.objects.filter(order_id=self.instance.pk).first()
@@ -70,9 +70,13 @@ def order_finance_summary(obj):
         return "برای این سفارش هنوز پیش‌فاکتور ثبت نشده است."
     rows = [
         ("جمع قبل از تخفیف", quote.subtotal),
-        ("تخفیف", quote.discount),
-        ("مبلغ نهایی", quote.total_price),
-        ("دریافتی تأییدشده", quote.paid_amount),
+        ("تخفیف پیش‌فاکتور اولیه", quote.discount),
+        ("مبلغ اصلی قطعی", quote.total_price),
+        ("اصلاحیه‌های کاهنده", quote.credit_note_total),
+        ("مبلغ قرارداد پس از اصلاحیه", quote.effective_total_price),
+        ("مجموع دریافت‌های تأییدشده", quote.gross_paid_amount),
+        ("مبالغ بازپرداخت‌شده", quote.refunded_amount),
+        ("دریافتی خالص تأییدشده", quote.paid_amount),
         ("در انتظار بررسی/پرداخت", quote.pending_amount),
         ("مانده قابل وصول", quote.remaining_amount),
         ("مبلغ آزاد برای دریافت جدید", quote.available_payment_amount),

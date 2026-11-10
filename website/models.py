@@ -946,28 +946,58 @@ class Quote(models.Model):
         return total
 
     @property
+    def credit_note_total(self):
+        """Approved, immutable commercial reductions; never rewrite the original quote."""
+        from django.db.models import Sum
+        if not self.pk:
+            return 0
+        return int(self.credit_notes.aggregate(value=Sum("amount"))["value"] or 0)
+
+    @property
+    def effective_total_price(self):
+        return max(int(self.total_price) - self.credit_note_total, 0)
+
+    @property
     def deposit_amount(self):
-        if not self.total_price:
+        if not self.effective_total_price:
             return 0
         percent = max(Decimal(self.deposit_percent or 0), Decimal("0"))
-        amount = Decimal(self.total_price) * percent / Decimal("100")
+        amount = Decimal(self.effective_total_price) * percent / Decimal("100")
         return int(amount.quantize(Decimal("1"), rounding=ROUND_HALF_UP))
 
     @property
-    def paid_amount(self):
+    def gross_paid_amount(self):
         return int(sum(self.payments.filter(status="paid").values_list("amount", flat=True)))
+
+    @property
+    def refunded_amount(self):
+        """Refund debits are the monetary source of truth, linked to original paid receipts."""
+        from django.db.models import Sum
+        if not self.pk:
+            return 0
+        return int(self.ledger_entries.filter(
+            entry_type="refund", direction="debit", currency="IRT"
+        ).aggregate(value=Sum("amount"))["value"] or 0)
+
+    @property
+    def paid_amount(self):
+        return max(self.gross_paid_amount - self.refunded_amount, 0)
 
     @property
     def pending_amount(self):
         return int(sum(self.payments.filter(status__in=["pending", "verifying", "awaiting_review"]).values_list("amount", flat=True)))
 
     @property
+    def refundable_excess(self):
+        return max(self.paid_amount - self.effective_total_price, 0)
+
+    @property
     def remaining_amount(self):
-        return max(int(self.total_price) - self.paid_amount, 0)
+        return max(self.effective_total_price - self.paid_amount, 0)
 
     @property
     def available_payment_amount(self):
-        return max(int(self.total_price) - self.paid_amount - self.pending_amount, 0)
+        return max(self.effective_total_price - self.paid_amount - self.pending_amount, 0)
 
 
 class Payment(models.Model):
@@ -1108,6 +1138,149 @@ class PaymentLedgerEntry(models.Model):
     def __str__(self):
         return f"{self.get_entry_type_display()} - {self.amount} تومان"
 
+    def save(self, *args, **kwargs):
+        if self.pk:
+            from django.core.exceptions import ValidationError
+            previous = type(self).objects.get(pk=self.pk)
+            frozen = (
+                "quote_id", "payment_id", "entry_type", "direction", "amount",
+                "currency", "event_key", "provider_ref", "description", "metadata",
+            )
+            if any(getattr(self, name) != getattr(previous, name) for name in frozen):
+                raise ValidationError("سند ثبت‌شده دفتر مالی قابل بازنویسی نیست.")
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        from django.core.exceptions import ValidationError
+        raise ValidationError("حذف سند دفتر مالی مجاز نیست؛ سند اصلاحی مستقل لازم است.")
+
+
+class ServiceCreditNote(models.Model):
+    """Issued reduction to an immutable service quote; distinct from money sent back."""
+    quote = models.ForeignKey(Quote, on_delete=models.PROTECT, related_name="credit_notes", verbose_name="پیش‌فاکتور")
+    amount = models.PositiveBigIntegerField(verbose_name="مبلغ اصلاحیه کاهنده (تومان)")
+    reference = models.CharField(max_length=90, unique=True, verbose_name="شماره یکتای اصلاحیه")
+    reason = models.TextField(verbose_name="دلیل مستند اصلاح قیمت")
+    issued_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
+        related_name="issued_service_credit_notes", verbose_name="صادرکننده",
+    )
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ("-created_at", "-id")
+        verbose_name = "اصلاحیه بستانکاری خدمات"
+        verbose_name_plural = "اصلاحیه‌های بستانکاری خدمات"
+
+    def clean(self):
+        super().clean()
+        from django.core.exceptions import ValidationError
+        if self.amount <= 0 or not self.reference.strip() or not self.reason.strip():
+            raise ValidationError("شماره، مبلغ مثبت و دلیل مستند برای اصلاحیه ضروری است.")
+        if self.quote_id and (self.quote.status != "accepted" or not self.quote.pricing_snapshot_at):
+            raise ValidationError("اصلاحیه فقط برای پیش‌فاکتور قطعی و تأییدشده صادر می‌شود.")
+        if not self.pk and self.quote_id and self.amount > self.quote.effective_total_price:
+            raise ValidationError("مجموع اصلاحیه‌های کاهنده از مبلغ نهایی پیش‌فاکتور تجاوز می‌کند.")
+
+    def save(self, *args, **kwargs):
+        from django.core.exceptions import ValidationError
+        if self.pk:
+            raise ValidationError("اصلاحیه صادرشده تغییرپذیر نیست. سند جدید صادر کنید.")
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        from django.core.exceptions import ValidationError
+        raise ValidationError("سند اصلاحیه حذف نمی‌شود؛ فرایند حسابداری مستند لازم است.")
+
+    def __str__(self):
+        return f"{self.reference}: {self.amount:,} تومان"
+
+
+class ServiceRefund(models.Model):
+    """Refund request and external payout attestation. Never initiates a bank transfer."""
+    STATUS_CHOICES = [
+        ("requested", "در انتظار اجرای استرداد"),
+        ("completed", "استرداد واقعی ثبت و تأیید شد"),
+        ("cancelled", "درخواست استرداد لغو شد"),
+    ]
+    METHOD_CHOICES = [
+        ("bank_transfer", "انتقال بانکی به مشتری"),
+        ("pos_reversal", "برگشت از کارتخوان"),
+        ("cash", "تحویل نقدی به مشتری"),
+        ("provider_manual", "برگشت دستی از طریق ارائه‌دهنده درگاه"),
+    ]
+    quote = models.ForeignKey(Quote, on_delete=models.PROTECT, related_name="refunds", verbose_name="پیش‌فاکتور")
+    original_payment = models.ForeignKey(
+        Payment, on_delete=models.PROTECT, related_name="service_refunds", verbose_name="دریافت اولیه",
+    )
+    amount = models.PositiveBigIntegerField(verbose_name="مبلغ استرداد (تومان)")
+    method = models.CharField(max_length=24, choices=METHOD_CHOICES, verbose_name="روش اجرای بازپرداخت")
+    reason = models.TextField(verbose_name="دلیل و سند تصمیم به استرداد")
+    request_key = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default="requested", db_index=True)
+    payout_reference = models.CharField(
+        max_length=180, blank=True, null=True, unique=True,
+        verbose_name="شماره پیگیری بازپرداخت / رسید نقدی",
+    )
+    requested_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
+        related_name="requested_service_refunds", verbose_name="درخواست‌کننده",
+    )
+    completed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
+        null=True, blank=True, related_name="completed_service_refunds", verbose_name="تأییدکننده پرداخت وجه",
+    )
+    completed_at = models.DateTimeField(null=True, blank=True, verbose_name="زمان تأیید انجام استرداد")
+    cancellation_reason = models.TextField(blank=True, verbose_name="دلیل لغو درخواست")
+    ledger_entry = models.OneToOneField(
+        PaymentLedgerEntry, null=True, blank=True, on_delete=models.PROTECT,
+        related_name="service_refund", verbose_name="سند بدهکار دفتر مالی",
+    )
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ("-created_at", "-id")
+        verbose_name = "درخواست استرداد خدمات"
+        verbose_name_plural = "درخواست‌های استرداد خدمات"
+
+    def clean(self):
+        super().clean()
+        from django.core.exceptions import ValidationError
+        if self.amount <= 0 or not self.reason.strip():
+            raise ValidationError("مبلغ استرداد باید مثبت و دلیل آن مستند باشد.")
+        if self.original_payment_id and self.quote_id and self.original_payment.quote_id != self.quote_id:
+            raise ValidationError("دریافت اولیه به این پیش‌فاکتور تعلق ندارد.")
+        if self.original_payment_id and self.original_payment.status != "paid":
+            raise ValidationError("استرداد فقط به دریافت واقعاً تأییدشده متصل می‌شود.")
+        if self.status == "completed" and (
+            not self.completed_by_id or not self.completed_at or not (self.payout_reference or "").strip()
+            or not self.ledger_entry_id
+        ):
+            raise ValidationError("استرداد انجام‌شده باید رسید، تأییدکننده و سند بدهکار داشته باشد.")
+        if self.status == "cancelled" and not self.cancellation_reason.strip():
+            raise ValidationError("لغو درخواست بدون دلیل مستند امکان‌پذیر نیست.")
+
+    def save(self, *args, **kwargs):
+        from django.core.exceptions import ValidationError
+        if self.pk:
+            original = type(self).objects.get(pk=self.pk)
+            frozen = ("quote_id", "original_payment_id", "amount", "method",
+                      "reason", "request_key", "requested_by_id")
+            if original.status in {"completed", "cancelled"} or any(
+                getattr(self, key) != getattr(original, key) for key in frozen
+            ):
+                raise ValidationError("استرداد قطعی یا لغوشده و مشخصات اولیه قابل بازنویسی نیست.")
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        from django.core.exceptions import ValidationError
+        raise ValidationError("درخواست استرداد حذف نمی‌شود؛ وضعیت آن را مستند لغو کنید.")
+
+    def __str__(self):
+        return f"استرداد {self.amount:,} تومان | {self.get_status_display()}"
+
 
 class ServiceOrderDelivery(models.Model):
     """Auditable service-order handoff, separate from financial settlement."""
@@ -1161,7 +1334,7 @@ class ServiceOrderDelivery(models.Model):
         except Quote.DoesNotExist:
             raise ValidationError("سفارش بدون پیش فاکتور تأییدشده قابل تحویل نیست.")
         if (quote.status != "accepted" or not quote.pricing_snapshot_at or
-                quote.total_price <= 0 or quote.paid_amount < quote.total_price):
+                quote.effective_total_price <= 0 or quote.paid_amount < quote.effective_total_price):
             raise ValidationError("ثبت تحویل فقط پس از تأیید پیش فاکتور و تسویه واقعی مجاز است.")
         if self.status == "dispatched" and self.shipping_method.code.startswith("pickup"):
             raise ValidationError("تحویل حضوری را مستقیماً در وضعیت تحویل قطعی ثبت کنید.")

@@ -54,9 +54,14 @@
         {% if quote.shipping_fee %}<tr><td class="p-4 text-slate-400">ارسال</td><td class="p-4">{{ quote.shipping_fee|intcomma }} تومان</td></tr>{% endif %}
         {% if quote.discount %}<tr><td class="p-4 text-slate-400">تخفیف</td><td class="p-4 text-emerald-300">{{ quote.discount|intcomma }} تومان</td></tr>{% endif %}
         {% if quote.offer_rounding_adjustment %}<tr><td class="p-4 text-slate-400">تعدیل گردکردن مطابق نرم‌افزار دسکتاپ</td><td class="p-4">{{ quote.offer_rounding_adjustment|intcomma }} تومان</td></tr>{% endif %}
-        <tr class="bg-slate-900"><td class="p-5 text-lg font-black">مبلغ نهایی</td><td class="p-5 text-2xl font-black text-cyan-300">{{ quote.total_price|intcomma }} تومان</td></tr>
+        <tr class="bg-slate-900"><td class="p-5 text-lg font-black">مبلغ نهایی پیش‌فاکتور اصلی</td><td class="p-5 text-2xl font-black text-cyan-300">{{ quote.total_price|intcomma }} تومان</td></tr>
+        {% if quote.credit_note_total %}<tr><td class="p-4 text-slate-400">اصلاحیه‌های رسمی کاهنده</td><td class="p-4 text-emerald-300">−{{ quote.credit_note_total|intcomma }} تومان</td></tr>
+        <tr><td class="p-4 font-black">مبلغ قرارداد پس از اصلاحیه</td><td class="p-4 font-black">{{ quote.effective_total_price|intcomma }} تومان</td></tr>{% endif %}
         <tr><td class="p-4 text-slate-400">بیعانه {{ quote.deposit_percent|floatformat:0 }}٪</td><td class="p-4 font-black text-orange-300">{{ quote.deposit_amount|intcomma }} تومان</td></tr>
-        <tr><td class="p-4 text-slate-400">پرداخت تأییدشده</td><td class="p-4">{{ quote.paid_amount|intcomma }} تومان</td></tr>
+        <tr><td class="p-4 text-slate-400">کل دریافتی تأییدشده</td><td class="p-4">{{ quote.gross_paid_amount|intcomma }} تومان</td></tr>
+        {% if quote.refunded_amount %}<tr><td class="p-4 text-slate-400">وجه بازپرداخت‌شده به مشتری</td><td class="p-4 text-emerald-300">−{{ quote.refunded_amount|intcomma }} تومان</td></tr>{% endif %}
+        <tr><td class="p-4 text-slate-400">دریافتی خالص</td><td class="p-4">{{ quote.paid_amount|intcomma }} تومان</td></tr>
+        {% if quote.refundable_excess %}<tr><td class="p-4 text-slate-400">بستانکاری قابل استرداد مشتری</td><td class="p-4 text-amber-300">{{ quote.refundable_excess|intcomma }} تومان</td></tr>{% endif %}
         <tr><td class="p-4 text-slate-400">مانده</td><td class="p-4 font-black">{{ quote.remaining_amount|intcomma }} تومان</td></tr>
       </tbody></table></div>
     {% endif %}
@@ -94,6 +99,13 @@
   {% if payment_form and not can_submit_payment %}<section class="qcard rounded-[2rem] p-6 md:p-8 mb-6"><h2 class="text-xl font-black">رسید قبلی در انتظار بررسی است</h2><p class="text-slate-400 leading-8 mt-2">پس از تأیید یا رد واحد مالی، مبلغ قابل پرداخت بعدی در همین صفحه فعال می‌شود.</p></section>{% endif %}
 
   {% if payments %}<section class="qcard rounded-[2rem] p-6 md:p-8 mb-6"><h2 class="text-2xl font-black mb-5">سوابق پرداخت</h2><div class="grid gap-3">{% for payment in payments %}<div class="rounded-2xl bg-slate-900 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3"><div><b>{{ payment.get_payment_kind_display }}</b><small class="block text-slate-400 mt-1">{{ payment.get_method_display }} | {{ payment.created_at|date:'Y/m/d H:i' }}</small></div><strong>{{ payment.amount|intcomma }} تومان</strong><span class="text-cyan-300">{{ payment.get_status_display }}</span></div>{% endfor %}</div></section>{% endif %}
+  {% if quote.credit_note_total or quote.refunds.exists %}
+  <section class="qcard rounded-[2rem] p-6 md:p-8 mb-6">
+    <h2 class="text-xl font-black mb-3">اصلاحیه‌ها و استردادهای مالی</h2>
+    {% for note in quote.credit_notes.all %}<p class="py-2 border-b border-slate-800">اصلاحیه {{ note.reference }} — {{ note.amount|intcomma }} تومان</p>{% endfor %}
+    {% for refund in quote.refunds.all %}<p class="py-2 border-b border-slate-800">درخواست بازپرداخت {{ refund.amount|intcomma }} تومان — {{ refund.get_status_display }}</p>{% endfor %}
+    <p class="text-sm text-slate-400 mt-3">مبالغ استرداد تنها پس از تأیید رسید واقعی از جمع دریافتی خالص کسر می‌شوند.</p>
+  </section>{% endif %}
   {% if order.service_delivery %}<section class="qcard rounded-[2rem] p-6 md:p-8 mb-6">
     <h2 class="text-2xl font-black mb-3">ارسال و تحویل سفارش</h2>
     <p>روش تحویل: {{ order.service_delivery.shipping_method.title }}</p>

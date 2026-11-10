@@ -1364,3 +1364,9 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - Added Website 0027 additive migration; 22/22 latest focused tests PASS, broad suite pending final rounding patch. Production source and financial data unchanged pending guarded publish.
 
 2026-11-10 LOCAL_TESTED addendum: Final 97/97 broad regression PASS, including fractional Desktop HALF_UP total parity and durable signed rounding adjustment snapshot, 112 active/stocked live Offers, and post/courier/pickup delivery restrictions. One additive Website 0027 only; no production financial data changed. SHA-pinned backup-aware Host deployment runner authored and syntax-checked; rollout pending.
+
+## 2026-11-10 — Service credit note/refund follow-up (UNRELEASED)
+- Added immutable `ServiceCreditNote`, proposed/completed/cancelled `ServiceRefund`, admin credit/refund forms, quote effective total, credit/refund disclosure and debit-ledger preservation; additive website 0028.
+- Corrected financial approval locking and back-office approval queryset change-during-iteration issue; shipping settles adjusted due, not original when a valid credit note exists.
+- Finance reconciliation checks refund debit/receipt linkage, overcredit and overrefund, operator verified bank evidence. **No automatic external refund is performed.**
+- Final local **129/129 broad regression** PASS (including Store reconciliation), static, schema drift and Bash syntax checks PASS. Production unchanged at `b5687b81` until verified deployment.

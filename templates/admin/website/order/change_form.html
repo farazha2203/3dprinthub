@@ -7,6 +7,12 @@
       <p style="margin-top:10px">تخفیف را در بخش پیش‌فاکتور همین صفحه وارد کنید. پس از ذخیره، مبلغ نهایی و مانده به‌روز می‌شود.</p>
     </div>
   {% endif %}
+  {% if order_adjustments_panel %}
+    <div dir="rtl" style="margin:16px 0;padding:20px;background:#fcfbf7;border:1px solid #cabd9a;border-radius:14px">
+      <h2>اصلاحیه‌های مالی و استرداد وجه</h2>
+      {{ order_adjustments_panel }}
+    </div>
+  {% endif %}
   {% if order_delivery_panel %}
     <div dir="rtl" style="margin:16px 0;padding:20px;background:#f4f8fa;border:1px solid #acc8d1;border-radius:14px">
       <h2>ارسال و تحویل به مشتری</h2>

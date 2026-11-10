@@ -71,11 +71,12 @@ def record_service_delivery_view(model_admin, request, order_id):
         if form.is_valid():
             try:
                 with transaction.atomic():
+                    # Consistent financial lock order across receipt, refund and delivery writers.
+                    quote = Quote.objects.select_for_update().filter(order_id=order.pk).first()
                     locked = Order.objects.select_for_update().get(pk=order.pk)
-                    quote = Quote.objects.select_for_update().filter(order=locked).first()
                     if not quote or quote.status != "accepted" or not quote.pricing_snapshot_at:
                         raise ValidationError("ابتدا پیش فاکتور را تأیید کنید.")
-                    if quote.paid_amount < quote.total_price or not quote.total_price:
+                    if quote.paid_amount < quote.effective_total_price or not quote.effective_total_price:
                         raise ValidationError("تحویل بدون تسویه مالی تأییدشده مجاز نیست.")
                     delivery = ServiceOrderDelivery.objects.select_for_update().filter(order=locked).first()
                     if delivery and delivery.status == "delivered":

@@ -1043,3 +1043,13 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 
 - [x] Service-order integrated candidate broad regression **97/97 PASS** after Decimal Desktop total-rounding parity and courier address checks; no migration drift, Python compile, Bash and diff checks PASS.
 - [ ] GitHub commit/push + guarded Production approval/rollout of Website 0027 from verified clean host `df1be383`; record exact verified backup and source SHA, then read-only Admin Order #1 and public HTTP acceptance.
+
+## 2026-11-10 — Service credit notes and confirmed refunds
+- [x] Isolated branch for immutable credit note, approved overpayment refund requests, payout proof and idempotent debit ledger, manual cash/POS/bank audits.
+- [x] Net money and adjusted Quote due reflected in customer/admin views and Delivery/Payment guards.
+- [x] Finance reconciliation audits debit/credit separately and corrects office-reviewed bank entry audit source and queryset mutation issue.
+- [x] New additive Website.0028 migration and guarded full source/.env/MySQL backup-aware deploy runner authored.
+- [x] Focused local 29/29 tests including refund finance ledger and store reconciliation PASS.
+- [x] Broad final **129/129** QA regression PASS, Bash syntax, migration drift, Python compile, diff lint clean.
+- [ ] Freeze tested SHA, push isolated branch; guarded Host release and independent read-only acceptance.
+- [ ] Implement external PSP refund API, human second approval and RMA/StoreOrder credits as separate scope after review.

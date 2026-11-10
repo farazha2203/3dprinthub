@@ -27,7 +27,7 @@ def _receipt_state(field) -> tuple[bool, bool | None]:
 
 def collect_finance_reconciliation(*, check_storage: bool = True) -> dict[str, Any]:
     from website.models import Order as WebsiteOrder
-    from website.models import Payment, PaymentLedgerEntry, Quote
+    from website.models import Payment, PaymentLedgerEntry, Quote, ServiceCreditNote, ServiceRefund
 
     failures: Counter[str] = Counter()
     warnings: Counter[str] = Counter()
@@ -116,10 +116,20 @@ def collect_finance_reconciliation(*, check_storage: bool = True) -> dict[str, A
     for payment in website_payments:
         if int(payment.amount or 0) <= 0:
             failures["website_payment_nonpositive_amount"] += 1
+        # Owner-verified office bank entries are evidence-backed by their audit ledger,
+        # unlike customer-uploaded card-transfer receipts which require private media.
+        payment_credit = payment.ledger_entries.filter(
+            entry_type="payment", direction="credit"
+        ).first() if payment.status == "paid" else None
+        origin = (payment_credit.metadata or {}) if payment_credit else {}
+        verified_office_bank = bool(
+            payment.method == "bank_transfer" and payment.status == "paid"
+            and origin.get("review_source") == "order_admin"
+            and origin.get("reviewed_by_user_id")
+        )
         manual_reviewed = payment.method == "bank_transfer" and payment.status in {
-            "awaiting_review",
-            "paid",
-        }
+            "awaiting_review", "paid",
+        } and not verified_office_bank
         if manual_reviewed:
             present, exists = _receipt_state(payment.receipt_image)
             if not present:
@@ -146,7 +156,7 @@ def collect_finance_reconciliation(*, check_storage: bool = True) -> dict[str, A
         if payment.method == "bank_transfer":
             reviewer = (ledger.metadata or {}).get("reviewed_by_user_id")
             source = str((ledger.metadata or {}).get("review_source") or "")
-            if not reviewer or source != "admin_manual":
+            if not reviewer or source not in {"admin_manual", "order_admin"}:
                 failures["website_manual_paid_reviewer_missing"] += 1
 
     ledger_entries = PaymentLedgerEntry.objects.select_related("payment", "quote").all()
@@ -157,14 +167,49 @@ def collect_finance_reconciliation(*, check_storage: bool = True) -> dict[str, A
         )["value"]
         or 0
     )
+    refund_ledger = ledger_entries.filter(entry_type="refund")
+    metrics["website_refund_debit_sum"] = int(refund_ledger.filter(
+        direction="debit").aggregate(value=Sum("amount"))["value"] or 0)
+    metrics["website_credit_note_sum"] = int(ServiceCreditNote.objects.aggregate(
+        value=Sum("amount"))["value"] or 0)
+    metrics["website_net_paid_sum"] = metrics["website_ledger_credit_sum"] - metrics["website_refund_debit_sum"]
+    metrics["website_credit_note_count"] = ServiceCreditNote.objects.count()
+    metrics["website_refund_requests"] = ServiceRefund.objects.count()
     for ledger in ledger_entries.filter(entry_type="payment"):
         if ledger.payment_id and ledger.quote_id != ledger.payment.quote_id:
             failures["website_ledger_cross_quote"] += 1
 
-    for quote in Quote.objects.prefetch_related("payments").all():
+    for ledger in refund_ledger:
+        refund = ServiceRefund.objects.filter(ledger_entry_id=ledger.pk).first()
+        if (ledger.direction != "debit" or ledger.currency != "IRT"
+                or not refund or refund.status != "completed"
+                or refund.quote_id != ledger.quote_id
+                or refund.original_payment_id != ledger.payment_id
+                or refund.amount != ledger.amount
+                or (refund.payout_reference or "") != ledger.provider_ref):
+            failures["website_refund_ledger_mismatch"] += 1
+        if ledger.payment.status != "paid" or ledger.payment.quote_id != ledger.quote_id:
+            failures["website_refund_unverified_payment"] += 1
+    for refund in ServiceRefund.objects.all():
+        if refund.status == "completed" and not refund.ledger_entry_id:
+            failures["website_refund_completed_without_ledger"] += 1
+        if refund.status != "completed" and refund.ledger_entry_id:
+            failures["website_refund_unconfirmed_ledger"] += 1
+    for note in ServiceCreditNote.objects.select_related("quote"):
+        if not note.quote.pricing_snapshot_at or not note.reference or not note.reason:
+            failures["website_credit_note_missing_proof"] += 1
+    for quote in Quote.objects.prefetch_related("payments", "credit_notes", "ledger_entries").all():
         paid_sum = sum(int(p.amount or 0) for p in quote.payments.all() if p.status == "paid")
         if paid_sum > int(quote.total_price or 0):
             failures["website_quote_overpaid"] += 1
+        if quote.credit_note_total > quote.total_price:
+            failures["website_quote_overcredited"] += 1
+        if quote.refunded_amount > paid_sum:
+            failures["website_quote_overrefunded"] += 1
+        if quote.paid_amount != paid_sum - quote.refunded_amount:
+            failures["website_quote_net_paid_mismatch"] += 1
+        if any(r.amount <= 0 for r in quote.credit_notes.all()):
+            failures["website_invalid_credit_note"] += 1
 
     active_custom = WebsiteOrder.objects.filter(status__in=ACTIVE_CUSTOM_ORDER_STATUSES)
     metrics["active_custom_orders"] = active_custom.count()

@@ -1,0 +1,51 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div dir="rtl" style="max-width:850px;margin:20px auto;line-height:2">
+  <p><a href="{{ change_url }}">بازگشت به سفارش</a></p>
+  <h2>{{ title }} — سفارش {{ order.pk }}</h2>
+  <div style="padding:18px;border:1px solid #d9cdbb;border-radius:12px;background:#fffaf1;margin-bottom:22px">
+    <p>مبلغ پیش‌فاکتور اصلی: <strong>{{ quote.total_price }} تومان</strong> |
+       اصلاحیه‌های قبلی: <strong>{{ quote.credit_note_total }} تومان</strong> |
+       بدهی تعدیل‌شده: <strong>{{ quote.effective_total_price }} تومان</strong></p>
+    <p>وجه تأییدشده دریافت‌شده: <strong>{{ quote.gross_paid_amount }} تومان</strong> |
+       وجه واقعاً مستردشده: <strong>{{ quote.refunded_amount }} تومان</strong> |
+       مانده قابل استرداد: <strong>{{ quote.refundable_excess }} تومان</strong></p>
+    {% if action_type == 'refund_request' %}
+      <p><b>این فرم فقط درخواست ایجاد می‌کند.</b> تا وقتی وجه واقعاً برنگشته و شماره رسید در مرحله تأیید ثبت نشده باشد، دفتر مالی هیچ استردادی ثبت نمی‌کند.</p>
+    {% elif action_type == 'credit' %}
+      <p><b>اصلاحیه، پیش‌فاکتور قطعی اولیه را تغییر نمی‌دهد</b> و خودِ صدور اصلاحیه به معنی استرداد وجه نیست.</p>
+    {% else %}
+      <p><b>این صفحه پول منتقل نمی‌کند.</b> ابتدا از طریق بانک، پوز یا نقدی، پرداخت واقعی را انجام داده و سند بیرونی را بررسی کنید.</p>
+    {% endif %}
+  </div>
+  {% if refund %}
+    <div style="padding:15px;background:#f2f6f9;border-radius:10px">
+      <b>درخواست #{{ refund.pk }}</b> |
+      {{ refund.amount }} تومان |
+      {{ refund.get_method_display }} |
+      {{ refund.get_status_display }}
+      <p>دلیل: {{ refund.reason }}</p>
+      {% if refund.status == 'completed' %}
+        <p>شناسه پرداخت واقعی: {{ refund.payout_reference }} |
+           تأییدکننده: {{ refund.completed_by }}</p>
+      {% elif refund.status == 'cancelled' %}
+        <p>دلیل لغو: {{ refund.cancellation_reason }}</p>
+      {% endif %}
+    </div>
+  {% endif %}
+  {% if not refund or refund.status == 'requested' %}
+    <form method="post" style="padding:15px 0">{% csrf_token %}
+      {{ form.non_field_errors }}
+      {% for field in form %}
+        <div style="margin:15px 0">
+          <label style="display:block;font-weight:bold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% for error in field.errors %}<p style="color:#a22">{{ error }}</p>{% endfor %}
+          {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+        </div>
+      {% endfor %}
+      <button type="submit" class="default" style="padding:10px 25px">ثبت تصمیم مستند</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

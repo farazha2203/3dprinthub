@@ -23,6 +23,8 @@ from .models import (
     Payment,
     PaymentLedgerEntry,
     ServiceOrderDelivery,
+    ServiceCreditNote,
+    ServiceRefund,
     OrderReview,
 )
 
@@ -398,16 +400,31 @@ class OrderAdmin(admin.ModelAdmin):
     def change_view(self, request, object_id, form_url="", extra_context=None):
         from .order_finance_admin import order_finance_summary
         from .service_delivery_admin import order_delivery_summary
+        from .service_adjustment_admin import order_adjustments_summary
         obj = self.get_object(request, object_id)
         context = dict(extra_context or {})
         context["order_finance_panel"] = order_finance_summary(obj) if obj else ""
         context["order_delivery_panel"] = order_delivery_summary(obj) if obj else ""
+        context["order_adjustments_panel"] = order_adjustments_summary(obj) if obj else ""
         return super().change_view(request, object_id, form_url, extra_context=context)
 
     def get_urls(self):
         from .order_finance_admin import record_manual_receipt_view
         from .service_delivery_admin import record_service_delivery_view
+        from .service_adjustment_admin import (
+            issue_service_credit_note_view, request_service_refund_view,
+            complete_service_refund_view,
+        )
         return [
+            path("<int:order_id>/issue-credit-note/", self.admin_site.admin_view(
+                lambda request, order_id: issue_service_credit_note_view(self, request, order_id)
+            ), name="website_order_issue_credit_note"),
+            path("<int:order_id>/request-refund/", self.admin_site.admin_view(
+                lambda request, order_id: request_service_refund_view(self, request, order_id)
+            ), name="website_order_request_refund"),
+            path("<int:order_id>/complete-refund/<int:refund_id>/", self.admin_site.admin_view(
+                lambda request, order_id, refund_id: complete_service_refund_view(self, request, order_id, refund_id)
+            ), name="website_order_complete_refund"),
             path("<int:order_id>/record-delivery/", self.admin_site.admin_view(
                 lambda request, order_id: record_service_delivery_view(self, request, order_id)
             ), name="website_order_record_delivery"),
@@ -695,8 +712,12 @@ class PaymentAdmin(admin.ModelAdmin):
 
     @admin.action(description="تأیید پرداخت‌های انتخاب‌شده")
     def mark_selected_paid(self, request, queryset):
-        eligible = queryset.filter(method__in=["bank_transfer", "pos", "cash"], status__in=["pending", "awaiting_review"])
-        for payment in eligible:
+        eligible_ids = list(queryset.filter(
+            method__in=["bank_transfer", "pos", "cash"],
+            status__in=["pending", "awaiting_review"],
+        ).values_list("pk", flat=True))
+        skipped = queryset.exclude(pk__in=eligible_ids).count()
+        for payment in Payment.objects.filter(pk__in=eligible_ids):
             payment.mark_paid(
                 ref_id=payment.ref_id,
                 provider_message="تأیید دستی واحد مالی",
@@ -705,7 +726,6 @@ class PaymentAdmin(admin.ModelAdmin):
                     "reviewed_by_user_id": request.user.pk,
                 },
             )
-        skipped = queryset.exclude(method__in=["bank_transfer", "pos", "cash"], status__in=["pending", "awaiting_review"]).count()
         if skipped:
             self.message_user(request, "تراکنش‌های درگاه فقط با Verify بانکی تأیید می‌شوند و وضعیت‌های غیرمجاز تغییر نکردند.", level=messages.WARNING)
 
@@ -723,6 +743,43 @@ class PaymentLedgerEntryAdmin(admin.ModelAdmin):
         "quote", "payment", "entry_type", "direction", "amount", "currency", "event_key",
         "provider_ref", "description", "metadata", "created_at",
     ]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(ServiceCreditNote)
+class ServiceCreditNoteAdmin(admin.ModelAdmin):
+    list_display = ("reference", "quote", "amount", "issued_by", "created_at")
+    search_fields = ("reference", "quote__order__phone", "reason")
+    readonly_fields = ("reference", "quote", "amount", "reason", "issued_by", "created_at")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(ServiceRefund)
+class ServiceRefundAdmin(admin.ModelAdmin):
+    list_display = ("quote", "original_payment", "amount", "method", "status",
+                    "payout_reference", "requested_by", "completed_by", "created_at")
+    list_filter = ("status", "method")
+    search_fields = ("quote__order__phone", "payout_reference", "reason")
+    readonly_fields = ("quote", "original_payment", "amount", "method", "reason",
+                       "request_key", "status", "payout_reference", "requested_by",
+                       "completed_by", "completed_at", "cancellation_reason",
+                       "ledger_entry", "created_at")
 
     def has_add_permission(self, request):
         return False
