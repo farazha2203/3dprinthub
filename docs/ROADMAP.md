@@ -1072,3 +1072,10 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - [x] Final integrated **188/188** local tests PASS, including newer independent-cancellation/least-privilege tests; schema/Bash/Python/diff checks PASS.
 - [ ] Publish exact clean source SHA via full backup and migration allowlist, verify unchanged real DB/order/stock fingerprints and separate reviewer permissions.
 - [ ] Explicitly assign reviewer permission to a separately authorized staff account using Django Groups (not auto-provisioned). PSP payout API / signed provider callbacks remain separate.
+
+## 2026-11-11 - Production tunnel recovery before dual-approval rollout
+- [x] Reconfirm new refund maker/checker source at GitHub; 188/188 regression successful, migration scripts unchanged.
+- [x] Identify transport blocker: PrintHub reverse loopback 22024 down, WinSCP read-only Host branch SHA remains 0ae8d785; other independent tunnel ports are up.
+- [x] Prepare project-scoped, no-secret cPanel Terminal one-shot bootstrap and per-minute cron audit runbook in `docs/operations/PHASE50_TUNNEL_RECOVERY_20261111.md`.
+- [ ] Recover project-only reverse SSH bridge with documented Host bootstrap and verify Windows authenticated health.
+- [ ] Re-run full preflight, deploy Website.0029 + Store.0044 and independently confirm no change to all original money/stock records and public/admin pages. No FTP code upload or other-project tunnel bypass.
