@@ -1079,3 +1079,10 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - [x] Prepare project-scoped, no-secret cPanel Terminal one-shot bootstrap and per-minute cron audit runbook in `docs/operations/PHASE50_TUNNEL_RECOVERY_20261111.md`.
 - [ ] Recover project-only reverse SSH bridge with documented Host bootstrap and verify Windows authenticated health.
 - [ ] Re-run full preflight, deploy Website.0029 + Store.0044 and independently confirm no change to all original money/stock records and public/admin pages. No FTP code upload or other-project tunnel bypass.
+
+## 2026-11-11 — 3DPrintHub tunnel watchdog root-cause prevention
+- [x] Confirm dedicated reverse port 22024 remains absent while other independent services are healthy; FTPS source ref remains live 0ae8d785 and host watchdog output stale.
+- [x] Independently reproduce flock-inherited-lock bug in Linux: daemon spawned under `flock -n` retains lock; `flock -n -o` and child fd3 closure prevent it.
+- [x] Update dedicated bootstrap source to close inherited lock fd3 in both persistent `nohup` children; update canonical cPanel Cron example with `flock -n -o` and exact host release allowlist; syntax tests clean.
+- [ ] In 3DPrintHub cPanel Terminal, inspect whether `watchdog.lock` is actually held, correct the per-minute Cron entry without touching other projects, restart the transport-only bootstrap, then verify authenticated local 22024 health.
+- [ ] Once connected: repeat independent DB/source/financial preflight; full backup; gated dual-approval migrations and read-only production smoke.

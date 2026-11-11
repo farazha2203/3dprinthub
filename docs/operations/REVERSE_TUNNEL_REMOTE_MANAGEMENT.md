@@ -63,10 +63,10 @@ The accepted Production operations profile adds a one-minute cPanel cron watchdo
 
 ```cron
 # 3DPrintHub reverse tunnel watchdog
-* * * * * /bin/flock -n /home/sfkilvrs/.config/reverse-host-bridge/3dprinthub/watchdog.lock /bin/bash -lc 'cd /home/sfkilvrs/3dprinthub && WAIT_SECONDS=35 /bin/bash scripts/host/phase50_reverse_tunnel_bootstrap.sh >> /home/sfkilvrs/.config/reverse-host-bridge/3dprinthub/watchdog.log 2>&1'
+* * * * * /bin/flock -n -o /home/sfkilvrs/.config/reverse-host-bridge/3dprinthub/watchdog.lock /bin/bash -lc 'cd /home/sfkilvrs/3dprinthub && WAIT_SECONDS=35 /bin/bash scripts/host/phase50_reverse_tunnel_bootstrap.sh >> /home/sfkilvrs/.config/reverse-host-bridge/3dprinthub/watchdog.log 2>&1'
 ```
 
-The bootstrap is idempotent: when the bridge/tunnel are healthy it exits successfully without starting duplicates; when the tunnel process is gone the next watchdog pass creates a new SSH process. `flock -n` prevents overlapping recovery attempts.
+The bootstrap is idempotent: when the bridge/tunnel are healthy it exits successfully without starting duplicates; when the tunnel process is gone the next watchdog pass creates a new SSH process. `flock -n -o` prevents overlapping recovery attempts **without passing the lock file descriptor to the long-running SSH and bridge child processes**. The `-o` (`--close`) flag is required for durable recovery: with `flock -n` alone, a `nohup` child may inherit the lock and indefinitely block later watchdog runs. The bootstrap launcher also closes inherited fd 3 (`3>&-`) as a defensive fallback. Update the actual cPanel Cron Jobs entry to include `-o`; changing documentation or Git source does not update an existing cron entry automatically.
 
 SSH process health is also bounded by `ExitOnForwardFailure=yes`, `ServerAliveInterval=30`, and `ServerAliveCountMax=3`.
 

@@ -88,10 +88,13 @@ else
     fi
   fi
   : > "$BRIDGE_LOG"
+  # When invoked by cron under flock(1), close inherited lock fd 3 in the
+  # detached process. Otherwise the persistent bridge can prevent all future
+  # watchdog runs even after the short bootstrap command exits.
   nohup env OPERATOR_BRIDGE_TOKEN_FILE="$TOKEN_FILE" \
     "$ROOT/scripts/operator/start_reverse_host_bridge.sh" \
     "$PY" "$ROOT" "$BRIDGE_PORT" \
-    > "$BRIDGE_LOG" 2>&1 < /dev/null &
+    > "$BRIDGE_LOG" 2>&1 < /dev/null 3>&- &
   NEW_BRIDGE_PID=$!
   printf '%s\n' "$NEW_BRIDGE_PID" > "$BRIDGE_PID"
   sleep 2
@@ -116,7 +119,7 @@ start_tunnel_once() {
     -o ServerAliveCountMax=3 \
     -R "127.0.0.1:${WINDOWS_PORT}:127.0.0.1:${BRIDGE_PORT}" \
     "${WINDOWS_USER}@${WINDOWS_HOST}" \
-    > "$TUNNEL_LOG" 2>&1 < /dev/null &
+    > "$TUNNEL_LOG" 2>&1 < /dev/null 3>&- &
   printf '%s\n' "$!" > "$TUNNEL_PID"
 }
 if [[ -f "$TUNNEL_PID" ]]; then

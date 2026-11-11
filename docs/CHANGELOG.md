@@ -1381,3 +1381,7 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - Added dedicated approver permissions, immutable second-user/approval timestamp/approval notes and blocking state transitions for both ServiceRefund and StoreReturnRefund. No automatic bank payout, receipt mutation or stock change.
 - Expanded Store and Website refund audit reconciliation. Hardened approved-but-unpaid cancellation permissions and prevented original requesters completing their refunds.
 - Staff admin now separates first approval from real-world payout confirmation; retains existing refund and inventory ledgers without duplicating funds. Schema requires Website.0029 and Store.0044, currently not applied on Host. Final **188/188** broad local regression PASS, static/schema drift and Bash syntax PASS. Host migration/release not yet applied.
+
+## 2026-11-11 — Project-specific reverse SSH watchdog hardening (UNRELEASED)
+- Updated 3DPrintHub transport-only SSH and bridge `nohup` launches to close inherited flock descriptor 3, preventing live child processes from starving the one-minute cron watchdog. Updated source runbook to `flock -n -o` and exact financial-release changed-file allowlist. Bash syntax and diff hygiene pass.
+- This addresses a reproduced Linux FD inheritance behavior consistent with Nov9 stale watchdog + Nov11 tunnel disconnect. Host flock holder is not independently proven; actual cPanel Cron change/Host bootstrap still needed. Current Host runtime stays 0ae8d785, financial dual approval migration unapplied.
