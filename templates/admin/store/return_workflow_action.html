@@ -15,8 +15,7 @@
       <p><b>درخواست وجه به معنی انتقال پول نیست.</b>
       مبلغ را طبق ارزش کالای دریافت‌شده و پرداخت واقعی مشتری ثبت کنید.</p>
     {% elif action == 'decide-refund' %}
-      <p><b>تا زمان ثبت رسید واقعی بازپرداخت، هیچ سند بدهکاری صادر نمی‌شود.</b>
-      مرجوعی و دریافت وجه مشتری حذف یا بازنویسی نخواهند شد.</p>
+      <p><b>این فرم پول منتقل نمی‌کند.</b> ابتدا یک مسئول مالی غیر از درخواست‌کننده، مبلغ را با سند مستقل تأیید می‌کند؛ سپس پس از پرداخت واقعی وجه و بررسی رسید، سند بدهکار ثبت می‌شود. هیچ‌کدام از این مراحل، دریافت اصلی مشتری را بازنویسی نمی‌کنند.</p>
     {% endif %}
   </div>
   {% if refund %}
@@ -24,9 +23,12 @@
     <b>درخواست استرداد {{ refund.pk }}</b>
     <p>{{ refund.amount }} تومان | {{ refund.get_method_display }} | {{ refund.get_status_display }}</p>
     <p>دلیل: {{ refund.reason }}</p>
+    <p>درخواست‌کننده: {{ refund.requested_by }} | تأییدکننده دوم: {{ refund.approved_by|default:"در انتظار تأیید مستقل" }}</p>
+    {% if refund.approved_at %}<p>علت تأیید: {{ refund.approval_note }} | تاریخ: {{ refund.approved_at }}</p>{% endif %}
     {% if refund.payout_reference %}<p>رسید واقعی: {{ refund.payout_reference }}</p>{% endif %}
   </div>
   {% endif %}
+  {% if not refund or refund.status == "requested" or refund.status == "approved" %}
   <form method="post" style="margin-top:20px">{% csrf_token %}
     {{ form.non_field_errors }}
     {% for field in form %}
@@ -38,5 +40,6 @@
     {% endfor %}
     <button type="submit" class="default" style="padding:10px 25px">ثبت تصمیم مستند</button>
   </form>
+  {% endif %}
 </div>
 {% endblock %}

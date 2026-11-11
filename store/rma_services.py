@@ -164,7 +164,7 @@ def inspect_return(*, return_id, received_quantity, restock_quantity, inspection
 
 def _outstanding_refunds(*, order_id, payment_id=None, rma_id=None):
     qs = StoreReturnRefund.objects.filter(
-        return_request__order_id=order_id, status__in=["requested", "completed"]
+        return_request__order_id=order_id, status__in=["requested", "approved", "completed"]
     )
     if payment_id is not None:
         qs = qs.filter(payment_id=payment_id)
@@ -220,6 +220,41 @@ def request_store_return_refund(
     )
 
 
+def approve_store_return_refund(*, refund_id, approval_note, actor):
+    """A distinct finance reviewer approves the amount, never sends money."""
+    _staff(actor, "store.approve_storereturnrefund")
+    note = (approval_note or "").strip()
+    if len(note) < 8:
+        raise StoreRMAError("دلیل تأیید مستقل باید حداقل هشت نویسه باشد.")
+    order_id = StoreReturnRefund.objects.select_related("return_request").get(
+        pk=refund_id
+    ).return_request.order_id
+    with transaction.atomic():
+        order = _order(order_id)
+        refund = StoreReturnRefund.objects.select_for_update().select_related(
+            "return_request", "payment"
+        ).get(pk=refund_id)
+        if actor.pk == refund.requested_by_id:
+            raise StoreRMAError("درخواست‌کننده اجازه تأیید استرداد خودش را ندارد.")
+        if refund.status == "approved":
+            if refund.approved_by_id == actor.pk and refund.approval_note == note:
+                return refund
+            raise StoreRMAError("این درخواست پیش‌تر تأیید شده است.")
+        if refund.status != "requested":
+            raise StoreRMAError("فقط درخواست ثبت‌شده قابل تأیید مستقل است.")
+        if refund.payment.status != "paid" or refund.payment.order_id != order.pk:
+            raise StoreRMAError("دریافت معتبر برای بازپرداخت وجود ندارد.")
+        rma = _request(refund.return_request_id)
+        if rma.status not in {"received", "refunded"} or not hasattr(rma, "inspection"):
+            raise StoreRMAError("کالا هنوز دریافت و بررسی نشده است.")
+        refund.approved_by = actor
+        refund.approved_at = timezone.now()
+        refund.approval_note = note
+        refund.status = "approved"
+        refund.save(update_fields=["approved_by", "approved_at", "approval_note", "status"])
+        return refund
+
+
 def confirm_store_return_refund(
     *, refund_id, payout_reference, actor, confirmed_external_payout=False,
 ):
@@ -233,14 +268,16 @@ def confirm_store_return_refund(
     with transaction.atomic():
         order = _order(order_id)
         refund = StoreReturnRefund.objects.select_for_update().select_related(
-            "return_request", "payment"
+            "return_request", "payment", "requested_by", "approved_by"
         ).get(pk=refund_id)
+        if actor.pk == refund.requested_by_id:
+            raise StoreRMAError("درخواست‌کننده حق ثبت تأیید پرداخت خودش را ندارد.")
         if refund.status == "completed":
             if refund.payout_reference == reference and StoreReturnRefundLedger.objects.filter(refund=refund).exists():
                 return refund
             raise StoreRMAError("این بازپرداخت پیش‌تر با رسید دیگری قطعی شده است.")
-        if refund.status != "requested":
-            raise StoreRMAError("بازپرداخت لغوشده قابل تأیید نیست.")
+        if refund.status != "approved" or not refund.approved_by_id or not refund.approved_at:
+            raise StoreRMAError("استرداد باید ابتدا توسط مسئول مالی مستقل تأیید شده باشد.")
         if StoreReturnRefund.objects.filter(payout_reference=reference).exclude(pk=refund.pk).exists():
             raise StoreRMAError("شماره رسید استرداد قبلاً استفاده شده است.")
         if refund.payment.status != "paid" or refund.payment.order_id != order.pk:
@@ -288,8 +325,12 @@ def cancel_store_return_refund(*, refund_id, cancellation_reason, actor):
     with transaction.atomic():
         _order(order_id)
         refund = StoreReturnRefund.objects.select_for_update().get(pk=refund_id)
-        if refund.status != "requested":
+        if refund.status not in {"requested", "approved"}:
             raise StoreRMAError("فقط درخواست پرداخت‌نشده قابل لغو است.")
+        if refund.status == "approved" and (
+            actor.pk == refund.requested_by_id or not actor.has_perm("store.approve_storereturnrefund")
+        ):
+            raise StoreRMAError("لغو درخواست تأییدشده نیازمند مسئول مالی مستقل است.")
         refund.status, refund.cancelled_reason = "cancelled", reason
         refund.save(update_fields=["status", "cancelled_reason"])
         return refund

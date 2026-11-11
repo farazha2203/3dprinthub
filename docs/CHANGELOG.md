@@ -1376,3 +1376,8 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - Return stock only after physical inspection of a real sold original ProductVariant, once per RMA; quality rejects do not increase inventory, and no return can exceed purchased quantity/sale inventory movements.
 - Staff-admin controlled status forms replace direct editable refunded flag; Store payment admin forbids manually confirming gateway attempts, shipping of unpaid orders and rewriting paid receipt state. Partial refund cannot reverse whole affiliate commission.
 - Customer order page shows quantities, inspection, refund state and actual external proof. Finance reconciliation calculates store net paid and detects invalid stock/ledger connections. 42/42 initial targeted tests PASS; baseline 3 unrelated legacy commerce test failures independently reproduced.
+
+## 2026-11-11 — Independent reviewer for refund payouts (LOCAL)
+- Added dedicated approver permissions, immutable second-user/approval timestamp/approval notes and blocking state transitions for both ServiceRefund and StoreReturnRefund. No automatic bank payout, receipt mutation or stock change.
+- Expanded Store and Website refund audit reconciliation. Hardened approved-but-unpaid cancellation permissions and prevented original requesters completing their refunds.
+- Staff admin now separates first approval from real-world payout confirmation; retains existing refund and inventory ledgers without duplicating funds. Schema requires Website.0029 and Store.0044, currently not applied on Host. Final **188/188** broad local regression PASS, static/schema drift and Bash syntax PASS. Host migration/release not yet applied.

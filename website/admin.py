@@ -773,11 +773,12 @@ class ServiceCreditNoteAdmin(admin.ModelAdmin):
 @admin.register(ServiceRefund)
 class ServiceRefundAdmin(admin.ModelAdmin):
     list_display = ("quote", "original_payment", "amount", "method", "status",
-                    "payout_reference", "requested_by", "completed_by", "created_at")
+                    "payout_reference", "requested_by", "approved_by", "completed_by", "created_at")
     list_filter = ("status", "method")
     search_fields = ("quote__order__phone", "payout_reference", "reason")
     readonly_fields = ("quote", "original_payment", "amount", "method", "reason",
                        "request_key", "status", "payout_reference", "requested_by",
+                       "approved_by", "approved_at", "approval_note",
                        "completed_by", "completed_at", "cancellation_reason",
                        "ledger_entry", "created_at")
 

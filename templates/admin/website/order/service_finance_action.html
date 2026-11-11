@@ -15,7 +15,7 @@
     {% elif action_type == 'credit' %}
       <p><b>اصلاحیه، پیش‌فاکتور قطعی اولیه را تغییر نمی‌دهد</b> و خودِ صدور اصلاحیه به معنی استرداد وجه نیست.</p>
     {% else %}
-      <p><b>این صفحه پول منتقل نمی‌کند.</b> ابتدا از طریق بانک، پوز یا نقدی، پرداخت واقعی را انجام داده و سند بیرونی را بررسی کنید.</p>
+      <p><b>این صفحه پول منتقل نمی‌کند.</b> ابتدا کاربر دومِ دارای مجوز مستقل، مبلغ استرداد را تأیید کند. فقط پس از انجام واقعی پرداخت بیرونی و ثبت رسید، سند بدهکار ایجاد می‌شود. درخواست‌کننده مجاز به تأیید یا ثبت نهایی نیست.</p>
     {% endif %}
   </div>
   {% if refund %}
@@ -25,6 +25,8 @@
       {{ refund.get_method_display }} |
       {{ refund.get_status_display }}
       <p>دلیل: {{ refund.reason }}</p>
+      <p>درخواست‌کننده: <b>{{ refund.requested_by }}</b> | تأییدکننده مستقل: <b>{{ refund.approved_by|default:"در انتظار تأیید شخص دوم" }}</b></p>
+      {% if refund.approved_at %}<p>سند تأیید مستقل: {{ refund.approval_note }} | زمان: {{ refund.approved_at }}</p>{% endif %}
       {% if refund.status == 'completed' %}
         <p>شناسه پرداخت واقعی: {{ refund.payout_reference }} |
            تأییدکننده: {{ refund.completed_by }}</p>
@@ -33,7 +35,7 @@
       {% endif %}
     </div>
   {% endif %}
-  {% if not refund or refund.status == 'requested' %}
+  {% if not refund or refund.status == 'requested' or refund.status == 'approved' %}
     <form method="post" style="padding:15px 0">{% csrf_token %}
       {{ form.non_field_errors }}
       {% for field in form %}

@@ -14,7 +14,7 @@ from website.models import (
 )
 from website.payment_services import PaymentFlowError
 from website.service_adjustments import (
-    ServiceFinanceError, cancel_service_refund, confirm_service_refund,
+    ServiceFinanceError, approve_service_refund, cancel_service_refund, confirm_service_refund,
     issue_service_credit_note, request_service_refund,
 )
 
@@ -23,6 +23,10 @@ class ServiceAdjustmentTests(TestCase):
     def setUp(self):
         self.owner = User.objects.create_superuser(
             username="service-refund-finance", email="finance@example.invalid",
+            password="unit-test-password",
+        )
+        self.checker = User.objects.create_superuser(
+            username="service-refund-checker", email="checker@example.invalid",
             password="unit-test-password",
         )
         self.customer = User.objects.create_user(
@@ -70,6 +74,12 @@ class ServiceAdjustmentTests(TestCase):
             quote_id=self.quote.pk, payment_id=payment.pk,
             amount=amount, method=method, reason="Customer overpayment on revised invoice",
             actor=self.owner, request_key=key,
+        )
+
+    def approve_refund(self, refund):
+        return approve_service_refund(
+            refund_id=refund.pk, approval_note="Independent payment decision verified",
+            actor=self.checker,
         )
 
     def test_credit_reduces_collectible_debt_without_rewriting_original_quote(self):
@@ -147,13 +157,14 @@ class ServiceAdjustmentTests(TestCase):
         p = self.pay()
         note = self.credit()
         requested = self.request_refund(p, amount=60000)
+        self.approve_refund(requested)
         with self.assertRaises(ServiceFinanceError):
             confirm_service_refund(
-                refund_id=requested.pk, actor=self.owner,
+                refund_id=requested.pk, actor=self.checker,
                 payout_reference="bank-real-123", confirmed_external_payout=False,
             )
         done = confirm_service_refund(
-            refund_id=requested.pk, actor=self.owner,
+            refund_id=requested.pk, actor=self.checker,
             payout_reference="bank-real-123", confirmed_external_payout=True,
         )
         self.assertEqual(done.status, "completed")
@@ -161,7 +172,7 @@ class ServiceAdjustmentTests(TestCase):
         self.assertEqual(done.ledger_entry.direction, "debit")
         self.assertEqual(done.ledger_entry.amount, 60000)
         self.assertEqual(done.ledger_entry.payment_id, p.pk)
-        self.assertEqual(done.completed_by, self.owner)
+        self.assertEqual(done.completed_by, self.checker)
         self.assertEqual(done.ledger_entry.metadata["refund_id"], requested.pk)
         self.assertEqual(self.quote.refunded_amount, 60000)
         self.assertEqual(self.quote.paid_amount, 140000)
@@ -179,19 +190,20 @@ class ServiceAdjustmentTests(TestCase):
         p = self.pay()
         self.credit()
         req = self.request_refund(p, amount=30000)
+        self.approve_refund(req)
         one = confirm_service_refund(
-            refund_id=req.pk, actor=self.owner,
+            refund_id=req.pk, actor=self.checker,
             payout_reference="refund-confirm-01", confirmed_external_payout=True,
         )
         two = confirm_service_refund(
-            refund_id=req.pk, actor=self.owner,
+            refund_id=req.pk, actor=self.checker,
             payout_reference="refund-confirm-01", confirmed_external_payout=True,
         )
         self.assertEqual(one.ledger_entry_id, two.ledger_entry_id)
         self.assertEqual(PaymentLedgerEntry.objects.filter(entry_type="refund").count(), 1)
         with self.assertRaises(ServiceFinanceError):
             confirm_service_refund(
-                refund_id=req.pk, actor=self.owner,
+                refund_id=req.pk, actor=self.checker,
                 payout_reference="another-bank-trace", confirmed_external_payout=True,
             )
         one.reason = "changed"
@@ -216,7 +228,7 @@ class ServiceAdjustmentTests(TestCase):
         self.assertEqual(new.amount, 60000)
         with self.assertRaises(ServiceFinanceError):
             confirm_service_refund(
-                refund_id=req.pk, actor=self.owner,
+                refund_id=req.pk, actor=self.checker,
                 payout_reference="refund-cancelled", confirmed_external_payout=True,
             )
 
@@ -266,13 +278,15 @@ class ServiceAdjustmentTests(TestCase):
         self.credit()
         one = self.request_refund(p, amount=20000)
         two = self.request_refund(p, amount=20000)
+        self.approve_refund(one)
+        self.approve_refund(two)
         confirm_service_refund(
-            refund_id=one.pk, actor=self.owner,
+            refund_id=one.pk, actor=self.checker,
             payout_reference="BANK-REUSED-1", confirmed_external_payout=True,
         )
         with self.assertRaises(ServiceFinanceError):
             confirm_service_refund(
-                refund_id=two.pk, actor=self.owner,
+                refund_id=two.pk, actor=self.checker,
                 payout_reference="BANK-REUSED-1", confirmed_external_payout=True,
             )
         self.assertEqual(self.quote.refunded_amount, 20000)
@@ -309,6 +323,11 @@ class ServiceAdjustmentTests(TestCase):
         complete_url = reverse(
             "admin:website_order_complete_refund", args=[self.order.pk, refund.pk]
         )
+        self.client.force_login(self.checker)
+        approved = self.client.post(complete_url, {
+            "action": "approve", "approval_note": "Independent refund approved after proof review",
+        })
+        self.assertEqual(approved.status_code, 302)
         no_real_payout = self.client.post(complete_url, {
             "action": "complete", "payout_reference": "BANK-WEB-VERIFY-01",
         })
@@ -358,8 +377,9 @@ class ServiceAdjustmentTests(TestCase):
         p = self.pay()
         self.credit()
         ref = self.request_refund(p, amount=20000, method="cash")
+        self.approve_refund(ref)
         confirm_service_refund(
-            refund_id=ref.pk, actor=self.owner,
+            refund_id=ref.pk, actor=self.checker,
             payout_reference="CASH-VOUCHER-001", confirmed_external_payout=True,
         )
         result = collect_finance_reconciliation(check_storage=False)
@@ -374,12 +394,14 @@ class ServiceAdjustmentTests(TestCase):
         self.credit(amount=90000)
         one = self.request_refund(first, amount=70000)
         two = self.request_refund(second, amount=20000)
+        self.approve_refund(one)
+        self.approve_refund(two)
         confirm_service_refund(
-            refund_id=one.pk, actor=self.owner,
+            refund_id=one.pk, actor=self.checker,
             payout_reference="BANK-FIRST-REFUND", confirmed_external_payout=True,
         )
         confirm_service_refund(
-            refund_id=two.pk, actor=self.owner,
+            refund_id=two.pk, actor=self.checker,
             payout_reference="BANK-SECOND-REFUND", confirmed_external_payout=True,
         )
         self.assertEqual(self.quote.refunded_amount, 90000)
@@ -403,8 +425,9 @@ class ServiceAdjustmentTests(TestCase):
         original = self.pay()
         self.credit()
         requested = self.request_refund(original, amount=50000)
+        self.approve_refund(requested)
         refund = confirm_service_refund(
-            refund_id=requested.pk, actor=self.owner,
+            refund_id=requested.pk, actor=self.checker,
             payout_reference="PROOF-AUDIT-001", confirmed_external_payout=True,
         )
         ledger = refund.ledger_entry
@@ -450,3 +473,142 @@ class ServiceAdjustmentTests(TestCase):
                 reason="This is an invalid over-credit attempt", issued_by=self.owner,
             )
         self.assertEqual(ServiceCreditNote.objects.count(), 0)
+
+    def test_independent_checker_required_before_any_service_refund_debit(self):
+        p = self.pay()
+        self.credit()
+        refund = self.request_refund(p, amount=45000)
+        with self.assertRaises(ServiceFinanceError):
+            approve_service_refund(
+                refund_id=refund.pk, approval_note="Trying to approve own refund",
+                actor=self.owner,
+            )
+        with self.assertRaises(ServiceFinanceError):
+            confirm_service_refund(
+                refund_id=refund.pk, payout_reference="PREAPPROVAL-BANK-01",
+                actor=self.checker, confirmed_external_payout=True,
+            )
+        self.assertEqual(self.quote.refunded_amount, 0)
+        approved = self.approve_refund(refund)
+        self.assertEqual(approved.status, "approved")
+        self.assertEqual(approved.approved_by_id, self.checker.pk)
+        self.assertEqual(approved.requested_by_id, self.owner.pk)
+        self.assertEqual(PaymentLedgerEntry.objects.filter(entry_type="refund").count(), 0)
+        self.assertEqual(self.quote.refundable_excess, 60000)
+        self.assertEqual(self.quote.remaining_amount, 0)
+        with self.assertRaises(ServiceFinanceError):
+            self.request_refund(p, amount=16000)
+        with self.assertRaises(ServiceFinanceError):
+            confirm_service_refund(
+                refund_id=refund.pk, payout_reference="OWNER-SELF-PAYOUT",
+                actor=self.owner, confirmed_external_payout=True,
+            )
+        closed = confirm_service_refund(
+            refund_id=refund.pk, payout_reference="CHECKER-PAYOUT-01",
+            actor=self.checker, confirmed_external_payout=True,
+        )
+        self.assertEqual(closed.status, "completed")
+        self.assertEqual(closed.ledger_entry.metadata["approved_by_user_id"], self.checker.pk)
+        self.assertEqual(closed.ledger_entry.metadata["requested_by_user_id"], self.owner.pk)
+        self.assertEqual(closed.ledger_entry.metadata["confirmed_by_user_id"], self.checker.pk)
+
+    def test_service_approval_is_idempotent_immutable_and_cancel_releases_hold(self):
+        payment = self.pay()
+        self.credit()
+        refund = self.request_refund(payment, amount=40000)
+        first = self.approve_refund(refund)
+        second = self.approve_refund(refund)
+        self.assertEqual(first.pk, second.pk)
+        with self.assertRaises(ServiceFinanceError):
+            approve_service_refund(
+                refund_id=refund.pk, approval_note="Conflicting second endorsement",
+                actor=self.checker,
+            )
+        first.approval_note = "Edited after approval"
+        with self.assertRaises(ValidationError):
+            first.save()
+        first.refresh_from_db()
+        with self.assertRaises(ServiceFinanceError):
+            self.request_refund(payment, amount=30000)
+        cancel_service_refund(
+            refund_id=refund.pk, reason="Approved but external payout was cancelled",
+            actor=self.checker,
+        )
+        self.assertEqual(ServiceRefund.objects.get(pk=refund.pk).status, "cancelled")
+        self.assertEqual(PaymentLedgerEntry.objects.filter(entry_type="refund").count(), 0)
+        new = self.request_refund(payment, amount=60000)
+        self.assertEqual(new.status, "requested")
+
+    def test_service_dedicated_approval_permission_cannot_be_bypassed(self):
+        payment = self.pay()
+        self.credit()
+        refund = self.request_refund(payment, amount=50000)
+        finance_user = User.objects.create_user(
+            username="service-finance-request-only", password="test-password",
+            is_staff=True, is_active=True,
+        )
+        with self.assertRaises(PermissionDenied):
+            approve_service_refund(
+                refund_id=refund.pk, approval_note="Not authorized to endorse",
+                actor=finance_user,
+            )
+        with self.assertRaises(PermissionDenied):
+            approve_service_refund(
+                refund_id=refund.pk, approval_note="Untrusted customer actor",
+                actor=self.customer,
+            )
+        refund.status = "completed"
+        with self.assertRaises(ValidationError):
+            refund.save()
+        self.assertEqual(self.quote.refunded_amount, 0)
+
+    def test_independent_approval_reconciliation_flags_malicious_updated_record(self):
+        payment = self.pay()
+        self.credit()
+        refund = self.request_refund(payment, amount=30000)
+        self.approve_refund(refund)
+        ServiceRefund.objects.filter(pk=refund.pk).update(approved_by=self.owner)
+        audit = collect_finance_reconciliation(check_storage=False)
+        self.assertEqual(audit["failures"].get("website_refund_independent_approval_missing"), 1)
+
+    def test_approved_service_refund_cannot_be_cancelled_by_original_requester(self):
+        payment = self.pay()
+        self.credit()
+        refund = self.request_refund(payment, amount=45000)
+        self.approve_refund(refund)
+        with self.assertRaises(ServiceFinanceError):
+            cancel_service_refund(
+                refund_id=refund.pk, reason="Requester tries to cancel approved payment",
+                actor=self.owner,
+            )
+        self.assertEqual(ServiceRefund.objects.get(pk=refund.pk).status, "approved")
+        cancel_service_refund(
+            refund_id=refund.pk, reason="Authorized second finance reviewer cancelled",
+            actor=self.checker,
+        )
+        self.assertEqual(ServiceRefund.objects.get(pk=refund.pk).status, "cancelled")
+        self.assertEqual(self.quote.refunded_amount, 0)
+
+    def test_service_approval_only_staff_cannot_finalize_without_change_permission(self):
+        from django.contrib.auth.models import Permission
+        payment = self.pay()
+        self.credit()
+        refund = self.request_refund(payment, amount=30000)
+        reviewer = User.objects.create_user(
+            username="service-approver-only", password="test-password",
+            is_staff=True, is_active=True,
+        )
+        reviewer.user_permissions.add(
+            Permission.objects.get(content_type__app_label="website", codename="approve_servicerefund")
+        )
+        approved = approve_service_refund(
+            refund_id=refund.pk, approval_note="Separate limited finance reviewer",
+            actor=reviewer,
+        )
+        self.assertEqual(approved.status, "approved")
+        with self.assertRaises(PermissionDenied):
+            confirm_service_refund(
+                refund_id=refund.pk, payout_reference="ROLE-NO-PAYOUT-PERMISSION",
+                actor=reviewer, confirmed_external_payout=True,
+            )
+        self.assertEqual(PaymentLedgerEntry.objects.filter(entry_type="refund").count(), 0)

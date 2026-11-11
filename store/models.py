@@ -1234,7 +1234,8 @@ class StoreReturnInspection(models.Model):
 class StoreReturnRefund(models.Model):
     """Requested vs proven external payout, never an actual bank transfer."""
     STATUS_CHOICES = [
-        ("requested", "در انتظار اجرای واقعی استرداد"),
+        ("requested", "در انتظار تأیید مستقل مسئول مالی"),
+        ("approved", "تأیید مستقل؛ در انتظار رسید واقعی استرداد"),
         ("completed", "بازپرداخت واقعی ثبت و تأیید شد"),
         ("cancelled", "درخواست استرداد لغو شد"),
     ]
@@ -1262,6 +1263,13 @@ class StoreReturnRefund(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
         related_name="requested_store_refunds", verbose_name="درخواست‌کننده",
     )
+    approved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
+        null=True, blank=True, related_name="approved_store_refunds",
+        verbose_name="مسئول مالی دوم برای تأیید مستقل",
+    )
+    approved_at = models.DateTimeField(null=True, blank=True)
+    approval_note = models.TextField(blank=True, verbose_name="دلایل و مستند تأیید مستقل")
     completed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
         null=True, blank=True, related_name="completed_store_refunds",
@@ -1275,6 +1283,31 @@ class StoreReturnRefund(models.Model):
         ordering = ("-created_at", "-id")
         verbose_name = "بازپرداخت مرجوعی فروشگاه"
         verbose_name_plural = "بازپرداخت‌های مرجوعی فروشگاه"
+        permissions = [("approve_storereturnrefund", "Can independently approve store return refunds")]
+
+    def clean(self):
+        super().clean()
+        if self.amount < 1 or not (self.reason or "").strip():
+            raise ValidationError("مبلغ مثبت و دلیل مستند بازپرداخت الزامی است.")
+        if self.payment_id and self.return_request_id and (
+            self.payment.order_id != self.return_request.order_id or self.payment.status != "paid"
+        ):
+            raise ValidationError("پرداخت تأییدشده باید متعلق به همین سفارش باشد.")
+        if self.status in {"approved", "completed"} and (
+            not self.approved_by_id or not self.approved_at
+            or len((self.approval_note or "").strip()) < 8
+            or self.approved_by_id == self.requested_by_id
+        ):
+            raise ValidationError("تأییدکننده مستقل باید غیر از درخواست‌کننده باشد.")
+        if self.status == "requested" and (self.approved_by_id or self.approved_at):
+            raise ValidationError("درخواست جدید نباید تأیید از پیش ثبت‌شده داشته باشد.")
+        if self.status == "completed" and (
+            not self.completed_by_id or self.completed_by_id == self.requested_by_id
+            or not self.completed_at or not (self.payout_reference or "").strip()
+        ):
+            raise ValidationError("بازپرداخت قطعی بدون تأیید مستقل، رسید واقعی و مسئول دوم ممنوع است.")
+        if self.status == "cancelled" and len((self.cancelled_reason or "").strip()) < 8:
+            raise ValidationError("لغو بازپرداخت بدون توضیح مستند مجاز نیست.")
 
     def save(self, *args, **kwargs):
         if self.pk:
@@ -1285,6 +1318,19 @@ class StoreReturnRefund(models.Model):
                 getattr(self, name) != getattr(previous, name) for name in original
             ):
                 raise ValidationError("بازپرداخت قطعی یا مشخصات اصلی آن قابل بازنویسی نیست.")
+            allowed = {
+                "requested": {"requested", "approved", "cancelled"},
+                "approved": {"approved", "completed", "cancelled"},
+            }
+            if self.status not in allowed.get(previous.status, set()):
+                raise ValidationError("بازپرداخت قبل از تأیید مستقل یا با جهش وضعیت مجاز نیست.")
+            if previous.approved_by_id and (
+                self.approved_by_id != previous.approved_by_id
+                or self.approved_at != previous.approved_at
+                or self.approval_note != previous.approval_note
+            ):
+                raise ValidationError("تصمیم تأییدکننده مستقل غیرقابل بازنویسی است.")
+        self.full_clean()
         return super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):

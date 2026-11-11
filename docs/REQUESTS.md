@@ -1135,3 +1135,6 @@ Implement traceable post-acceptance price corrections and payout reversals WITHO
 
 ## 2026-11-10 — Next step after service-order payment, delivery and credit/refund
 Owner requested continued development. Focus: existing ready-to-sell StoreOrder / ProductVariant/PrintQuality/MaterialColorOption catalog and sold inventory must agree with return/inspection/refund process. Current Store already had SKU variants, stored Checkout price snapshots and stock reservation; missing controlled ReturnRequest quantity, physical inspection, restock and debit-ledger proof. New isolated RMA phase uses exact original Store Variant and requires actual seller/receiver action; no live counterfeit payments, returns or stock movements for QA.
+
+## 2026-11-11 — Next step after Store ProductVariant RMA / service payments
+Current requested development is a two-person, auditable refund-approval cycle on both Service Quote and StoreOrder RMA, before any real external refund proof can generate a debit. Work in isolated branch `fix/service-store-refund-dual-approval-20261111`. Existing 0ae8 Host production unchanged until migration and comprehensive QA gates PASS. The extra finance approval permission is not silently granted to the requester's account.

@@ -77,7 +77,8 @@ def _completed_refunds_for_payment(payment_id: int) -> int:
 
 
 def _requested_refunds(*, quote_id: int, payment_id: int | None = None) -> int:
-    q = ServiceRefund.objects.filter(quote_id=quote_id, status="requested")
+    # Approval must not release an already reserved overpayment before actual payout.
+    q = ServiceRefund.objects.filter(quote_id=quote_id, status__in=["requested", "approved"])
     if payment_id is not None:
         q = q.filter(original_payment_id=payment_id)
     return int(q.aggregate(value=Sum("amount"))["value"] or 0)
@@ -125,6 +126,37 @@ def request_service_refund(
         )
 
 
+def approve_service_refund(*, refund_id: int, approval_note: str, actor) -> ServiceRefund:
+    """Separate reviewer attests the commercial decision; does NOT move money."""
+    _authorized(actor, "website.approve_servicerefund")
+    note = (approval_note or "").strip()
+    if len(note) < 8:
+        raise ServiceFinanceError("مسئول مالی دوم باید دلیل تأیید را مستند کند.")
+    quote_id = ServiceRefund.objects.only("quote_id").get(pk=refund_id).quote_id
+    with transaction.atomic():
+        quote = _locked_quote(quote_id)
+        _frozen_approved_quote(quote)
+        refund = ServiceRefund.objects.select_for_update().select_related(
+            "original_payment", "requested_by"
+        ).get(pk=refund_id, quote=quote)
+        if actor.pk == refund.requested_by_id:
+            raise ServiceFinanceError("تأیید مالی توسط همان درخواست‌کننده ممنوع است.")
+        if refund.status == "approved":
+            if refund.approved_by_id == actor.pk and refund.approval_note == note:
+                return refund
+            raise ServiceFinanceError("این درخواست قبلاً توسط مسئول دیگری تأیید شده است.")
+        if refund.status != "requested":
+            raise ServiceFinanceError("فقط درخواست در انتظار تأیید، قابل بررسی است.")
+        if refund.original_payment.status != "paid" or quote.refundable_excess < refund.amount:
+            raise ServiceFinanceError("مبلغ/دریافت معتبر برای تأیید مستقل کافی نیست.")
+        refund.status = "approved"
+        refund.approved_by = actor
+        refund.approved_at = timezone.now()
+        refund.approval_note = note
+        refund.save(update_fields=["status", "approved_by", "approved_at", "approval_note"])
+        return refund
+
+
 def confirm_service_refund(
     *, refund_id: int, payout_reference: str, actor, confirmed_external_payout: bool,
 ) -> ServiceRefund:
@@ -140,14 +172,16 @@ def confirm_service_refund(
         quote = _locked_quote(quote_id)
         _frozen_approved_quote(quote)
         refund = ServiceRefund.objects.select_for_update().select_related(
-            "original_payment", "requested_by",
+            "original_payment", "requested_by", "approved_by",
         ).get(pk=refund_id, quote=quote)
+        if actor.pk == refund.requested_by_id:
+            raise ServiceFinanceError("ثبت نهایی رسید توسط درخواست‌کننده ممنوع است.")
         if refund.status == "completed":
             if refund.payout_reference == reference and refund.ledger_entry_id:
                 return refund
             raise ServiceFinanceError("این استرداد قبلاً با شناسه دیگری بسته شده است.")
-        if refund.status != "requested":
-            raise ServiceFinanceError("درخواست لغوشده قابل پرداخت و ثبت مجدد نیست.")
+        if refund.status != "approved" or not refund.approved_by_id or not refund.approved_at:
+            raise ServiceFinanceError("ابتدا تأیید مستقل مسئول مالی دوم باید ثبت شود.")
         if ServiceRefund.objects.filter(payout_reference=reference).exclude(pk=refund.pk).exists():
             raise ServiceFinanceError("این شماره بازپرداخت قبلاً ثبت شده است.")
         if quote.refundable_excess < refund.amount:
@@ -166,6 +200,8 @@ def confirm_service_refund(
                 "metadata": {
                     "refund_id": refund.pk, "confirmed_by_user_id": actor.pk,
                     "requested_by_user_id": refund.requested_by_id,
+                    "approved_by_user_id": refund.approved_by_id,
+                    "approved_at": refund.approved_at.isoformat(),
                     "method": refund.method, "external_payout_confirmed": True,
                 },
             },
@@ -196,8 +232,12 @@ def cancel_service_refund(*, refund_id: int, reason: str, actor) -> ServiceRefun
     with transaction.atomic():
         _locked_quote(quote_id)
         refund = ServiceRefund.objects.select_for_update().get(pk=refund_id)
-        if refund.status != "requested":
-            raise ServiceFinanceError("فقط درخواست معلق قابل لغو است.")
+        if refund.status not in {"requested", "approved"}:
+            raise ServiceFinanceError("فقط درخواست پرداخت‌نشده قابل لغو است.")
+        if refund.status == "approved" and (
+            actor.pk == refund.requested_by_id or not actor.has_perm("website.approve_servicerefund")
+        ):
+            raise ServiceFinanceError("لغو درخواست تأییدشده نیز نیازمند مسئول مالی مستقل است.")
         refund.status = "cancelled"
         refund.cancellation_reason = reason
         refund.save(update_fields=["status", "cancellation_reason"])

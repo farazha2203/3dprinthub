@@ -323,3 +323,9 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - RMA code: `store/rma_services.py`, `store/rma_admin.py`, `store/test_phase50_variant_rma.py`, `store/migrations/0043_store_variant_rma_stock_refund_audit.py`.
 - Guarded release: `scripts/host/phase50_store_variant_rma_deploy.sh`; dedicated tunnel `D:\projects\.chatgpt-gateway\project-host.ps1 -Project 3dprinthub`; Host root `/home/sfkilvrs/3dprinthub` / MySQL `sfkilvrs_EmiAdmin_3dprinthub`.
 - Dirty canonical `D:\projects\3DPrintHub` and docs-only other worktrees must be left untouched.
+
+## 2026-11-11 — Refund maker/checker controlled release candidate
+- Source `D:\projects\3DPrintHub-refund-approval-20261111` branch `fix/service-store-refund-dual-approval-20261111`, based on exact deployed Host 0ae8d785.
+- New Website migration `website/migrations/0029_refund_maker_checker_approval.py`; Store `store/migrations/0044_refund_maker_checker_approval.py`.
+- Code `website/service_adjustments.py`, `website/service_adjustment_admin.py`, `store/rma_services.py`, `store/rma_admin.py`, `store/finance_reconciliation.py`; test modules `website/test_service_financial_adjustments.py` and `store/test_phase50_variant_rma.py`.
+- Guarded one-shot release `scripts/host/phase50_refund_dual_approval_deploy.sh` via `D:\projects\.chatgpt-gateway\project-host.ps1 -Project 3dprinthub`, full SQL/.env/source backup and SHA256.

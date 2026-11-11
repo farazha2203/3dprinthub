@@ -10,8 +10,8 @@ from django.utils.html import format_html, format_html_join
 
 from .models import Order, Payment, Quote, ServiceCreditNote, ServiceRefund
 from .service_adjustments import (
-    ServiceFinanceError, cancel_service_refund, confirm_service_refund,
-    issue_service_credit_note, request_service_refund,
+    ServiceFinanceError, approve_service_refund, cancel_service_refund,
+    confirm_service_refund, issue_service_credit_note, request_service_refund,
 )
 
 
@@ -43,9 +43,10 @@ class ServiceRefundRequestForm(forms.Form):
 
 
 class ServiceRefundDecisionForm(forms.Form):
-    action = forms.ChoiceField(
-        label="تصمیم مستند",
-        choices=(("complete", "ثبت پرداخت واقعی بازپرداخت"), ("cancel", "لغو درخواست بدون پرداخت")),
+    action = forms.ChoiceField(label="تصمیم مستند", choices=())
+    approval_note = forms.CharField(
+        required=False, label="دلیل مستقل تأیید یا تصمیم مالی",
+        widget=forms.Textarea(attrs={"rows": 3}),
     )
     payout_reference = forms.CharField(
         max_length=180, required=False,
@@ -59,9 +60,25 @@ class ServiceRefundDecisionForm(forms.Form):
         required=False,
     )
 
+    def __init__(self, *args, status="requested", **kwargs):
+        super().__init__(*args, **kwargs)
+        if status == "requested":
+            self.fields["action"].choices = (
+                ("approve", "تأیید مستقل بدون انتقال وجه"),
+                ("cancel", "لغو درخواست بدون پرداخت"),
+            )
+        elif status == "approved":
+            self.fields["action"].choices = (
+                ("complete", "ثبت وجه واقعاً بازپرداخت‌شده با رسید"),
+                ("cancel", "لغو درخواست تأییدشده بدون پرداخت"),
+            )
+
     def clean(self):
         data = super().clean()
-        if data.get("action") == "complete":
+        if data.get("action") == "approve":
+            if len((data.get("approval_note") or "").strip()) < 8:
+                self.add_error("approval_note", "تأیید مستقل نیازمند توضیح حداقل ۸ نویسه است.")
+        elif data.get("action") == "complete":
             if not data.get("confirmed"):
                 self.add_error("confirmed", "بدون تأیید پرداخت واقعی ثبت حسابداری مجاز نیست.")
             if len((data.get("payout_reference") or "").strip()) < 4:
@@ -81,11 +98,13 @@ def order_adjustments_summary(order):
     credit_url = reverse("admin:website_order_issue_credit_note", args=[order.pk])
     request_url = reverse("admin:website_order_request_refund", args=[order.pk])
     notes = quote.credit_notes.select_related("issued_by").order_by("-id")[:10]
-    refunds = quote.refunds.select_related("completed_by", "requested_by", "original_payment").order_by("-id")[:10]
+    refunds = quote.refunds.select_related("completed_by", "requested_by", "approved_by", "original_payment").order_by("-id")[:10]
     note_html = format_html_join("", "<li>{}: {} تومان — {}</li>",
         ((n.reference, f"{n.amount:,}", n.reason[:120]) for n in notes))
-    refund_html = format_html_join("", '<li>{} تومان | {} | {} | <a href="{}">مدیریت</a></li>',
-        ((f"{r.amount:,}", r.get_status_display(), r.payout_reference or "بدون پرداخت",
+    refund_html = format_html_join("", '<li>{} تومان | {} | درخواست‌کننده: {} | تأییدکننده مستقل: {} | رسید: {} | <a href="{}">مدیریت</a></li>',
+        ((f"{r.amount:,}", r.get_status_display(), r.requested_by.get_username(),
+          r.approved_by.get_username() if r.approved_by_id else "هنوز تأیید نشده",
+          r.payout_reference or "بدون پرداخت",
           reverse("admin:website_order_complete_refund", args=[order.pk, r.pk])) for r in refunds))
     return format_html(
         '<section dir="rtl" style="max-width:750px">'
@@ -174,16 +193,25 @@ def request_service_refund_view(model_admin, request, order_id):
 
 
 def complete_service_refund_view(model_admin, request, order_id, refund_id):
-    if not model_admin.has_change_permission(request) or not request.user.has_perm("website.change_servicerefund"):
+    if not model_admin.has_change_permission(request) or not (
+        request.user.has_perm("website.approve_servicerefund")
+        or request.user.has_perm("website.change_servicerefund")
+    ):
         raise PermissionDenied
     order = get_object_or_404(Order, pk=order_id)
     refund = get_object_or_404(ServiceRefund, pk=refund_id, quote__order=order)
     quote = refund.quote
-    if request.method == "POST" and refund.status == "requested":
-        form = ServiceRefundDecisionForm(request.POST)
+    if request.method == "POST" and refund.status in {"requested", "approved"}:
+        form = ServiceRefundDecisionForm(request.POST, status=refund.status)
         if form.is_valid():
             try:
-                if form.cleaned_data["action"] == "complete":
+                if form.cleaned_data["action"] == "approve":
+                    approve_service_refund(
+                        refund_id=refund.pk, approval_note=form.cleaned_data["approval_note"],
+                        actor=request.user,
+                    )
+                    outcome = "درخواست توسط مسئول مالی مستقل تأیید شد؛ هنوز وجهی منتقل نشده است."
+                elif form.cleaned_data["action"] == "complete":
                     confirm_service_refund(
                         refund_id=refund.pk, actor=request.user,
                         payout_reference=form.cleaned_data["payout_reference"],
@@ -202,7 +230,10 @@ def complete_service_refund_view(model_admin, request, order_id, refund_id):
                 model_admin.message_user(request, outcome, messages.SUCCESS)
                 return redirect("admin:website_order_change", order.pk)
     else:
-        form = ServiceRefundDecisionForm(initial={"action": "complete"})
+        form = ServiceRefundDecisionForm(
+            status=refund.status,
+            initial={"action": "approve" if refund.status == "requested" else "complete"},
+        )
     return render(request, "admin/website/order/service_finance_action.html",
-        _base_context(model_admin, request, order, "تأیید/لغو درخواست استرداد",
+        _base_context(model_admin, request, order, "تأیید دومرحله‌ای / ثبت رسید واقعی استرداد",
             form=form, quote=quote, refund=refund, action_type="refund_decision"))

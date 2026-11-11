@@ -11,7 +11,8 @@ from django.utils.html import format_html, format_html_join
 from .models import ReturnRequest, StorePayment, StoreReturnInspection, StoreReturnRefund
 from .rma_services import (
     StoreRMAError, decide_store_return, inspect_return,
-    request_store_return_refund, confirm_store_return_refund, cancel_store_return_refund,
+    request_store_return_refund, approve_store_return_refund,
+    confirm_store_return_refund, cancel_store_return_refund,
 )
 
 
@@ -64,9 +65,10 @@ class RefundRequestForm(forms.Form):
 
 
 class RefundDecisionForm(forms.Form):
-    action = forms.ChoiceField(
-        choices=[("complete", "ثبت استرداد واقعی با رسید"), ("cancel", "لغو درخواست بدون پرداخت")],
-        label="تصمیم مالی",
+    action = forms.ChoiceField(choices=(), label="تصمیم مالی")
+    approval_note = forms.CharField(
+        required=False, label="توضیح تأیید مستقل مسئول مالی دوم",
+        widget=forms.Textarea(attrs={"rows": 3}),
     )
     payout_reference = forms.CharField(
         max_length=180, required=False, label="شناسه بانکی/پوز یا رسید تسلیم نقدی",
@@ -79,9 +81,25 @@ class RefundDecisionForm(forms.Form):
         label="رسید بیرونی را بررسی کردم و بازپرداخت واقعی به مشتری انجام شده است.",
     )
 
+    def __init__(self, *args, status="requested", **kwargs):
+        super().__init__(*args, **kwargs)
+        if status == "requested":
+            self.fields["action"].choices = [
+                ("approve", "تأیید مستقل بدون جابه‌جایی پول"),
+                ("cancel", "لغو درخواست بدون پرداخت"),
+            ]
+        elif status == "approved":
+            self.fields["action"].choices = [
+                ("complete", "ثبت رسید بازپرداخت واقعی"),
+                ("cancel", "لغو استرداد تأییدشده بدون پرداخت"),
+            ]
+
     def clean(self):
         data = super().clean()
-        if data.get("action") == "complete":
+        if data.get("action") == "approve":
+            if len((data.get("approval_note") or "").strip()) < 8:
+                self.add_error("approval_note", "تأییدکننده باید دلیل مستند بنویسد.")
+        elif data.get("action") == "complete":
             if len((data.get("payout_reference") or "").strip()) < 4:
                 self.add_error("payout_reference", "شناسه بیرونی معتبر را ثبت کنید.")
             if not data.get("confirmed"):
@@ -102,8 +120,8 @@ def rma_workflow_summary(rma):
         fragments.append(("ثبت بازرسی و دریافت کالا", url("admin:store_returnrequest_workflow_inspect")))
     if rma.status in {"received", "refunded"}:
         fragments.append(("درخواست بازپرداخت مستند", url("admin:store_returnrequest_workflow_request_refund")))
-    refunds = rma.refunds.select_related("payment", "completed_by").order_by("-id")
-    pending = [r for r in refunds if r.status == "requested"]
+    refunds = list(rma.refunds.select_related("payment", "completed_by", "approved_by", "requested_by").order_by("-id"))
+    pending = [r for r in refunds if r.status in {"requested", "approved"}]
     for refund in pending:
         fragments.append((
             f"تأیید/لغو استرداد {refund.amount:,} تومان", url(
@@ -112,8 +130,10 @@ def rma_workflow_summary(rma):
         ))
     links = format_html_join(" ", '<a class="button" style="margin:4px" href="{}">{}</a>',
         ((href, title) for title, href in fragments))
-    history = format_html_join("", '<li>{} تومان | {} | رسید {}</li>', (
-        (f"{refund.amount:,}", refund.get_status_display(), refund.payout_reference or "هنوز پرداخت نشده")
+    history = format_html_join("", '<li>{} تومان | {} | درخواست: {} | تأیید مستقل: {} | رسید {}</li>', (
+        (f"{refund.amount:,}", refund.get_status_display(), refund.requested_by.get_username(),
+         refund.approved_by.get_username() if refund.approved_by_id else "در انتظار",
+         refund.payout_reference or "هنوز پرداخت نشده")
         for refund in refunds
     ))
     if hasattr(rma, "inspection"):
@@ -145,7 +165,13 @@ def rma_action_view(model_admin, request, return_id, action, refund_id=None):
         "request-refund": "store.add_storereturnrefund",
         "decide-refund": "store.change_storereturnrefund",
     }.get(action)
-    if not permission or not model_admin.has_change_permission(request) or not request.user.has_perm(permission):
+    if not permission or not model_admin.has_change_permission(request):
+        raise PermissionDenied
+    if action == "decide-refund":
+        if not (request.user.has_perm("store.change_storereturnrefund") or
+                request.user.has_perm("store.approve_storereturnrefund")):
+            raise PermissionDenied
+    elif not request.user.has_perm(permission):
         raise PermissionDenied
     rma = get_object_or_404(
         ReturnRequest.objects.select_related("order", "item", "item__variant", "user"),
@@ -161,7 +187,9 @@ def rma_action_view(model_admin, request, return_id, action, refund_id=None):
         "decide-refund": RefundDecisionForm,
     }[action]
     extra = {"order": rma.order} if action == "request-refund" else {}
-    if request.method == "POST":
+    if action == "decide-refund":
+        extra["status"] = refund.status
+    if request.method == "POST" and (refund is None or refund.status in {"requested", "approved"}):
         form = form_cls(request.POST, **extra)
         if form.is_valid():
             try:
@@ -188,6 +216,12 @@ def rma_action_view(model_admin, request, return_id, action, refund_id=None):
                         request_key=form.cleaned_data["request_key"],
                     )
                     success = "درخواست بازپرداخت ثبت شد؛ هنوز وجهی پرداخت یا از حساب کسر نشده است."
+                elif form.cleaned_data["action"] == "approve":
+                    approve_store_return_refund(
+                        refund_id=refund.pk, approval_note=form.cleaned_data["approval_note"],
+                        actor=request.user,
+                    )
+                    success = "تأیید مستقل ثبت شد، ولی هیچ پولی انتقال نیافته است."
                 elif form.cleaned_data["action"] == "complete":
                     confirm_store_return_refund(
                         refund_id=refund.pk, actor=request.user,
@@ -216,12 +250,14 @@ def rma_action_view(model_admin, request, return_id, action, refund_id=None):
             initial = {"request_key": uuid4(), "method": "bank_transfer"}
         elif action == "review":
             initial = {"decision": "approved"}
+        if action == "decide-refund":
+            initial["action"] = "approve" if refund.status == "requested" else "complete"
         form = form_cls(initial=initial, **extra)
     titles = {
         "review": "تصمیم کارشناسی مرجوعی",
         "inspect": "تحویل فیزیکی و بازرسی تنوع محصول",
         "request-refund": "درخواست بازپرداخت واقعی به مشتری",
-        "decide-refund": "تأیید/لغو بازپرداخت مرجوعی",
+        "decide-refund": "تأیید مستقل دومرحله‌ای / ثبت رسید استرداد",
     }
     return render(request, "admin/store/return_workflow_action.html", {
         **model_admin.admin_site.each_context(request),

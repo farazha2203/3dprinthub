@@ -101,12 +101,26 @@ def collect_finance_reconciliation(*, check_storage: bool = True) -> dict[str, A
             failures["store_rma_refund_status_ledger_mismatch"] += 1
         if refund.payment.order_id != refund.return_request.order_id or refund.payment.status != "paid":
             failures["store_rma_refund_source_mismatch"] += 1
+        if refund.status in {"approved", "completed"} and (
+            not refund.approved_by_id or refund.approved_by_id == refund.requested_by_id
+            or not refund.approved_at or len((refund.approval_note or "").strip()) < 8
+        ):
+            failures["store_rma_independent_approval_missing"] += 1
+        if refund.status == "requested" and (
+            refund.approved_by_id or refund.approved_at or refund.approval_note
+        ):
+            failures["store_rma_premature_approval_metadata"] += 1
+        if refund.status == "completed" and (
+            not refund.completed_by_id or refund.completed_by_id == refund.requested_by_id
+        ):
+            failures["store_rma_requester_completed_own_refund"] += 1
     for ledger in store_refund_ledger:
         refund = ledger.refund
         if (refund.status != "completed" or ledger.amount != refund.amount
                 or ledger.payment_id != refund.payment_id
                 or ledger.order_id != refund.return_request.order_id
                 or ledger.provider_ref != refund.payout_reference
+                or ledger.created_by_id != refund.completed_by_id
                 or ledger.currency != "IRT" or ledger.amount <= 0):
             failures["store_rma_refund_ledger_invalid"] += 1
     for inspection in StoreReturnInspection.objects.select_related(
@@ -250,7 +264,9 @@ def collect_finance_reconciliation(*, check_storage: bool = True) -> dict[str, A
                 or refund.quote_id != ledger.quote_id
                 or refund.original_payment_id != ledger.payment_id
                 or refund.amount != ledger.amount
-                or (refund.payout_reference or "") != ledger.provider_ref):
+                or (refund.payout_reference or "") != ledger.provider_ref
+                or (ledger.metadata or {}).get("approved_by_user_id") != refund.approved_by_id
+                or (ledger.metadata or {}).get("confirmed_by_user_id") != refund.completed_by_id):
             failures["website_refund_ledger_mismatch"] += 1
         if ledger.payment.status != "paid" or ledger.payment.quote_id != ledger.quote_id:
             failures["website_refund_unverified_payment"] += 1
@@ -259,6 +275,19 @@ def collect_finance_reconciliation(*, check_storage: bool = True) -> dict[str, A
             failures["website_refund_completed_without_ledger"] += 1
         if refund.status != "completed" and refund.ledger_entry_id:
             failures["website_refund_unconfirmed_ledger"] += 1
+        if refund.status in {"approved", "completed"} and (
+            not refund.approved_by_id or refund.approved_by_id == refund.requested_by_id
+            or not refund.approved_at or len((refund.approval_note or "").strip()) < 8
+        ):
+            failures["website_refund_independent_approval_missing"] += 1
+        if refund.status == "requested" and (
+            refund.approved_by_id or refund.approved_at or refund.approval_note
+        ):
+            failures["website_refund_premature_approval_metadata"] += 1
+        if refund.status == "completed" and (
+            not refund.completed_by_id or refund.completed_by_id == refund.requested_by_id
+        ):
+            failures["website_refund_requester_completed_own_refund"] += 1
     for note in ServiceCreditNote.objects.select_related("quote"):
         if not note.quote.pricing_snapshot_at or not note.reference or not note.reason:
             failures["website_credit_note_missing_proof"] += 1

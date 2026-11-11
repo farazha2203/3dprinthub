@@ -1200,7 +1200,8 @@ class ServiceCreditNote(models.Model):
 class ServiceRefund(models.Model):
     """Refund request and external payout attestation. Never initiates a bank transfer."""
     STATUS_CHOICES = [
-        ("requested", "در انتظار اجرای استرداد"),
+        ("requested", "در انتظار تأیید مستقل مسئول مالی"),
+        ("approved", "تأیید مستقل انجام شد؛ آماده ثبت رسید واقعی"),
         ("completed", "استرداد واقعی ثبت و تأیید شد"),
         ("cancelled", "درخواست استرداد لغو شد"),
     ]
@@ -1227,6 +1228,13 @@ class ServiceRefund(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
         related_name="requested_service_refunds", verbose_name="درخواست‌کننده",
     )
+    approved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
+        null=True, blank=True, related_name="approved_service_refunds",
+        verbose_name="مسئول مالی تأییدکننده مستقل",
+    )
+    approved_at = models.DateTimeField(null=True, blank=True, verbose_name="زمان تأیید مستقل")
+    approval_note = models.TextField(blank=True, verbose_name="مستندات تصمیم تأییدکننده مستقل")
     completed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
         null=True, blank=True, related_name="completed_service_refunds", verbose_name="تأییدکننده پرداخت وجه",
@@ -1243,6 +1251,7 @@ class ServiceRefund(models.Model):
         ordering = ("-created_at", "-id")
         verbose_name = "درخواست استرداد خدمات"
         verbose_name_plural = "درخواست‌های استرداد خدمات"
+        permissions = [("approve_servicerefund", "Can independently approve service refund requests")]
 
     def clean(self):
         super().clean()
@@ -1253,11 +1262,20 @@ class ServiceRefund(models.Model):
             raise ValidationError("دریافت اولیه به این پیش‌فاکتور تعلق ندارد.")
         if self.original_payment_id and self.original_payment.status != "paid":
             raise ValidationError("استرداد فقط به دریافت واقعاً تأییدشده متصل می‌شود.")
+        if self.status in {"approved", "completed"} and (
+            not self.approved_by_id or not self.approved_at
+            or len((self.approval_note or "").strip()) < 8
+            or self.approved_by_id == self.requested_by_id
+        ):
+            raise ValidationError("تأیید مستقل باید توسط کاربری متفاوت همراه با دلیل ثبت شود.")
+        if self.status == "requested" and (self.approved_by_id or self.approved_at):
+            raise ValidationError("درخواست تازه نباید تأیید مستقل از پیش ثبت‌شده داشته باشد.")
         if self.status == "completed" and (
-            not self.completed_by_id or not self.completed_at or not (self.payout_reference or "").strip()
+            not self.completed_by_id or self.completed_by_id == self.requested_by_id
+            or not self.completed_at or not (self.payout_reference or "").strip()
             or not self.ledger_entry_id
         ):
-            raise ValidationError("استرداد انجام‌شده باید رسید، تأییدکننده و سند بدهکار داشته باشد.")
+            raise ValidationError("پرداخت مستردشده نیازمند تأیید مستقل، رسید و مسئول متفاوت از درخواست‌کننده است.")
         if self.status == "cancelled" and not self.cancellation_reason.strip():
             raise ValidationError("لغو درخواست بدون دلیل مستند امکان‌پذیر نیست.")
 
@@ -1271,6 +1289,18 @@ class ServiceRefund(models.Model):
                 getattr(self, key) != getattr(original, key) for key in frozen
             ):
                 raise ValidationError("استرداد قطعی یا لغوشده و مشخصات اولیه قابل بازنویسی نیست.")
+            allowed = {
+                "requested": {"requested", "approved", "cancelled"},
+                "approved": {"approved", "completed", "cancelled"},
+            }
+            if self.status not in allowed.get(original.status, set()):
+                raise ValidationError("پرش از مرحله تأیید مستقل یا بازگرداندن وضعیت استرداد مجاز نیست.")
+            if original.approved_by_id and (
+                self.approved_by_id != original.approved_by_id
+                or self.approved_at != original.approved_at
+                or self.approval_note != original.approval_note
+            ):
+                raise ValidationError("سند تأیید مستقل پس از ثبت تغییرپذیر نیست.")
         self.full_clean()
         return super().save(*args, **kwargs)
 

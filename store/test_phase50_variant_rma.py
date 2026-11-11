@@ -18,7 +18,8 @@ from store.models import (
 from store.services import reserve_order_inventory, transition_order
 from store.rma_services import (
     StoreRMAError, submit_return_request, decide_store_return, inspect_return,
-    request_store_return_refund, confirm_store_return_refund, cancel_store_return_refund,
+    request_store_return_refund, approve_store_return_refund,
+    confirm_store_return_refund, cancel_store_return_refund,
     full_store_order_refund_proven,
 )
 
@@ -29,6 +30,7 @@ class StoreVariantRMATests(TestCase):
     def setUp(self):
         PricingSetting.objects.create(default_hourly_rate=100000, default_labor_percent=Decimal("20"))
         self.staff = User.objects.create_superuser("rma-finance-operator", "rma@example.invalid", "test-password")
+        self.checker = User.objects.create_superuser("rma-finance-reviewer", "reviewer@example.invalid", "test-password")
         self.buyer = User.objects.create_user("rma-shopper", "buyer@example.invalid", "test-password")
         self.other = User.objects.create_user("unrelated-buyer", "other@example.invalid", "test-password")
         self.material = Material.objects.create(
@@ -112,6 +114,12 @@ class StoreVariantRMATests(TestCase):
             amount=amount, method="bank_transfer",
             reason="Refund after certified physical return",
             actor=self.staff, request_key=key,
+        )
+
+    def approve_refund(self, refund):
+        return approve_store_return_refund(
+            refund_id=refund.pk, approval_note="Independent store return finance review",
+            actor=self.checker,
         )
 
     def test_checkout_sale_consumes_real_variant_stock_before_return(self):
@@ -264,14 +272,15 @@ class StoreVariantRMATests(TestCase):
     def test_complete_external_refund_requires_proof_and_is_idempotent(self):
         r, _ = self.inspect(quantity=1, restock=0)
         refund = self.refund(r, amount=75000)
+        self.approve_refund(refund)
         with self.assertRaises(StoreRMAError):
             confirm_store_return_refund(
                 refund_id=refund.pk, payout_reference="BANK-RMA-001",
-                actor=self.staff, confirmed_external_payout=False,
+                actor=self.checker, confirmed_external_payout=False,
             )
         finished = confirm_store_return_refund(
             refund_id=refund.pk, payout_reference="BANK-RMA-001",
-            actor=self.staff, confirmed_external_payout=True,
+            actor=self.checker, confirmed_external_payout=True,
         )
         r.refresh_from_db()
         self.assertEqual(r.status, "refunded")
@@ -283,7 +292,7 @@ class StoreVariantRMATests(TestCase):
         self.assertEqual(ledger.provider_ref, "BANK-RMA-001")
         repeat = confirm_store_return_refund(
             refund_id=refund.pk, payout_reference="BANK-RMA-001",
-            actor=self.staff, confirmed_external_payout=True,
+            actor=self.checker, confirmed_external_payout=True,
         )
         self.assertEqual(repeat.pk, finished.pk)
         self.assertEqual(StoreReturnRefundLedger.objects.count(), 1)
@@ -296,9 +305,10 @@ class StoreVariantRMATests(TestCase):
     def test_same_external_proof_cannot_refund_twice(self):
         a, _ = self.inspect(quantity=1, restock=0)
         first = self.refund(a, amount=80000)
+        self.approve_refund(first)
         confirm_store_return_refund(
             refund_id=first.pk, payout_reference="BANK-SAME-001",
-            actor=self.staff, confirmed_external_payout=True,
+            actor=self.checker, confirmed_external_payout=True,
         )
         b = self.approve(quantity=1)
         inspect_return(
@@ -306,10 +316,11 @@ class StoreVariantRMATests(TestCase):
             inspection_note="Second verified item returned", actor=self.staff,
         )
         second = self.refund(b, amount=50000)
+        self.approve_refund(second)
         with self.assertRaises(StoreRMAError):
             confirm_store_return_refund(
                 refund_id=second.pk, payout_reference="BANK-SAME-001",
-                actor=self.staff, confirmed_external_payout=True,
+                actor=self.checker, confirmed_external_payout=True,
             )
         self.assertEqual(StoreReturnRefundLedger.objects.count(), 1)
 
@@ -386,6 +397,11 @@ class StoreVariantRMATests(TestCase):
         self.assertEqual(requested.status_code, 302)
         refund = StoreReturnRefund.objects.get(return_request=r)
         confirm_url = reverse("admin:store_returnrequest_workflow_decide_refund", args=[r.pk, refund.pk])
+        self.client.force_login(self.checker)
+        approval = self.client.post(confirm_url, {
+            "action": "approve", "approval_note": "Independent RMA refund review and authorization",
+        })
+        self.assertEqual(approval.status_code, 302)
         denied = self.client.post(confirm_url, {
             "action": "complete", "payout_reference": "RMA-WEBBANK-01",
         })
@@ -407,9 +423,10 @@ class StoreVariantRMATests(TestCase):
     def test_full_refund_proof_requires_every_item_and_total_cash(self):
         r, _ = self.inspect(quantity=3, restock=0)
         refund = self.refund(r, amount=300000)
+        self.approve_refund(refund)
         confirm_store_return_refund(
             refund_id=refund.pk, payout_reference="RMA-LINE-300K",
-            actor=self.staff, confirmed_external_payout=True,
+            actor=self.checker, confirmed_external_payout=True,
         )
         self.assertFalse(full_store_order_refund_proven(self.order))
         # Shipping was paid and was not part of the returned product line.
@@ -480,9 +497,10 @@ class StoreVariantRMATests(TestCase):
         self.payment.save(update_fields=["receipt_image"])
         rma, inspected = self.inspect(quantity=2, restock=1)
         request = self.refund(rma, amount=120000)
+        self.approve_refund(request)
         confirm_store_return_refund(
             refund_id=request.pk, payout_reference="RMA-AUDIT-001",
-            actor=self.staff, confirmed_external_payout=True,
+            actor=self.checker, confirmed_external_payout=True,
         )
         report = collect_finance_reconciliation(check_storage=False)
         self.assertTrue(report["ok"], report["failures"])
@@ -497,9 +515,10 @@ class StoreVariantRMATests(TestCase):
         self.payment.save(update_fields=["receipt_image"])
         rma, receipt = self.inspect(quantity=1, restock=1)
         payout = self.refund(rma, amount=50000)
+        self.approve_refund(payout)
         confirm_store_return_refund(
             refund_id=payout.pk, payout_reference="RMA-CORRUPT-TEST",
-            actor=self.staff, confirmed_external_payout=True,
+            actor=self.checker, confirmed_external_payout=True,
         )
         StoreReturnRefundLedger.objects.filter(refund=payout).update(amount=60000)
         InventoryMovement.objects.filter(pk=receipt.inventory_movement_id).update(quantity=2)
@@ -507,3 +526,125 @@ class StoreVariantRMATests(TestCase):
         self.assertFalse(report["ok"])
         self.assertEqual(report["failures"].get("store_rma_refund_ledger_invalid"), 1)
         self.assertEqual(report["failures"].get("store_rma_restock_movement_mismatch"), 1)
+
+    def test_store_requester_cannot_approve_or_confirm_own_refund(self):
+        rma, inspection = self.inspect(quantity=1, restock=0)
+        refund = self.refund(rma, amount=70000)
+        with self.assertRaises(StoreRMAError):
+            approve_store_return_refund(
+                refund_id=refund.pk, approval_note="Same operator approval attempt",
+                actor=self.staff,
+            )
+        with self.assertRaises(StoreRMAError):
+            confirm_store_return_refund(
+                refund_id=refund.pk, payout_reference="NO-REVIEW-1234",
+                actor=self.checker, confirmed_external_payout=True,
+            )
+        self.assertEqual(StoreReturnRefundLedger.objects.count(), 0)
+        approved = self.approve_refund(refund)
+        self.assertEqual(approved.status, "approved")
+        self.assertEqual(approved.approved_by_id, self.checker.pk)
+        self.assertEqual(StoreReturnRefundLedger.objects.count(), 0)
+        with self.assertRaises(StoreRMAError):
+            confirm_store_return_refund(
+                refund_id=refund.pk, payout_reference="SELF-RECEIPT-1234",
+                actor=self.staff, confirmed_external_payout=True,
+            )
+        self.assertEqual(StoreReturnRefundLedger.objects.count(), 0)
+        confirmed = confirm_store_return_refund(
+            refund_id=refund.pk, payout_reference="REVIEWER-RECEIPT-1234",
+            actor=self.checker, confirmed_external_payout=True,
+        )
+        self.assertEqual(confirmed.completed_by_id, self.checker.pk)
+        self.assertEqual(StoreReturnRefundLedger.objects.count(), 1)
+        self.assertEqual(self.payment.status, "paid")
+
+    def test_store_approved_hold_cannot_double_spend_or_mutate_endorsement(self):
+        rma, inspected = self.inspect(quantity=1, restock=0)
+        refund = self.refund(rma, amount=70000)
+        self.approve_refund(refund)
+        with self.assertRaises(StoreRMAError):
+            self.refund(rma, amount=30001)
+        with self.assertRaises(StoreRMAError):
+            approve_store_return_refund(
+                refund_id=refund.pk, approval_note="Conflicting independent signoff",
+                actor=self.checker,
+            )
+        refund.refresh_from_db()
+        refund.approval_note = "Overwritten"
+        with self.assertRaises(ValidationError):
+            refund.save()
+        cancel_store_return_refund(
+            refund_id=refund.pk,
+            cancellation_reason="Unpaid approval was cancelled after finance review",
+            actor=self.checker,
+        )
+        self.assertEqual(StoreReturnRefundLedger.objects.count(), 0)
+        new = self.refund(rma, amount=100000)
+        self.assertEqual(new.status, "requested")
+
+    def test_store_reviewer_permission_required_and_direct_status_jump_blocked(self):
+        rma, inspected = self.inspect(quantity=1, restock=0)
+        refund = self.refund(rma, amount=40000)
+        with self.assertRaises(PermissionDenied):
+            approve_store_return_refund(
+                refund_id=refund.pk, approval_note="Customer self-approved maliciously",
+                actor=self.buyer,
+            )
+        refund.status = "completed"
+        with self.assertRaises(ValidationError):
+            refund.save()
+        self.assertEqual(StoreReturnRefundLedger.objects.count(), 0)
+
+    def test_store_reconciliation_detects_fake_independent_approval(self):
+        from store.finance_reconciliation import collect_finance_reconciliation
+        self.payment.receipt_image = "store/payments/receipts/rma-test.jpg"
+        self.payment.save(update_fields=["receipt_image"])
+        rma, inspected = self.inspect(quantity=1, restock=0)
+        refund = self.refund(rma, amount=50000)
+        self.approve_refund(refund)
+        StoreReturnRefund.objects.filter(pk=refund.pk).update(approved_by=self.staff)
+        audit = collect_finance_reconciliation(check_storage=False)
+        self.assertEqual(audit["failures"].get("store_rma_independent_approval_missing"), 1)
+
+    def test_approved_store_refund_cannot_be_cancelled_by_original_requester(self):
+        rma, inspection = self.inspect(quantity=1, restock=0)
+        refund = self.refund(rma, amount=50000)
+        self.approve_refund(refund)
+        with self.assertRaises(StoreRMAError):
+            cancel_store_return_refund(
+                refund_id=refund.pk,
+                cancellation_reason="Requester tries to undo second-person approval",
+                actor=self.staff,
+            )
+        self.assertEqual(StoreReturnRefund.objects.get(pk=refund.pk).status, "approved")
+        cancel_store_return_refund(
+            refund_id=refund.pk,
+            cancellation_reason="Independent reviewer cancelled before actual payout",
+            actor=self.checker,
+        )
+        self.assertEqual(StoreReturnRefund.objects.get(pk=refund.pk).status, "cancelled")
+        self.assertEqual(StoreReturnRefundLedger.objects.count(), 0)
+
+    def test_store_approval_only_staff_cannot_finalize_without_change_permission(self):
+        from django.contrib.auth.models import Permission
+        rma, inspection = self.inspect(quantity=1, restock=0)
+        refund = self.refund(rma, amount=50000)
+        reviewer = User.objects.create_user(
+            username="store-rma-approval-only", password="test-password",
+            is_staff=True, is_active=True,
+        )
+        reviewer.user_permissions.add(
+            Permission.objects.get(content_type__app_label="store", codename="approve_storereturnrefund")
+        )
+        approval = approve_store_return_refund(
+            refund_id=refund.pk, approval_note="Separate RMA finance endorsement",
+            actor=reviewer,
+        )
+        self.assertEqual(approval.status, "approved")
+        with self.assertRaises(PermissionDenied):
+            confirm_store_return_refund(
+                refund_id=refund.pk, payout_reference="RMA-NO-FINALIZE-PERM",
+                actor=reviewer, confirmed_external_payout=True,
+            )
+        self.assertEqual(StoreReturnRefundLedger.objects.count(), 0)

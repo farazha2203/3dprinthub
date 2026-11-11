@@ -1063,3 +1063,12 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - [x] 42/42 targeted RMA + old checkout + finance recon tests PASS.
 - [ ] Finish broad targeted regression, pin release SHA; full backup + guarded Host Store.0043 migration, verify live unchanged data and public/private pages.
 - [ ] In separate phases: PSP automated refunds, operator dual approval, shipping label reverse logistics, replacement inventory reservations, legal tax credit notes and apportioned affiliate commissions.
+
+## 2026-11-11 — Service + Store refund independent authorization (candidate)
+- [x] Separate staff approval `requested → approved → completed` for Website ServiceRefund and Store StoreReturnRefund; preserve non-retroactive original Price/Payment/Stock records.
+- [x] Independent reviewer custom permissions; requester cannot approve, finalize or cancel an already approved refund; no payout logged on approval.
+- [x] Cash reservation/overpayment caps keep `approved` requests included; duplicate receipt and repeated API calls remain guarded; finance reconciliation detects fraudulent approvals and missing second person.
+- [x] Admin stage-specific forms, actor/approval notes and customer high-level status; additive Website.0029 + Store.0044 migrations generated, deployment guard authored.
+- [x] Final integrated **188/188** local tests PASS, including newer independent-cancellation/least-privilege tests; schema/Bash/Python/diff checks PASS.
+- [ ] Publish exact clean source SHA via full backup and migration allowlist, verify unchanged real DB/order/stock fingerprints and separate reviewer permissions.
+- [ ] Explicitly assign reviewer permission to a separately authorized staff account using Django Groups (not auto-provisioned). PSP payout API / signed provider callbacks remain separate.

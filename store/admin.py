@@ -561,7 +561,7 @@ class StoreReturnInspectionAdmin(admin.ModelAdmin):
 @admin.register(StoreReturnRefund)
 class StoreReturnRefundAdmin(admin.ModelAdmin):
     list_display = ("return_request", "amount", "method", "status", "payout_reference",
-                    "requested_by", "completed_by", "completed_at")
+                    "requested_by", "approved_by", "completed_by", "completed_at")
     list_filter = ("status", "method")
     readonly_fields = [f.name for f in StoreReturnRefund._meta.fields]
     def has_add_permission(self, request): return False
