@@ -64,3 +64,12 @@ Safe Host operator recovery, through the 3DPrintHub cPanel Terminal (not FTP):
 2. Identify the actual project-owned orphan SSH/bridge processes and lock ownership; recover ONLY this project's watchdog if warranted.
 3. Use the documented per-minute watchdog with `/bin/flock -n -o` so future detached children cannot inherit its lock; do not duplicate cron jobs.
 4. Run the existing project transport-only bootstrap once, verify that reverse port 22024 and project-host.ps1 -Health work; then perform source/DB/migration and audited release controls.
+
+## 2026-11-12 22:19 (+03:30) — follow-up: tunnel still absent, deployment still blocked
+
+- Authorized Emad-NewCom command check confirms Windows `sshd` Running/Automatic; loopback reverse SSH listeners `22022` through `22027` are all absent, including dedicated 3DPrintHub `22024`. Project-specific `project-host.ps1 -Health` cannot connect.
+- Project FTP read-only check confirms active Git ref remains `0ae8d7851b803ddc8ab75be3adf35ac2a2d76a5a`. The remote `watchdog.log` still ends at 2026-11-09 14:00:13 and `tunnel.log` at 2026-11-11 08:42:50. No evidence of a successful project watchdog restart or restored authenticated SSH.
+- Public `/`, `/store/`, `/admin/login/` all returned HTTP 200, but public HTTP health does NOT prove pending finance migrations are applied. They have not been deliberately deployed from this branch.
+- A September historical runbook `docs/operations/reverse-tunnel-ssh/VERIFIED_PERSISTENCE_COMMANDS.md` still contained an unsafe `flock -n` Cron recipe. This commit replaces it with `flock -n -o` and marks the old hard-coded September branch as historical, preventing accidental reinstallation of the known lock-inheritance pattern.
+- Added isolated GitHub Actions CI for the Service + Store reviewer permissions, ledger/stock/quote regressions, migrations and shell scripts. It uses only ephemeral CI credentials; it cannot deploy to production or send money.
+- Current production release remains **blocked pending authenticated cPanel Host Terminal / project tunnel recovery**. Do not use FTP to run migrations and do not alter unrelated project tunnels, accounts or firewalls.

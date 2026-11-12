@@ -1,7 +1,9 @@
 # Verified Persistent Reverse Tunnel Commands
 
 Date: 2026-09-13
-Status: `EXECUTED SUCCESSFULLY / AUTO_RECONNECT PASS`
+Status: `HISTORICAL ACCEPTANCE RECORD — NOT A CURRENT PRODUCTION RUNBOOK`
+
+**2026-11-12 safety note:** The original Cron example below inherited a `flock` descriptor through a background SSH process and may block subsequent watchdog runs. The corrected example uses `flock -n -o`. The old hard-coded branch belongs to the September snapshot and is **not the current production branch**; do not run this historical setup block unchanged. For the existing live site use `docs/operations/PHASE50_TUNNEL_RECOVERY_20261111.md` and verify the current Host Git SHA before changing Cron.
 Project: `3DPrintHub`
 
 These are the commands that produced the accepted persistent-tunnel result. Secret values are deliberately absent. Before reuse, read `AGENTS.md`, the current project docs and `docs/operations/REVERSE_TUNNEL_REMOTE_MANAGEMENT.md`, then verify the real branch/HEAD/paths/network state.
@@ -55,7 +57,7 @@ crontab -l 2>/dev/null \
 
 cat >> "$TMP_CRON" <<EOF
 # 3DPrintHub reverse tunnel watchdog
-* * * * * $FLOCK_BIN -n $STATE/watchdog.lock $BASH_BIN -lc 'cd $ROOT && WAIT_SECONDS=35 $BASH_BIN scripts/host/phase50_reverse_tunnel_bootstrap.sh >> $STATE/watchdog.log 2>&1'
+* * * * * $FLOCK_BIN -n -o $STATE/watchdog.lock $BASH_BIN -lc 'cd $ROOT && WAIT_SECONDS=35 $BASH_BIN scripts/host/phase50_reverse_tunnel_bootstrap.sh >> $STATE/watchdog.log 2>&1'
 EOF
 
 crontab "$TMP_CRON"
