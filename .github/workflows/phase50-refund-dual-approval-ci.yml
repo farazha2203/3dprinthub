@@ -40,6 +40,10 @@ jobs:
       DJANGO_SECRET_KEY: phase50-refund-approval-ci-only-not-production
       DJANGO_DEBUG: "1"
       DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,testserver
+      # Never write uploaded test files into the production Host filesystem.
+      MEDIA_ROOT: "/tmp/3dprinthub-ci-media"
+      STATIC_ROOT: "/tmp/3dprinthub-ci-static"
+      PRIVATE_MEDIA_ROOT: "/tmp/3dprinthub-ci-private-media"
       PAYMENT_GATEWAY_ENABLED: "0"
       ZARINPAL_SANDBOX: "0"
       ZARINPAL_MERCHANT_ID: ""
