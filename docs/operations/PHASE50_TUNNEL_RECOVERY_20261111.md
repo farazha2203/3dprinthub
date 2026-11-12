@@ -48,3 +48,19 @@ GitHub branch `fix/service-store-refund-dual-approval-20261111`, SHA `d13379b289
 6. Verify port 22024 and authenticated `project-host.ps1 -Health` from Windows; only then consider the separate financially gated release with fresh full backup, two migrations and exact money/stock hash.
 
 **Important:** Neither this document nor the script fix has been applied to the current Host. Latest FTP read-only HEAD `0ae8d7851b803ddc8ab75be3adf35ac2a2d76a5a` and local pending release SHA `d13379b2891a85fec762bda79c08f85bb4d529a8`; after this source fix the deploy candidate SHA will change. Avoid claiming the feature is live.
+
+## 2026-11-12 12:23 Europe/Istanbul / 12:23 office clock — follow-up diagnostics, no host execution
+
+- Connected Emad-NewCom is online; Windows sshd is Running (Automatic), but reverse listener ports 22022-22027, including 3DPrintHub's isolated 22024, are absent. The authenticated project-host.ps1 health check reports remote-server connection unavailable.
+- FTPS (read-only) succeeds. Exact Host release branch ref is still 0ae8d7851b803ddc8ab75be3adf35ac2a2d76a5a; new dual-approval source remains on its separate GitHub branch and was NOT published. FTP ref verification does not establish current DB migration state.
+- Project watchdog.log is unchanged since 2026-11-09 14:00:13 and tunnel.log since 2026-11-11 08:42:50 (connection reset / broken pipe). The watchdog.lock file exists; whether an orphaned child actually holds its kernel flock cannot be observed through FTPS.
+- Selective outbound networking is important: curl --noproxy '*' to api.ipify.org returns 5.188.190.59, but to ipv4.icanhazip.com returns 37.255.236.184; TCP port 22 of 37.255.236.184 was reachable from the office machine itself. Therefore it would be UNSAFE to replace the configured Windows reverse-tunnel destination based on ipify alone. The original endpoint may still be valid from an external host; it is not externally verified in this check.
+- PrintHubTunnel local Windows account exists and is enabled; its authorized_keys path exists, but is access-restricted to the current operator, so no claim about current key content or fingerprint matching has been made. The last logged successful PrintHubTunnel public-key authentication remains 2026-11-09 14:00:10.
+- No Host shell was available through the existing project gateway. Generic SSH TCP 22 to nphost4.parsblog.com is not available from this Windows computer; FTPS cannot run an authenticated shell and must NOT be used to deploy migration/code or create ad hoc exec endpoints.
+- Financial release pending: source branch fix/service-store-refund-dual-approval-20261111, last known local QA 188/188 passed; must wait for proper Host Terminal / authenticated tunnel before full backup, exact two migrations Website.0029 and Store.0044, financial/stock fingerprints and read-only acceptance. No financial, stock, cron, firewall, SSH identity or Host source mutation occurred today.
+
+Safe Host operator recovery, through the 3DPrintHub cPanel Terminal (not FTP):
+1. Inspect the existing Cron Jobs entry and check whether the project-specific watchdog.lock is busy using nonblocking flock with /bin/true. Do not delete a live lock file or kill a process based only on a PID file.
+2. Identify the actual project-owned orphan SSH/bridge processes and lock ownership; recover ONLY this project's watchdog if warranted.
+3. Use the documented per-minute watchdog with `/bin/flock -n -o` so future detached children cannot inherit its lock; do not duplicate cron jobs.
+4. Run the existing project transport-only bootstrap once, verify that reverse port 22024 and project-host.ps1 -Health work; then perform source/DB/migration and audited release controls.
