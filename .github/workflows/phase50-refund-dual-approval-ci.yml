@@ -50,6 +50,8 @@ jobs:
     steps:
       - name: Checkout exact candidate
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Use Python 3.12
         uses: actions/setup-python@v5
@@ -109,6 +111,44 @@ jobs:
             website.test_quote_time_basis \
             website.test_order_image_preview \
             website.tests
+
+      - name: Match deployment allowlist and exactly two migrations
+        run: |
+          python - <<'PY'
+          import fnmatch
+          import subprocess
+          from pathlib import Path
+
+          base = "0ae8d7851b803ddc8ab75be3adf35ac2a2d76a5a"
+          path = Path("scripts/host/phase50_refund_dual_approval_deploy.sh")
+          lines = path.read_text().splitlines()
+          cases = [
+              line.strip()[:-1].split("|")
+              for line in lines
+              if line.strip().startswith(".github/workflows/phase50-refund-dual-approval-ci.yml|")
+              and line.strip().endswith(")")
+          ]
+          assert len(cases) == 1, "missing or ambiguous deployment allowlist"
+          patterns = cases[0]
+          subprocess.run(["git", "merge-base", "--is-ancestor", base, "HEAD"], check=True)
+          changed = subprocess.check_output(
+              ["git", "diff", "--name-only", base, "HEAD"], text=True,
+          ).splitlines()
+          rejected = [
+              filename for filename in changed
+              if not any(fnmatch.fnmatchcase(filename, pattern) for pattern in patterns)
+          ]
+          assert not rejected, f"deployment runner would reject: {rejected}"
+          migrations = sorted(f for f in changed if f.startswith((
+              "store/migrations/", "website/migrations/",
+          )))
+          assert migrations == [
+              "store/migrations/0044_refund_maker_checker_approval.py",
+              "website/migrations/0029_refund_maker_checker_approval.py",
+          ], f"unexpected migrations: {migrations}"
+          print(f"PRODUCTION_ALLOWLIST=PASS changed_files={len(changed)}")
+          print("EXACT_TWO_MIGRATIONS=PASS")
+          PY
 
       - name: Diff hygiene
         run: git diff --check

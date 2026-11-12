@@ -74,7 +74,7 @@ printf 'SOURCE_DELTA=\n';cat "$DELTA"
 while IFS= read -r name; do
     [ -n "$name" ] || continue
     case "$name" in
-        docs/*|scripts/host/phase50_reverse_tunnel_bootstrap.sh|website/models.py|website/admin.py|website/service_adjustments.py|website/service_adjustment_admin.py|website/test_service_financial_adjustments.py|website/migrations/0029_refund_maker_checker_approval.py|store/models.py|store/admin.py|store/rma_services.py|store/rma_admin.py|store/finance_reconciliation.py|store/test_phase50_variant_rma.py|store/migrations/0044_refund_maker_checker_approval.py|templates/admin/website/order/service_finance_action.html|templates/admin/store/return_workflow_action.html|scripts/host/phase50_refund_dual_approval_deploy.sh)
+        .github/workflows/phase50-refund-dual-approval-ci.yml|docs/*|scripts/host/phase50_reverse_tunnel_bootstrap.sh|website/models.py|website/admin.py|website/service_adjustments.py|website/service_adjustment_admin.py|website/test_service_financial_adjustments.py|website/migrations/0029_refund_maker_checker_approval.py|store/models.py|store/admin.py|store/rma_services.py|store/rma_admin.py|store/finance_reconciliation.py|store/test_phase50_variant_rma.py|store/migrations/0044_refund_maker_checker_approval.py|templates/admin/website/order/service_finance_action.html|templates/admin/store/return_workflow_action.html|scripts/host/phase50_refund_dual_approval_deploy.sh)
         ;;
         *) fail "unapproved_source_change:$name";;
     esac
