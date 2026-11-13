@@ -11,9 +11,11 @@ BRANCH="fix/service-store-refund-dual-approval-20261111"
 BASE="0ae8d7851b803ddc8ab75be3adf35ac2a2d76a5a"
 TARGET="${1:-}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
-BACKUP="/home/sfkilvrs/3dprinthub-deploy-backups/${STAMP}-refund-dual-approval"
+BACKUPS="/home/sfkilvrs/3dprinthub-deploy-backups"
+BACKUP="${BACKUPS}/${STAMP}-refund-dual-approval"
 DELTA="/tmp/3dprinthub-refund-dual-approval-$$.txt"
-trap 'rm -f "$DELTA" 2>/dev/null || true' EXIT
+PROBE="${BACKUPS}/.refund-approval-quota-probe-${STAMP}-$$"
+trap 'rm -f -- "$DELTA" "$PROBE" 2>/dev/null || true' EXIT
 fail(){ printf 'REFUND_DUAL_APPROVAL_DEPLOY=FAIL\nCAUSE=%s\nBACKUP=%s\n' "$1" "$BACKUP" >&2; exit 1; }
 
 [ -n "$TARGET" ] || fail "target_sha_missing"
@@ -23,6 +25,7 @@ cd "$ROOT"
 [ "$(git rev-parse HEAD)" = "$BASE" ] || fail "production_sha_drift"
 [ -z "$(git status --porcelain --untracked-files=all)" ] || fail "dirty_production_source"
 case "$(git remote get-url origin)" in *farazha2203/3dprinthub.git|*farazha2203/3dprinthub) ;; *) fail "remote_not_expected";; esac
+[ -d "$BACKUPS" ] || fail "backup_root_missing"
 
 "$PY" - "$DB" <<'PYCODE'
 import os,sys
@@ -63,6 +66,35 @@ print("PREFLIGHT_FINANCE_AND_ORDER=PASS")
 PYCODE
 "$PY" manage.py check || fail "preflight_django_check"
 "$PY" manage.py makemigrations --check --dry-run || fail "preflight_unexpected_drift"
+
+# Production cPanel storage is account-quota limited, not just filesystem limited.
+# This preflight is intentionally fail-closed and precedes all source and SQL backups.
+"$PY" - <<'PYCODE'
+import re, subprocess
+result = subprocess.run(
+    ["uapi", "StatsBar", "get_stats", "display=diskusage"],
+    capture_output=True, text=True, check=True, timeout=30,
+)
+used = re.search(r"(?m)^ *_count: *'?([0-9]+)", result.stdout)
+limit = re.search(r"(?m)^ *_max: *'?([0-9]+)", result.stdout)
+if not used or not limit or int(limit.group(1)) != 2000:
+    raise SystemExit("CPANEL_QUOTA_UNVERIFIED")
+remaining = int(limit.group(1)) - int(used.group(1))
+if remaining < 128:
+    raise SystemExit("CPANEL_BACKUP_HEADROOM_BELOW_128MB")
+print("CPANEL_REPORTED_MB=" + used.group(1) + "/2000")
+print("CPANEL_BACKUP_HEADROOM_MB=" + str(remaining))
+PYCODE
+reserve_account_space() {
+    local count="$1"
+    [ ! -e "$PROBE" ] || fail "quota_probe_path_busy"
+    dd if=/dev/zero of="$PROBE" bs=1048576 count="$count" conv=fsync status=none || fail "quota_probe_write_failed_${count}MiB"
+    [ "$(stat -c %s "$PROBE")" -eq "$((count * 1048576))" ] || fail "quota_probe_incomplete"
+    rm -f -- "$PROBE"
+    printf 'REAL_ACCOUNT_RESERVE_MIB=%s PASS\n' "$count"
+}
+reserve_account_space 48
+reserve_account_space 32
 
 remote_sha="$(git ls-remote origin "refs/heads/$BRANCH" | awk '{print $1}')"
 [ "$remote_sha" = "$TARGET" ] || fail "remote_branch_sha_mismatch"
