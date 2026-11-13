@@ -1086,3 +1086,11 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 - [x] Update dedicated bootstrap source to close inherited lock fd3 in both persistent `nohup` children; update canonical cPanel Cron example with `flock -n -o` and exact host release allowlist; syntax tests clean.
 - [ ] In 3DPrintHub cPanel Terminal, inspect whether `watchdog.lock` is actually held, correct the per-minute Cron entry without touching other projects, restart the transport-only bootstrap, then verify authenticated local 22024 health.
 - [ ] Once connected: repeat independent DB/source/financial preflight; full backup; gated dual-approval migrations and read-only production smoke.
+
+## 2026-11-13 — Independently permitted financial reviewer UX
+- [x] Release candidate updated to let a limited Website reviewer with view_order + approve_servicerefund approve a ServiceRefund without change_order or change_servicerefund.
+- [x] Limited Store reviewer with view_returnrequest + approve_storereturnrefund can approve a StoreReturnRefund without change_returnrequest, stock operations or change_storereturnrefund.
+- [x] Action dropdown and form hidden for role-forbidden decisions; new Admin browser regressions ensure no unauthorized cancellation, cash ledger or customer-order mutation.
+- [x] Templates compiled in CI; template changes trigger CI, 190/190 case suite and 29/29 release file allowlist + exactly 2 migrations PASS. Run: https://github.com/farazha2203/3dprinthub/actions/runs/43479727956
+- [ ] Repair the dedicated 3DPrintHub authenticated reverse tunnel / cPanel watchdog on the actual host and reconfirm exact live Git SHA and MySQL identity.
+- [ ] Run the quota-checked full source/.env/MySQL backup and SHA-pinned Website.0029 + Store.0044 deployment; prove unchanged real invoice, payment, refund, stock and 3798 SKU snapshots. Only then manual group grants to a distinct authorized reviewer and production acceptance.

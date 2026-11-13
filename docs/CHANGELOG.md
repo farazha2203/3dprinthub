@@ -1385,3 +1385,9 @@ Owner-designated contact/map A is the shared footer; dark B removed. Map at top,
 ## 2026-11-11 — Project-specific reverse SSH watchdog hardening (UNRELEASED)
 - Updated 3DPrintHub transport-only SSH and bridge `nohup` launches to close inherited flock descriptor 3, preventing live child processes from starving the one-minute cron watchdog. Updated source runbook to `flock -n -o` and exact financial-release changed-file allowlist. Bash syntax and diff hygiene pass.
 - This addresses a reproduced Linux FD inheritance behavior consistent with Nov9 stale watchdog + Nov11 tunnel disconnect. Host flock holder is not independently proven; actual cPanel Cron change/Host bootstrap still needed. Current Host runtime stays 0ae8d785, financial dual approval migration unapplied.
+
+## 2026-11-13 — Service + Store Finance reviewer least-privilege Admin correction (GITHUB_UPDATED)
+- Narrowed only refund decision page access from change-order/return permissions to view-order/return permissions plus action-specific independent refund permission; no wider admin, bank refund or stock mutation authority is granted.
+- Filtered visible allowed actions per user and refund status. Reviewer-only staff can approve but cannot finalize or cancel, and the requester's own approval/payment is blocked.
+- New 2 browser-level role tests included in 190/190 successful Linux Python 3.12 Django regression; both finance templates parsed, migration plan unchanged, 29-file deployment allowlist green. https://github.com/farazha2203/3dprinthub/actions/runs/43479727956
+- This is NOT deployed: dedicated production SSH tunnel remains the blocker and no real customer money/stock records were altered.
