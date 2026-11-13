@@ -18,6 +18,8 @@ on:
       - store/finance_reconciliation.py
       - store/test_phase50_variant_rma.py
       - store/migrations/0044_refund_maker_checker_approval.py
+      - templates/admin/store/return_workflow_action.html
+      - templates/admin/website/order/service_finance_action.html
       - scripts/host/phase50_refund_dual_approval_deploy.sh
       - scripts/host/phase50_reverse_tunnel_bootstrap.sh
       - .github/workflows/phase50-refund-dual-approval-ci.yml
@@ -95,6 +97,22 @@ jobs:
         run: |
           python manage.py check
           python manage.py makemigrations --check --dry-run --noinput
+
+      - name: Compile financial approval Admin templates before DB tests
+        run: |
+          python - <<'PY'
+          import os
+          import django
+          from django.template.loader import get_template
+          os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
+          django.setup()
+          for template in (
+              "admin/website/order/service_finance_action.html",
+              "admin/store/return_workflow_action.html",
+          ):
+              get_template(template)
+              print("ADMIN_TEMPLATE_PARSE=PASS " + template)
+          PY
 
       - name: Exact two-migration reviewer permissions
         run: |
