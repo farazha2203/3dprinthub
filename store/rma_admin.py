@@ -81,7 +81,7 @@ class RefundDecisionForm(forms.Form):
         label="رسید بیرونی را بررسی کردم و بازپرداخت واقعی به مشتری انجام شده است.",
     )
 
-    def __init__(self, *args, status="requested", **kwargs):
+    def __init__(self, *args, status="requested", allowed_actions=None, **kwargs):
         super().__init__(*args, **kwargs)
         if status == "requested":
             self.fields["action"].choices = [
@@ -92,6 +92,11 @@ class RefundDecisionForm(forms.Form):
             self.fields["action"].choices = [
                 ("complete", "ثبت رسید بازپرداخت واقعی"),
                 ("cancel", "لغو استرداد تأییدشده بدون پرداخت"),
+            ]
+        if allowed_actions is not None:
+            self.fields["action"].choices = [
+                (value, label) for value, label in self.fields["action"].choices
+                if value in allowed_actions
             ]
 
     def clean(self):
@@ -165,7 +170,12 @@ def rma_action_view(model_admin, request, return_id, action, refund_id=None):
         "request-refund": "store.add_storereturnrefund",
         "decide-refund": "store.change_storereturnrefund",
     }.get(action)
-    if not permission or not model_admin.has_change_permission(request):
+    # Reviewing a payout does not grant permission to edit the physical RMA.
+    parent_allowed = (
+        model_admin.has_view_permission(request) if action == "decide-refund"
+        else model_admin.has_change_permission(request)
+    )
+    if not permission or not parent_allowed:
         raise PermissionDenied
     if action == "decide-refund":
         if not (request.user.has_perm("store.change_storereturnrefund") or
@@ -187,8 +197,23 @@ def rma_action_view(model_admin, request, return_id, action, refund_id=None):
         "decide-refund": RefundDecisionForm,
     }[action]
     extra = {"order": rma.order} if action == "request-refund" else {}
+    allowed_actions = set()
     if action == "decide-refund":
         extra["status"] = refund.status
+        requester = request.user.pk == refund.requested_by_id
+        may_approve = request.user.has_perm("store.approve_storereturnrefund") and not requester
+        may_finalize = request.user.has_perm("store.change_storereturnrefund") and not requester
+        if refund.status == "requested":
+            if may_approve:
+                allowed_actions.add("approve")
+            if request.user.has_perm("store.change_storereturnrefund"):
+                allowed_actions.add("cancel")
+        elif refund.status == "approved":
+            if may_finalize:
+                allowed_actions.add("complete")
+            if may_finalize and may_approve:
+                allowed_actions.add("cancel")
+        extra["allowed_actions"] = allowed_actions
     if request.method == "POST" and (refund is None or refund.status in {"requested", "approved"}):
         form = form_cls(request.POST, **extra)
         if form.is_valid():
@@ -251,7 +276,10 @@ def rma_action_view(model_admin, request, return_id, action, refund_id=None):
         elif action == "review":
             initial = {"decision": "approved"}
         if action == "decide-refund":
-            initial["action"] = "approve" if refund.status == "requested" else "complete"
+            initial["action"] = next(
+                (name for name in ("approve", "complete", "cancel") if name in allowed_actions),
+                "",
+            )
         form = form_cls(initial=initial, **extra)
     titles = {
         "review": "تصمیم کارشناسی مرجوعی",
@@ -264,5 +292,6 @@ def rma_action_view(model_admin, request, return_id, action, refund_id=None):
         "title": titles[action],
         "opts": model_admin.model._meta, "original": rma,
         "rma": rma, "refund": refund, "form": form, "action": action,
+        "can_submit": bool(allowed_actions) if action == "decide-refund" else True,
         "return_url": reverse("admin:store_returnrequest_change", args=[rma.pk]),
     })

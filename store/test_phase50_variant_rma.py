@@ -648,3 +648,55 @@ class StoreVariantRMATests(TestCase):
                 actor=reviewer, confirmed_external_payout=True,
             )
         self.assertEqual(StoreReturnRefundLedger.objects.count(), 0)
+
+    def test_admin_limited_second_reviewer_can_sign_off_without_editing_rma(self):
+        from django.contrib.auth.models import Permission
+
+        rma, _ = self.inspect(quantity=1, restock=0)
+        refund = self.refund(rma, amount=50000)
+        reviewer = User.objects.create_user(
+            username="rma-limited-admin-reviewer", password="test-password",
+            is_staff=True, is_active=True,
+        )
+        reviewer.user_permissions.add(*Permission.objects.filter(
+            content_type__app_label="store",
+            codename__in=["view_returnrequest", "approve_storereturnrefund"],
+        ))
+        self.assertTrue(reviewer.has_perm("store.view_returnrequest"))
+        self.assertTrue(reviewer.has_perm("store.approve_storereturnrefund"))
+        self.assertFalse(reviewer.has_perm("store.change_returnrequest"))
+        self.assertFalse(reviewer.has_perm("store.change_storereturnrefund"))
+        self.client.force_login(reviewer)
+        url = reverse(
+            "admin:store_returnrequest_workflow_decide_refund",
+            args=[rma.pk, refund.pk],
+        )
+        page = self.client.get(url)
+        self.assertEqual(page.status_code, 200)
+        self.assertContains(page, "تأیید مستقل بدون جابه‌جایی پول")
+        self.assertNotContains(page, "لغو درخواست بدون پرداخت")
+        blocked = self.client.post(url, {
+            "action": "cancel",
+            "cancellation_reason": "Finance reviewer cannot cancel alone",
+        })
+        self.assertEqual(blocked.status_code, 200)
+        self.assertEqual(StoreReturnRefund.objects.get(pk=refund.pk).status, "requested")
+        approved = self.client.post(url, {
+            "action": "approve",
+            "approval_note": "Independent limited RMA reviewer authorized amount",
+        })
+        self.assertEqual(approved.status_code, 302)
+        self.assertEqual(StoreReturnRefund.objects.get(pk=refund.pk).status, "approved")
+        self.assertEqual(StoreReturnRefundLedger.objects.count(), 0)
+        no_pay = self.client.get(url)
+        self.assertEqual(no_pay.status_code, 200)
+        self.assertNotContains(no_pay, 'name="action"')
+        denied = self.client.post(url, {
+            "action": "complete", "payout_reference": "NO-RMA-BANK-RECEIPT",
+            "confirmed": "on",
+        })
+        self.assertEqual(denied.status_code, 200)
+        self.assertEqual(StoreReturnRefundLedger.objects.count(), 0)
+        forbidden = reverse("admin:store_returnrequest_workflow_review",
+                            args=[rma.pk])
+        self.assertNotEqual(self.client.get(forbidden).status_code, 200)

@@ -60,7 +60,7 @@ class ServiceRefundDecisionForm(forms.Form):
         required=False,
     )
 
-    def __init__(self, *args, status="requested", **kwargs):
+    def __init__(self, *args, status="requested", allowed_actions=None, **kwargs):
         super().__init__(*args, **kwargs)
         if status == "requested":
             self.fields["action"].choices = (
@@ -71,6 +71,11 @@ class ServiceRefundDecisionForm(forms.Form):
             self.fields["action"].choices = (
                 ("complete", "ثبت وجه واقعاً بازپرداخت‌شده با رسید"),
                 ("cancel", "لغو درخواست تأییدشده بدون پرداخت"),
+            )
+        if allowed_actions is not None:
+            self.fields["action"].choices = tuple(
+                (value, label) for value, label in self.fields["action"].choices
+                if value in allowed_actions
             )
 
     def clean(self):
@@ -193,7 +198,9 @@ def request_service_refund_view(model_admin, request, order_id):
 
 
 def complete_service_refund_view(model_admin, request, order_id, refund_id):
-    if not model_admin.has_change_permission(request) or not (
+    # Independent reviewer needs only read access to the parent order,
+    # never broad authority to modify its price, items or status.
+    if not model_admin.has_view_permission(request) or not (
         request.user.has_perm("website.approve_servicerefund")
         or request.user.has_perm("website.change_servicerefund")
     ):
@@ -201,8 +208,24 @@ def complete_service_refund_view(model_admin, request, order_id, refund_id):
     order = get_object_or_404(Order, pk=order_id)
     refund = get_object_or_404(ServiceRefund, pk=refund_id, quote__order=order)
     quote = refund.quote
+    requester = request.user.pk == refund.requested_by_id
+    may_approve = request.user.has_perm("website.approve_servicerefund") and not requester
+    may_finalize = request.user.has_perm("website.change_servicerefund") and not requester
+    allowed_actions = set()
+    if refund.status == "requested":
+        if may_approve:
+            allowed_actions.add("approve")
+        if request.user.has_perm("website.change_servicerefund"):
+            allowed_actions.add("cancel")
+    elif refund.status == "approved":
+        if may_finalize:
+            allowed_actions.add("complete")
+        if may_approve and may_finalize:
+            allowed_actions.add("cancel")
     if request.method == "POST" and refund.status in {"requested", "approved"}:
-        form = ServiceRefundDecisionForm(request.POST, status=refund.status)
+        form = ServiceRefundDecisionForm(
+            request.POST, status=refund.status, allowed_actions=allowed_actions,
+        )
         if form.is_valid():
             try:
                 if form.cleaned_data["action"] == "approve":
@@ -230,10 +253,15 @@ def complete_service_refund_view(model_admin, request, order_id, refund_id):
                 model_admin.message_user(request, outcome, messages.SUCCESS)
                 return redirect("admin:website_order_change", order.pk)
     else:
+        default_action = next(
+            (name for name in ("approve", "complete", "cancel") if name in allowed_actions),
+            "",
+        )
         form = ServiceRefundDecisionForm(
-            status=refund.status,
-            initial={"action": "approve" if refund.status == "requested" else "complete"},
+            status=refund.status, allowed_actions=allowed_actions,
+            initial={"action": default_action},
         )
     return render(request, "admin/website/order/service_finance_action.html",
         _base_context(model_admin, request, order, "تأیید دومرحله‌ای / ثبت رسید واقعی استرداد",
-            form=form, quote=quote, refund=refund, action_type="refund_decision"))
+            form=form, quote=quote, refund=refund, action_type="refund_decision",
+            can_submit=bool(allowed_actions)))

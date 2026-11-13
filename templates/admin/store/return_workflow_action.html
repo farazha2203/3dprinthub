@@ -29,6 +29,7 @@
   </div>
   {% endif %}
   {% if not refund or refund.status == "requested" or refund.status == "approved" %}
+  {% if action != 'decide-refund' or can_submit %}
   <form method="post" style="margin-top:20px">{% csrf_token %}
     {{ form.non_field_errors }}
     {% for field in form %}
@@ -40,6 +41,9 @@
     {% endfor %}
     <button type="submit" class="default" style="padding:10px 25px">ثبت تصمیم مستند</button>
   </form>
+  {% else %}
+  <p>دسترسی شما در این مرحله فقط مشاهده پرونده است؛ ثبت پرداخت نیازمند مجوز مستقل دیگری است.</p>
   {% endif %}
+  {% endif %
 </div>
 {% endblock %}

@@ -612,3 +612,57 @@ class ServiceAdjustmentTests(TestCase):
                 actor=reviewer, confirmed_external_payout=True,
             )
         self.assertEqual(PaymentLedgerEntry.objects.filter(entry_type="refund").count(), 0)
+
+    def test_admin_limited_second_reviewer_can_approve_but_never_edit_order_or_pay(self):
+        from django.contrib.auth.models import Permission
+
+        original_payment = self.pay()
+        self.credit()
+        refund = self.request_refund(original_payment, amount=30000)
+        reviewer = User.objects.create_user(
+            username="service-limited-admin-reviewer", password="test-password",
+            is_staff=True, is_active=True,
+        )
+        reviewer.user_permissions.add(*Permission.objects.filter(
+            content_type__app_label="website",
+            codename__in=["view_order", "approve_servicerefund"],
+        ))
+        self.assertTrue(reviewer.has_perm("website.view_order"))
+        self.assertTrue(reviewer.has_perm("website.approve_servicerefund"))
+        self.assertFalse(reviewer.has_perm("website.change_order"))
+        self.assertFalse(reviewer.has_perm("website.change_servicerefund"))
+        self.client.force_login(reviewer)
+        url = reverse("admin:website_order_complete_refund",
+                      args=[self.order.pk, refund.pk])
+        page = self.client.get(url)
+        self.assertEqual(page.status_code, 200)
+        self.assertContains(page, "تأیید مستقل بدون انتقال وجه")
+        self.assertNotContains(page, "لغو درخواست بدون پرداخت")
+        # Even crafting a POST cannot bypass the custom reviewer permission.
+        invalid = self.client.post(url, {
+            "action": "cancel",
+            "cancellation_reason": "Not authorized to cancel a refund",
+        })
+        self.assertEqual(invalid.status_code, 200)
+        self.assertEqual(ServiceRefund.objects.get(pk=refund.pk).status, "requested")
+        reviewed = self.client.post(url, {
+            "action": "approve",
+            "approval_note": "Independent limited reviewer verified this refund",
+        })
+        self.assertEqual(reviewed.status_code, 302)
+        self.assertEqual(ServiceRefund.objects.get(pk=refund.pk).status, "approved")
+        self.assertEqual(PaymentLedgerEntry.objects.filter(entry_type="refund").count(), 0)
+        # Reviewer cannot create a real bank debit or modify the parent order.
+        readonly = self.client.get(url)
+        self.assertEqual(readonly.status_code, 200)
+        self.assertNotContains(readonly, 'name="action"')
+        denied = self.client.post(url, {
+            "action": "complete", "payout_reference": "NO-BANK-RECEIPT",
+            "confirmed": "on",
+        })
+        self.assertEqual(denied.status_code, 200)
+        self.assertEqual(PaymentLedgerEntry.objects.filter(entry_type="refund").count(), 0)
+        self.assertNotEqual(
+            self.client.get(reverse("admin:website_order_request_refund",
+                                    args=[self.order.pk])).status_code, 200,
+        )
