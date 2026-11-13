@@ -77,6 +77,20 @@ jobs:
           bash -n scripts/host/phase50_reverse_tunnel_bootstrap.sh
           bash -n scripts/host/phase50_refund_dual_approval_deploy.sh
 
+      - name: Prevent reverse-tunnel watchdog lock inheritance
+        run: |
+          set -euo pipefail
+          lock="$(mktemp)"
+          trap 'rm -f "$lock"' EXIT
+          # A detached long-lived child must not pin the parent's cron flock.
+          flock -n -o "$lock" bash -c 'nohup sleep 2 >/dev/null 2>&1 </dev/null &'
+          flock -n "$lock" /bin/true
+          # Both the bridge and the SSH daemon must defensively close fd 3.
+          test "$(grep -Fc '3>&- &' scripts/host/phase50_reverse_tunnel_bootstrap.sh)" -eq 2
+          # The cPanel cron example must also close the flock descriptor.
+          grep -Fq '/bin/flock -n -o' docs/operations/REVERSE_TUNNEL_REMOTE_MANAGEMENT.md
+          echo "TUNNEL_WATCHDOG_LOCK_RELEASE=PASS"
+
       - name: Django configuration and zero schema drift
         run: |
           python manage.py check
